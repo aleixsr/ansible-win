@@ -326,8 +326,8 @@ packages:
       choco: docker-desktop
       brew: docker
     - id: dbeaver
-      name: DBeaver
-      winget: dbeaver.dbeaver
+      name: DBeaver Community
+      winget: DBeaver.DBeaver.Community
       choco: dbeaver
       brew: dbeaver-community
     - id: postman
@@ -549,7 +549,7 @@ packages:
       brew: hammerspoon
     - id: explorerplusplus
       name: Explorer++
-      winget: Explorerplusplus.Explorerplusplus
+      winget: derceg.Explorer++
       choco: explorerplusplus
       brew: "(finder)"
 
@@ -585,7 +585,7 @@ packages:
   remote:
     - id: tailscale
       name: Tailscale
-      winget: tailscale.tailscale
+      winget: Tailscale.Tailscale
       choco: tailscale
       brew: tailscale
     - id: winscp
@@ -593,10 +593,11 @@ packages:
       winget: WinSCP.WinSCP
       choco: winscp
       brew: cyberduck
+    # FileZilla no és al repositori de winget: Chocolatey és l'únic proveïdor.
     - id: filezilla
       name: FileZilla
-      winget: TimKosse.FileZilla.Client
       choco: filezilla
+      provider: choco
       brew: filezilla
     - id: putty
       name: PuTTY
@@ -605,13 +606,14 @@ packages:
       brew: "(ssh)"
     - id: anydesk
       name: AnyDesk
-      winget: AnyDeskSoftwareGmbH.AnyDesk
+      winget: AnyDesk.AnyDesk
       choco: anydesk
       brew: anydesk
+    # RustDesk tampoc és a winget.
     - id: rustdesk
       name: RustDesk
-      winget: RustDesk.RustDesk
       choco: rustdesk
+      provider: choco
       brew: rustdesk
 
   # --- tipografies -----------------------------------------------------------
@@ -640,10 +642,8 @@ packages:
       winget: Oracle.VirtualBox
       choco: virtualbox
       brew: virtualbox
-    - id: vmware
-      name: VMware Workstation Pro
-      winget: VMware.WorkstationPro
-      brew: vmware-fusion
+    # VMware Workstation Pro va passar a Broadcom i ja no es distribueix ni per
+    # winget ni per Chocolatey: s'ha de baixar amb compte de Broadcom.
 
   gaming:
     - id: steam

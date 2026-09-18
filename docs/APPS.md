@@ -79,7 +79,7 @@ per a l'altra plataforma.
 | Azure CLI | `Microsoft.AzureCLI` | `azure-cli` | — | `azure-cli` |
 | Claude Code | `Anthropic.ClaudeCode` | — | — | `claude-code` |
 | Claude Desktop | `Anthropic.Claude` | — | — | `claude` |
-| DBeaver | `dbeaver.dbeaver` | `dbeaver` | — | `dbeaver-community` |
+| DBeaver Community | `DBeaver.DBeaver.Community` | `dbeaver` | — | `dbeaver-community` |
 | Docker Desktop | `Docker.DockerDesktop` | `docker-desktop` | — | `docker` |
 | fnm (gestor de versions de Node) | `Schniz.fnm` | `fnm` | — | `fnm` |
 | Go | `GoLang.Go` | `golang` | — | `go` |
@@ -145,11 +145,11 @@ per a l'altra plataforma.
 
 | Aplicació | winget | Chocolatey | Scoop | Homebrew (mac) |
 | --- | --- | --- | --- | --- |
-| AnyDesk | `AnyDeskSoftwareGmbH.AnyDesk` | `anydesk` | — | `anydesk` |
-| FileZilla | `TimKosse.FileZilla.Client` | `filezilla` | — | `filezilla` |
+| AnyDesk | `AnyDesk.AnyDesk` | `anydesk` | — | `anydesk` |
+| FileZilla | — | `filezilla` | — | `filezilla` |
 | PuTTY | `PuTTY.PuTTY` | `putty` | — | (ssh) |
-| RustDesk | `RustDesk.RustDesk` | `rustdesk` | — | `rustdesk` |
-| Tailscale | `tailscale.tailscale` | `tailscale` | — | `tailscale` |
+| RustDesk | — | `rustdesk` | — | `rustdesk` |
+| Tailscale | `Tailscale.Tailscale` | `tailscale` | — | `tailscale` |
 | WinSCP | `WinSCP.WinSCP` | `winscp` | — | `cyberduck` |
 
 ## `security`
@@ -168,7 +168,7 @@ per a l'altra plataforma.
 | --- | --- | --- | --- | --- |
 | AutoHotkey | `AutoHotkey.AutoHotkey` | `autohotkey` | — | `hammerspoon` |
 | Everything | `voidtools.Everything` | `everything` | — | (spotlight) |
-| Explorer++ | `Explorerplusplus.Explorerplusplus` | `explorerplusplus` | — | (finder) |
+| Explorer++ | `derceg.Explorer++` | `explorerplusplus` | — | (finder) |
 | PowerToys | `Microsoft.PowerToys` | `powertoys` | — | (rectangle/raycast) |
 | qBittorrent | `qBittorrent.qBittorrent` | `qbittorrent` | — | `qbittorrent` |
 | rclone | `Rclone.Rclone` | `rclone` | — | `rclone` |
@@ -182,11 +182,10 @@ per a l'altra plataforma.
 | Aplicació | winget | Chocolatey | Scoop | Homebrew (mac) |
 | --- | --- | --- | --- | --- |
 | VirtualBox | `Oracle.VirtualBox` | `virtualbox` | — | `virtualbox` |
-| VMware Workstation Pro | `VMware.WorkstationPro` | — | — | `vmware-fusion` |
 
 ---
 
-**106 paquets** en 14 grups.
+**105 paquets** en 14 grups.
 
 Llegenda de la columna Homebrew:
 
