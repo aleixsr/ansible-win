@@ -1,0 +1,29 @@
+# Overrides locals de la màquina
+group_vars/local.yml
+
+# Generat pels rols
+bin/
+files/profile.d/
+
+# Còpies de seguretat que fa el repo abans de sobreescriure
+*.bak
+*.ansible_windows.bak
+*.bak-*
+
+# Secrets
+*.key
+*.pem
+.env
+.env.*
+!.env.example
+
+# Soroll de Windows
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~

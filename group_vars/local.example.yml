@@ -1,0 +1,52 @@
+---
+# =============================================================================
+#  Overrides locals  -  copia'l a group_vars/local.yml (que git ignora)
+# =============================================================================
+#  Aquest fitxer es fusiona RECURSIVAMENT sobre group_vars/all.yml, així que
+#  només cal escriure el que vulguis canviar. Les llistes NO es fusionen: si
+#  redefineixes una llista, la substitueixes sencera.
+# =============================================================================
+
+# Només vull aquests grups en aquesta màquina:
+default_groups:
+  - core
+  - cli
+  - dev
+  - browsers
+  - utilities
+
+# El sudo natiu de Windows 11 ja em va bé en aquest equip:
+# sudo:
+#   provider: native
+
+dev:
+  git:
+    user_name: "El Teu Nom"
+    user_email: "tu@example.com"
+  npm_globals:
+    - pnpm
+    - yarn
+    - typescript
+  uv_tools:
+    - ruff
+    - httpie
+  vscode_extensions:
+    - ms-vscode.PowerShell
+    - eamodio.gitlens
+    - esbenp.prettier-vscode
+    - redhat.vscode-yaml
+    - ms-azuretools.vscode-docker
+
+shell:
+  prompt: starship
+
+system:
+  taskbar:
+    align_left: false
+  power:
+    plan: balanced
+
+dotfiles:
+  links:
+    - src: dotfiles/.gitconfig.local
+      dest: $env:USERPROFILE\.gitconfig.local

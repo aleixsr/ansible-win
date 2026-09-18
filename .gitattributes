@@ -1,0 +1,24 @@
+# Normalitza els finals de línia. Els .ps1 han de quedar amb CRLF al disc:
+# Windows PowerShell 5.1 hi va millor i els here-strings no es descol·loquen.
+* text=auto eol=crlf
+
+# Sense working-tree-encoding: els .ps1 porten BOM UTF-8 a propòsit (PS 5.1 el
+# necessita per llegir bé els accents) i git rebutja el BOM si se li declara.
+*.ps1   text eol=crlf
+*.psm1  text eol=crlf
+*.psd1  text eol=crlf
+*.cmd   text eol=crlf
+*.bat   text eol=crlf
+
+# YAML i Markdown amb LF: és el que esperen les eines multiplataforma.
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.md    text eol=lf
+*.json  text eol=lf
+
+# Binaris
+*.png   binary
+*.jpg   binary
+*.ico   binary
+*.ttf   binary
+*.otf   binary
