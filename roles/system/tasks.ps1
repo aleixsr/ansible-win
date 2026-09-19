@@ -221,6 +221,66 @@ if ($pw) {
 }
 
 # -----------------------------------------------------------------------------
+# Entrada: direcció de l'scroll
+# -----------------------------------------------------------------------------
+# Equivalent a "Disable natural scrolling" del rol desktop d'ansible-mac. A
+# macOS és una sola clau (com.apple.swipescrolldirection); aquí en calen dues,
+# i amb conveni invertit l'una respecte l'altra.
+$inp = $sys.input
+if ($inp -and $null -ne $inp.natural_scrolling) {
+    $natural = [bool]$inp.natural_scrolling
+    $etiqueta = 'clàssic'
+    if ($natural) { $etiqueta = 'natural' }
+
+    # --- touchpad de precisió (HKCU, no cal admin) ---------------------------
+    # 0 = natural (el contingut segueix els dits), 1 = clàssic.
+    $ptpKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\PrecisionTouchPad'
+    if (-not (Test-Path -LiteralPath $ptpKey)) {
+        Write-TaskResult -Task 'scroll del touchpad' -Status 'skipped' -Message 'aquest equip no té touchpad de precisió'
+    } else {
+        $ptpValue = 1
+        if ($natural) { $ptpValue = 0 }
+        Set-Tweak -Task "scroll del touchpad ($etiqueta)" -Path $ptpKey `
+            -Name 'ScrollDirection' -Value $ptpValue | Out-Null
+    }
+
+    # --- ratolins HID (HKLM, cal admin) --------------------------------------
+    # 0 = clàssic, 1 = natural. La clau és per dispositiu: cal recórrer-los tots,
+    # i n'hi ha un per cada ratolí que s'hagi connectat mai a l'equip.
+    if (-not (Test-Elevated) -and -not $checkMode) {
+        Write-TaskResult -Task "scroll del ratolí ($etiqueta)" -Status 'skipped' -Message 'cal admin'
+    } else {
+        $wheelValue = 0
+        if ($natural) { $wheelValue = 1 }
+        try {
+            $devices = @(Get-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Enum\HID\*\*\Device Parameters' `
+                            -Name FlipFlopWheel -ErrorAction SilentlyContinue)
+            if ($devices.Count -eq 0) {
+                Write-TaskResult -Task "scroll del ratolí ($etiqueta)" -Status 'skipped' -Message 'cap dispositiu HID amb FlipFlopWheel'
+            } else {
+                $touched = 0
+                foreach ($dev in $devices) {
+                    $devPath = $dev.PSPath -replace '^Microsoft\.PowerShell\.Core\\Registry::HKEY_LOCAL_MACHINE', 'HKLM:'
+                    if (Set-RegistryValue -Path $devPath -Name 'FlipFlopWheel' -Value $wheelValue -Type 'DWord') {
+                        $touched++
+                    }
+                }
+                if ($touched -gt 0) {
+                    Write-TaskResult -Task "scroll del ratolí ($etiqueta)" -Status 'changed' `
+                        -Message "$touched de $($devices.Count) dispositius"
+                    Write-Info 'El canvi al ratolí no s''aplica fins que el desconnectis i el tornis a connectar (o reiniciïs).'
+                } else {
+                    Write-TaskResult -Task "scroll del ratolí ($etiqueta)" -Status 'ok' `
+                        -Message "$($devices.Count) dispositius ja correctes"
+                }
+            }
+        } catch {
+            Write-TaskResult -Task "scroll del ratolí ($etiqueta)" -Status 'failed' -Message $_.Exception.Message
+        }
+    }
+}
+
+# -----------------------------------------------------------------------------
 # Desenvolupament  (cal admin)
 # -----------------------------------------------------------------------------
 $dv = $sys.developer

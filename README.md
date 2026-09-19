@@ -1,11 +1,73 @@
 # ansible-win
 
-Provisionament reproduïble d'una màquina Windows. És el germà de
-[`ansible-mac`](https://github.com/aleixsr/ansible-mac): mateixes categories,
-mateix catàleg centralitzat a `config.yml` i, app per app, **les mateixes
-aplicacions** sempre que existeixin per a Windows.
+Provisionament personal d'una màquina Windows: paquets de winget/Chocolatey/Scoop,
+apps de la Microsoft Store, aplicacions d'inici, configuració de la shell
+(Starship + PowerShell), ajustos del sistema i `sudo` de debò.
 
-D'una màquina acabada d'instal·lar a una màquina de treball amb una comanda.
+És el germà de [`ansible-mac`](https://github.com/aleixsr/ansible-mac): mateix
+`config.yml`, mateixes categories i, app per app, **les mateixes aplicacions**
+sempre que existeixin per a Windows.
+
+> **Nota sobre Ansible:** Ansible no pot córrer nativament a Windows — el node de
+> control ha de ser Linux o macOS. Aquest repo manté l'*estructura* d'Ansible
+> (`config.yml`, rols, sortida `ok`/`changed`/`skipped`, `PLAY RECAP`) però el
+> motor és PowerShell. Vegeu [Equivalències](#equivalències-amb-ansible-mac).
+
+## Què fa
+
+Executar `.\run.ps1` fa, en aquest ordre:
+
+1. **Prepara els gestors de paquets** (`roles/core`)
+   - Comprova winget, instal·la Chocolatey si falta, i Scoop només si algun
+     paquet el demana explícitament
+   - Instal·la **gsudo** i fa que `sudo` (sense la `g`) hi apunti, tant a
+     PowerShell com a `cmd.exe`. Vegeu [`sudo` sense la `g`](#sudo-sense-la-g)
+2. **Instal·la les aplicacions** (`roles/apps` + `config.yml`)
+   - Eines de línia d'ordres i apps gràfiques, per categories: development,
+     cloud/DevOps, networking, system utilities, browsers, terminal,
+     communication, productivity, networking/VPN, remote access, file
+     management/cloud, Microsoft suite, media, documents, hardware
+   - Apps de la **Microsoft Store** via `winget --source msstore` (l'equivalent
+     de `mas` al Mac)
+   - Nerd Fonts via Chocolatey
+3. **Configura la shell** (`roles/shell`)
+   - Instal·la Starship i els mòduls de PowerShell (`PSReadLine`,
+     `Terminal-Icons`, `posh-git`, `powershell-yaml`)
+   - Desplega `files/starship.toml`, **el mateix fitxer que a `ansible-mac`**
+   - Instal·la el perfil de PowerShell: el que queda a `Documents\` és un
+     carregador d'una línia, així que el contingut real viu al repo i un
+     `git pull` ja actualitza el perfil
+   - Aplica la configuració de Windows Terminal (fent còpia de la teva)
+4. **Configura l'entorn de desenvolupament** (`roles/dev`)
+   - `git config --global` (àlies, `pull.rebase`, `delta` com a pager si hi és)
+   - Genera la clau SSH `ed25519` si no existeix
+   - Paquets globals de npm, eines de Python amb `uv`, extensions de VS Code
+5. **Instal·la els connectors de Tabby** (`roles/tabby`) desplegant
+   [`files/tabby/package.json`](files/tabby/package.json) a
+   `%APPDATA%\tabby\plugins` i executant-hi `npm install`. És el mateix fitxer
+   que al Mac, així que tots dos equips acaben amb els mateixos connectors.
+6. **Aplica els ajustos del sistema** (`roles/system`) — l'equivalent del rol
+   `desktop` d'`ansible-mac`. Vegeu [Ajustos que aplica](#ajustos-que-aplica)
+7. **Configura les aplicacions d'inici** (`roles/startup`) — el que al Mac són
+   Login Items, aquí són valors a
+   `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`
+8. **Enllaça els dotfiles** (`roles/dotfiles`) que declaris a `config.yml`
+
+Tot és **idempotent**: executar-ho dues vegades seguides no canvia res la segona.
+
+## Requisits
+
+- Windows 10 21H2 o superior (provat a Windows 11)
+- Windows PowerShell 5.1 (el que ve de sèrie) o PowerShell 7+
+- [winget](https://aka.ms/getwinget) (App Installer). Si no el tens, instal·la
+  "Instal·lador d'aplicacions" des de la Microsoft Store
+
+La resta — Chocolatey, gsudo, Git i el mòdul `powershell-yaml` — els posa
+`bootstrap.ps1`.
+
+## Instal·lació
+
+D'una màquina acabada d'instal·lar:
 
 ```powershell
 irm https://raw.githubusercontent.com/aleixsr/ansible-win/main/bootstrap.ps1 | iex
@@ -13,155 +75,234 @@ cd ~\ansible-win
 .\run.ps1
 ```
 
----
+O, si ja tens el repo clonat:
 
-## Per què no és Ansible de debò
-
-Ansible **no pot córrer nativament a Windows**: el node de control ha de ser
-Linux o macOS. Les opcions eren WSL2 + SSH cap al propi Windows (funciona, però
-demana reinici, servidor SSH, claus, i `winget` no s'hi porta bé) o un motor
-natiu.
-
-Aquest repo tria el motor natiu: **PowerShell**, amb la *forma* d'Ansible.
-
-| `ansible-mac`         | `ansible-win`                             |
-| --------------------- | ----------------------------------------- |
-| `config.yml`          | `config.yml` (mateix nom, mateixa idea)   |
-| `roles/*/tasks/main.yml` | `roles/*/tasks.ps1`                    |
-| `main.yml` (playbook) | `run.ps1`                                 |
-| `ansible-playbook`    | `.\run.ps1`                               |
-| `--check`             | `.\run.ps1 -Check`                        |
-| `--tags browsers`     | `.\run.ps1 -Roles apps -Groups browsers`  |
-| `ok / changed`        | mateixa sortida i mateix `PLAY RECAP`     |
-| `homebrew` / `homebrew_cask` | winget / Chocolatey / Scoop        |
-| `mas` (App Store)     | `winget --source msstore`                 |
-
-Tot és **idempotent**: executar-lo dos cops seguits no canvia res la segona
-vegada.
-
----
-
-## Paritat amb `ansible-mac`
-
-Les categories de `config.yml` són les mateixes. L'única diferència és que a
-Windows no hi ha la distinció fórmula/cask de Homebrew, així que els parells
-`packages<x>` + `casks<x>` s'han fusionat en una sola categoria:
-
-| `ansible-mac`                                    | `ansible-win`         |
-| ------------------------------------------------ | --------------------- |
-| `packagesdevelopment` + `casksdevelopment`        | `development`         |
-| `packagesclouddevops`                             | `clouddevops`         |
-| `packagesnetworking`                              | `networking`          |
-| `packagessystemutilities` + `caskssystemutilities`| `systemutilities`     |
-| `casksbrowsers`                                   | `browsers`            |
-| `casksterminal`                                   | `terminal`            |
-| `caskscommunication`                              | `communication`       |
-| `casksproductivity`                               | `productivity`        |
-| `casksnetworkingvpn`                              | `networkingvpn`       |
-| `casksremoteaccess`                               | `remoteaccess`        |
-| `casksfilemanagementcloud`                        | `filemanagementcloud` |
-| `casksmicrosoftsuite`                             | `microsoftsuite`      |
-| `casksmedia`                                      | `media`               |
-| `casksdocuments`                                  | `documents`           |
-| `caskshardware`                                   | `hardware`            |
-| `mas_apps`                                        | `store`               |
-| `startup_apps`                                    | `startup_apps`        |
-
-Cada paquet du anotat **d'on ve al Mac**, així que la paritat es pot auditar:
-
-```yaml
-- id: wiztree
-  name: WizTree
-  winget: AntibodySoftware.WizTree
-  choco: wiztree
-  mac: disk-inventory-x      # <- el cask equivalent a ansible-mac
+```powershell
+.\bootstrap.ps1        # prepara la màquina
+.\run.ps1 -Check       # simulació: mira què faria
+.\run.ps1              # provisiona de debò
 ```
 
-Les apps del Mac **sense equivalent a Windows** no desapareixen del catàleg: hi
-queden amb un `note` que diu per què i quin és el substitut, i surten com a
-`skipped` quan executes `run.ps1`.
-
-```yaml
-- id: maccy
-  name: Maccy
-  mac: maccy
-  note: "Historial de porta-retalls. A Windows és natiu: Win+V."
-```
-
-La taula completa és a [docs/APPS.md](docs/APPS.md), i es regenera amb
-`.\scripts\Export-AppsTable.ps1`.
-
----
-
-## El mateix prompt a les dues màquines
-
-`files/starship.toml` és **byte a byte el mateix fitxer** que
-`roles/shell/files/starship.toml` d'`ansible-mac` (Catppuccin Mocha), i starship
-el busca a la mateixa ruta a les dues plataformes (`~/.config/starship.toml`).
-El tema ja porta el símbol de Windows definit.
-
-També s'hi instal·la la Meslo Nerd Font, com al Mac. El que al Mac fan
-`zsh-autosuggestions` i `zsh-syntax-highlighting`, a Windows ho cobreix
-PSReadLine, que ja ve de sèrie.
-
----
-
-## Estructura
-
-```
-ansible-win/
-├── bootstrap.ps1                 # d'un Windows verge a poder executar run.ps1
-├── run.ps1                       # el "ansible-playbook"
-├── config.yml                    # ÚNICA font de veritat: apps + tota la config
-├── config.local.example.yml      # overrides per màquina (copia'l a config.local.yml)
-├── roles/
-│   ├── core/tasks.ps1            # winget · choco · scoop · gsudo · sudo
-│   ├── apps/tasks.ps1            # instal·la el catàleg
-│   ├── shell/tasks.ps1           # perfil · starship · mòduls · Windows Terminal
-│   ├── dev/tasks.ps1             # git · SSH · npm -g · uv · extensions VS Code
-│   ├── tabby/tasks.ps1           # connectors de Tabby (= rol tabby del Mac)
-│   ├── system/tasks.ps1          # = rol desktop del Mac, en versió Windows
-│   ├── startup/tasks.ps1         # = rol startup del Mac (Login Items -> Run)
-│   └── dotfiles/tasks.ps1        # symlinks de configuració
-├── files/
-│   ├── profile.ps1               # el perfil de PowerShell (= .zshrc del Mac)
-│   ├── starship.toml             # idèntic al d'ansible-mac
-│   ├── tabby/package.json        # idèntic al d'ansible-mac
-│   ├── profile.d/                # fragments generats (sudo, prompt) — gitignored
-│   └── windows-terminal.settings.json
-├── lib/Provision.psm1            # el motor: idempotència, proveïdors, sortida
-├── scripts/Export-AppsTable.ps1  # regenera docs/APPS.md des de config.yml
-└── docs/APPS.md                  # taula de paritat
-```
-
----
+`run.ps1` es reobre sol amb privilegis via `gsudo` quan li calen.
 
 ## Ús
 
 ```powershell
-.\run.ps1 -Check                             # simulació: què canviaria
-.\run.ps1                                     # provisionament complet
-.\run.ps1 -Upgrade                            # actualitza el que ja hi ha
-.\run.ps1 -ListPackages                       # ensenya el catàleg sencer
-.\run.ps1 -Roles apps                         # només instal·la aplicacions
-.\run.ps1 -Roles apps -Groups browsers,terminal
-.\run.ps1 -Roles system,shell                 # només els ajustos
+.\run.ps1                                       # tot
+.\run.ps1 -Check                                # simulació (com --check)
+.\run.ps1 -Upgrade                              # actualitza el que ja hi ha
+.\run.ps1 -ListPackages                         # ensenya el catàleg sencer
+.\run.ps1 -NoElevate                            # sense demanar privilegis
 ```
 
-`run.ps1` es reobre sol amb privilegis via `gsudo` si li calen. Amb `-NoElevate`
-no ho fa (i els ajustos d'`HKLM` se salten amb `skipped`).
-
-### Personalitzar sense tocar el repo
+Executar només una part (l'equivalent dels `--tags` d'`ansible-mac`):
 
 ```powershell
-Copy-Item config.local.example.yml config.local.yml
-notepad config.local.yml
+# Només instal·lar aplicacions
+.\run.ps1 -Roles apps
+
+# Només algunes categories
+.\run.ps1 -Roles apps -Groups browsers,terminal,documents
+
+# Només la shell (Starship + perfil)
+.\run.ps1 -Roles shell
+
+# Només els ajustos del sistema
+.\run.ps1 -Roles system
+
+# Només les aplicacions d'inici
+.\run.ps1 -Roles startup
+
+# Només els connectors de Tabby
+.\run.ps1 -Roles tabby
 ```
 
-`config.local.yml` està al `.gitignore` i es fusiona **recursivament** sobre
-`config.yml`.
+## Configuració
 
----
+Tot el que instal·la i configura el repo és a [`config.yml`](config.yml). Edita
+aquest fitxer per afegir o treure software sense tocar cap `.ps1`:
+
+```yaml
+packages:
+  browsers:
+    - id: brave
+      name: Brave
+      winget: Brave.Brave
+      choco: brave
+      mac: brave-browser        # d'on ve a ansible-mac
+
+startup_apps:
+  - name: ShareX
+    path: $env:ProgramFiles\ShareX\ShareX.exe
+    mac: Shottr
+```
+
+Per personalitzar una màquina concreta sense tocar el repo, copia
+[`config.local.example.yml`](config.local.example.yml) a `config.local.yml`
+(ignorat per git): es fusiona **recursivament** sobre `config.yml`.
+
+Per trobar l'identificador exacte d'un paquet nou:
+
+```powershell
+winget search <nom>
+choco search <nom>
+```
+
+## Software que instal·la
+
+### Línia d'ordres i desenvolupament
+
+| Categoria | Paquets |
+|---|---|
+| Development | GitHub CLI, Git, Node.js LTS, Python 3.14, Apache Directory Studio, GitHub Copilot CLI, DBeaver Community, draw.io, GitHub Desktop, SoapUI, Sublime Text, Visual Studio Code, Visual Studio Code Insiders |
+| Cloud / DevOps | Azure CLI, OCI CLI |
+| Networking | iperf3, RustScan, WinMTR, Nmap, Speedtest CLI, tcping, wget |
+| System utilities | btop4win, PowerShell 7, balenaEtcher, Twinkle Tray, WizTree, PowerToys, ScreenToGif, WinFsp, Novabench, Veeam Agent, XCA |
+| Shell (via `roles/shell`) | Starship, PSReadLine, Terminal-Icons, posh-git, powershell-yaml |
+
+### Aplicacions gràfiques
+
+| Categoria | Apps |
+|---|---|
+| Browsers | Brave, Chromium, Firefox, Google Chrome, Microsoft Edge |
+| Terminal | Windows Terminal, Tabby, Warp |
+| Communication | Mailspring, Microsoft Teams, Telegram, WhatsApp |
+| Productivity | Claude Desktop, 7-Zip, Notion, Qalculate!, ShareX, HWiNFO |
+| Networking & VPN | SwitchHosts, Tailscale, OpenVPN Connect |
+| Remote access | Royal TS, RustDesk |
+| File management & cloud | Box Drive, LocalSend, Synology Drive Client |
+| Microsoft suite | Microsoft 365, Azure Storage Explorer |
+| Media | HandBrake, VLC |
+| Documents | Adobe Acrobat Reader, Mark Text, Modern CSV, ONLYOFFICE, PDF24 Creator, Xournal++ |
+| Hardware | Logi Options+ |
+| Fonts (via `roles/shell`) | Meslo LG Nerd Font |
+
+### Microsoft Store (via `winget --source msstore`)
+
+| App | Id |
+|---|---|
+| Microsoft To Do | `9NBLGGH5R558` |
+| Azure VPN Client | `9NP355QT2SQB` |
+| WireGuard | `WireGuard.WireGuard` |
+
+### Aplicacions d'inici
+
+Twinkle Tray, ShareX, HWiNFO, PowerToys, OneDrive.
+
+Només s'afegeixen si l'executable existeix: si encara no has instal·lat l'app, la
+tasca surt com a `skipped` en comptes de deixar una entrada morta al registre.
+
+### Apps del Mac sense equivalent a Windows
+
+No desapareixen del catàleg: hi queden amb un `note` que diu per què i quin és el
+substitut, i surten com a `skipped` quan executes `run.ps1`.
+
+| Al Mac | Per què no hi és |
+|---|---|
+| `swaks` | Script Perl sense paquet a Windows. Alternativa: `Send-MailMessage` o swaks sota WSL |
+| `mas` | No cal: winget ja parla amb la Microsoft Store |
+| `bluesnooze` | Específic de macOS. A Windows es gestiona des de l'Administrador de dispositius |
+| `resolutionator` | Canvi de resolució natiu (Win+P) |
+| `wins` | Alt+Tab natiu / PowerToys |
+| `shortwave` | Només macOS i web |
+| `zoho-mail` | Sense client d'escriptori; navegador o Outlook |
+| `alt-tab` | Porta a macOS l'Alt+Tab de Windows. Aquí ja hi és |
+| `caffeine` | PowerToys Awake |
+| `dockdoor` | Previsualització de finestres, nativa a Windows |
+| `maccy` | Historial de porta-retalls natiu: Win+V |
+| `rectangle` | PowerToys FancyZones + Win+fletxes |
+| `windows-app` | És el client RDP de Microsoft *per a macOS*. Aquí ja hi ha `mstsc.exe` |
+| `microsoft-auto-update` | Click-to-Run / Windows Update |
+| `macdown` | El cobreix Mark Text |
+| `Ping Status` | Alternativa: PingInfoView o `Test-Connection` |
+| `MuteKey` | PowerToys Video Conference Mute (Win+Maj+A) |
+
+La taula completa, paquet per paquet i amb els identificadors de cada gestor, és
+a [docs/APPS.md](docs/APPS.md). Es regenera des de `config.yml` amb:
+
+```powershell
+.\scripts\Export-AppsTable.ps1
+```
+
+## Ajustos que aplica
+
+Tots configurables a la secció `system:` de `config.yml`. Els que toquen `HKLM`
+necessiten administrador; sense privilegis surten com a `skipped`, no fallen.
+
+### Explorador de fitxers
+
+| Ajust | Per defecte |
+|---|---|
+| Mostrar les extensions de fitxer | sí |
+| Mostrar els fitxers ocults | sí |
+| Obrir a "Aquest equip" en comptes d'"Accés ràpid" | sí |
+| Ruta completa a la barra de títol | sí |
+| Expandir l'arbre fins a la carpeta oberta | sí |
+| Desactivar els fitxers recents | no |
+
+### Barra de tasques
+
+| Ajust | Per defecte |
+|---|---|
+| Icones alineades a l'esquerra | sí |
+| Amagar la caixa de cerca | sí |
+| Amagar el botó de vista de tasques | sí |
+| Amagar els widgets | sí |
+| Amagar el botó de xat | sí |
+
+### Aparença
+
+| Ajust | Per defecte |
+|---|---|
+| Tema fosc (aplicacions i sistema) | sí |
+| Efectes de transparència | sí |
+| Color d'accent a la barra de tasques | no |
+
+### Privadesa
+
+| Ajust | Per defecte |
+|---|---|
+| Desactivar l'identificador de publicitat | sí |
+| Desactivar la cerca web i els suggeriments de Bing al menú Inici | sí |
+| Desactivar les experiències personalitzades i el contingut suggerit | sí |
+
+### Entrada (ratolí i touchpad)
+
+Equival al "Disable natural scrolling" del rol `desktop` d'`ansible-mac`
+(`com.apple.swipescrolldirection = false`).
+
+| Ajust | Per defecte |
+|---|---|
+| `natural_scrolling` | `false` — scroll clàssic: gest o roda avall, la pàgina baixa |
+
+A macOS és una sola preferència. A Windows en calen dues, i **el `0` no vol dir
+el mateix a totes dues**:
+
+| Dispositiu | Clau | `0` | `1` |
+|---|---|---|---|
+| Touchpad de precisió | `HKCU\...\PrecisionTouchPad\ScrollDirection` | natural | clàssic |
+| Ratolí (una per cada HID) | `HKLM\SYSTEM\CurrentControlSet\Enum\HID\...\Device Parameters\FlipFlopWheel` | clàssic | natural |
+
+El canvi al touchpad és immediat. **El del ratolí no s'aplica fins que
+desconnectis i tornis a connectar el dispositiu, o reiniciïs.** Si et queda al
+revés, canvia el booleà i torna a executar `.\run.ps1 -Roles system`.
+
+### Energia i desenvolupament
+
+| Ajust | Per defecte |
+|---|---|
+| Pla d'energia | `high` (alt rendiment) |
+| Temps per apagar la pantalla | `-1`, no s'hi toca |
+| Temps per suspendre | `0`, mai |
+| Mode desenvolupador | activat |
+| Rutes llargues (>260 caràcters) | activades |
+| Servidor OpenSSH | desactivat |
+
+Alguns canvis de l'Explorador no es veuen fins que el reinicies:
+
+```powershell
+Stop-Process -Name explorer -Force
+```
 
 ## `sudo` sense la `g`
 
@@ -172,10 +313,10 @@ prou: el de Microsoft sempre guanyaria.
 El rol `core` ho resol per dues bandes:
 
 1. **A PowerShell** — genera `files/profile.d/10-sudo.ps1` amb una *funció*
-   `sudo`. A PowerShell, les funcions tenen precedència sobre els executables del
-   `PATH`, així que `sudo` és `gsudo` i punt. També deixa `s` com a abreviatura.
+   `sudo`. A PowerShell les funcions tenen precedència sobre els executables del
+   `PATH`, així que `sudo` és `gsudo` i punt. També deixa `s` com a abreviatura
 2. **A `cmd.exe` i companyia** — genera `bin\sudo.cmd`, que reenvia a `gsudo`, i
-   posa `bin\` al davant del `PATH` d'usuari.
+   posa `bin\` al davant del `PATH` d'usuari
 
 ```yaml
 sudo:
@@ -191,55 +332,82 @@ sudo notepad C:\Windows\System32\drivers\etc\hosts
 sudo !!                     # repeteix l'última comanda, elevada
 ```
 
----
+## Equivalències amb `ansible-mac`
 
-## Afegir una aplicació
+| `ansible-mac` | `ansible-win` |
+|---|---|
+| `config.yml` | `config.yml` |
+| `main.yml` (playbook) | `run.ps1` |
+| `roles/*/tasks/main.yml` | `roles/*/tasks.ps1` |
+| `ansible-playbook main.yml` | `.\run.ps1` |
+| `--check` | `-Check` |
+| `--tags shell` | `-Roles shell` |
+| `--tags casks,browsers` | `-Roles apps -Groups browsers` |
+| `homebrew` / `homebrew_cask` | winget / Chocolatey / Scoop |
+| `mas` (App Store) | `winget --source msstore` |
+| `osx_defaults` | registre de Windows (`HKCU` / `HKLM`) |
+| Login Items (`osascript`) | `HKCU\...\CurrentVersion\Run` |
+| `~/.zshrc` | perfil de PowerShell |
+| `roles/desktop` | `roles/system` |
+| `roles/karabiner` | sense rèplica: s'instal·la PowerToys |
 
-```powershell
-winget search <nom>          # per trobar l'id exacte
-choco search <nom>
+Les categories són les mateixes, fusionant els parells `packages<x>` +
+`casks<x>` perquè a Windows no existeix la distinció fórmula/cask de Homebrew:
+
+`packagesdevelopment` + `casksdevelopment` → `development`,
+`packagessystemutilities` + `caskssystemutilities` → `systemutilities`,
+`casksbrowsers` → `browsers`, `mas_apps` → `store`, i així amb la resta.
+
+El rol `karabiner` del Mac no té rèplica a propòsit: les seves modificacions
+(Home/End, F12 com a Print Screen, dreceres de Finder, intercanvi de la tecla
+ISO…) són precisament per fer que el Mac es comporti com un Windows. Aquí
+s'instal·la **PowerToys**, que és on viu el Keyboard Manager si algun dia cal
+remapejar res.
+
+## Estructura del projecte
+
+```
+bootstrap.ps1                    D'un Windows verge a poder executar run.ps1
+run.ps1                          Punt d'entrada: el "ansible-playbook"
+config.yml                       Catàleg centralitzat: apps + tota la config
+config.local.example.yml         Plantilla d'overrides per màquina
+roles/
+  core/tasks.ps1                 Gestors de paquets, gsudo i `sudo`
+  apps/tasks.ps1                 Instal·lació del catàleg
+  shell/tasks.ps1                Starship, perfil, mòduls, Windows Terminal
+  dev/tasks.ps1                  git, SSH, npm -g, uv, extensions de VS Code
+  tabby/tasks.ps1                Connectors de Tabby via npm
+  system/tasks.ps1               Ajustos de Windows (= rol desktop del Mac)
+  startup/tasks.ps1              Aplicacions d'inici (= Login Items del Mac)
+  dotfiles/tasks.ps1             Symlinks de configuració
+files/
+  profile.ps1                    El perfil de PowerShell (= .zshrc del Mac)
+  starship.toml                  Idèntic al d'ansible-mac
+  tabby/package.json             Idèntic al d'ansible-mac
+  windows-terminal.settings.json Configuració de Windows Terminal
+  profile.d/                     Fragments generats (sudo, prompt) — gitignored
+lib/Provision.psm1               El motor: idempotència, proveïdors, sortida
+scripts/Export-AppsTable.ps1     Regenera docs/APPS.md des de config.yml
+docs/APPS.md                     Taula de paritat macOS ↔ Windows
 ```
 
-Afegeix l'entrada a la categoria que toqui de `config.yml`, amb el camp `mac:`
-apuntant al que hi ha al repo de macOS, i valida-ho abans d'aplicar:
+## Notes
 
-```powershell
-.\run.ps1 -Roles apps -Check
-.\scripts\Export-AppsTable.ps1
-```
-
----
-
-## Ajustos del sistema
-
-El rol `desktop` d'`ansible-mac` toca Dock, hot corners i trackpad. A Windows no
-hi ha ni Dock ni hot corners, així que l'equivalent és el rol `system`: barra de
-tasques, Explorer, tema fosc, privadesa, pla d'energia, mode desenvolupador i
-rutes llargues.
-
-Els que toquen `HKLM` necessiten administrador; sense privilegis surten com a
-`skipped` en comptes de fallar. Alguns canvis d'Explorer només es veuen després
-de reiniciar-lo:
-
-```powershell
-Stop-Process -Name explorer -Force
-```
-
-El rol `karabiner` del Mac no té rèplica: les seves modificacions (Home/End,
-F12 com a Print Screen, drecera de Finder, intercanvi de la tecla ISO…) són
-precisament per fer que el Mac es comporti com un Windows. Aquí s'instal·la
-**PowerToys**, que és on viu el Keyboard Manager si algun dia cal remapejar res.
-
----
-
-## Requisits
-
-- Windows 10 21H2 o superior (provat a Windows 11)
-- Windows PowerShell 5.1 (el que ve de sèrie) o PowerShell 7+
-- `winget` (App Installer). Chocolatey i el mòdul `powershell-yaml` els posa
-  `bootstrap.ps1`
-
----
+- Les tasques són idempotents: els fitxers només s'escriuen si el contingut
+  difereix, els valors del registre només si el valor actual no és el desitjat, i
+  els paquets es comproven abans d'instal·lar-los
+- Un paquet que falla **no atura el run**: es reporta com a `failed` i el
+  provisionament continua. El `PLAY RECAP` final llista tots els errors
+- Els `.ps1` es guarden en **UTF-8 amb BOM** a propòsit: Windows PowerShell 5.1
+  llegeix els scripts com a ANSI si no el troben, i els accents es trenquen
+- Quan un paquet ofereix més d'un gestor, s'agafa el primer de `provider_order`
+  (winget → Chocolatey → Scoop) que estigui disponible. Es pot forçar amb
+  `provider:` — és el que fan les Nerd Fonts, que no són a winget
+- El perfil de PowerShell s'instal·la a les rutes de Windows PowerShell 5.1 **i**
+  de PowerShell 7, i també a les de OneDrive si té la carpeta Documents
+  redirigida
+- Instal·lar el catàleg sencer en una màquina neta triga **hores**, no minuts:
+  són desenes de descàrregues i instal·ladors MSI, que Windows serialitza
 
 ## Llicència
 

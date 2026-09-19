@@ -672,8 +672,16 @@ system:
     enable_long_paths: true
     enable_openssh_server: false
   input:
-    # A ansible-mac: "Disable natural scrolling". A Windows el desplaçament ja
-    # és el clàssic; invertir-lo depèn del driver, així que no s'hi toca.
+    # Equival a "Disable natural scrolling" d'ansible-mac
+    # (com.apple.swipescrolldirection = false).
+    #
+    #   false = scroll clàssic de Windows: gest/roda avall -> la pàgina baixa
+    #   true  = scroll natural (estil Mac): el contingut segueix els dits
+    #
+    # Windows fa servir dues claus independents, i el 0 NO vol dir el mateix a
+    # totes dues (no és un error de transcripció, és així):
+    #   touchpad de precisió  ScrollDirection = 0 natural / 1 clàssic
+    #   ratolí (per cada HID) FlipFlopWheel   = 0 clàssic / 1 natural
     natural_scrolling: false
     # A ansible-mac: F1..F12 com a tecles de funció. A Windows ho controla la
     # BIOS/firmware del portàtil (tecla Fn), no el sistema operatiu.
