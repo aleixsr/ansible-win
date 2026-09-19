@@ -66,8 +66,13 @@ try {
     } else {
         Push-Location $pluginsDir
         try {
-            & npm install --legacy-peer-deps 2>&1 | Out-Null
-            if ($LASTEXITCODE -ne 0) { throw "npm ha retornat $LASTEXITCODE" }
+            # npm escriu els avisos de paquets obsolets a stderr. Cridat
+            # directament, això avortava la tasca encara que la instal·lació
+            # hagués anat bé: el que compta és el codi de sortida.
+            $npm = Invoke-NativeCommand -FilePath 'npm' -Arguments @('install', '--legacy-peer-deps')
+            if ($npm.ExitCode -ne 0) {
+                throw "npm ha retornat $($npm.ExitCode): $($npm.Output.Trim())"
+            }
             Write-TaskResult -Task 'npm install' -Status 'changed'
         } finally {
             Pop-Location

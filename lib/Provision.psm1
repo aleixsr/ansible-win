@@ -168,6 +168,38 @@ function Test-CommandExists {
 
 <#
 .SYNOPSIS
+    Crida un executable i retorna la seva sortida i el seu codi de sortida.
+.DESCRIPTION
+    A Windows PowerShell 5.1, amb $ErrorActionPreference = 'Stop', qualsevol
+    cosa que un executable escrigui a stderr es converteix en error terminant i
+    avorta l'script allà mateix -- encara que el programa hagi acabat bé amb
+    codi 0. npm escriu avisos de paquets obsolets, gsudo escriu informació, i
+    tots dos feien caure tasques que en realitat havien anat bé.
+
+    L'única manera fiable de saber si un executable ha fallat és el seu codi de
+    sortida, no si ha escrit alguna cosa a stderr.
+#>
+function Invoke-NativeCommand {
+    param(
+        [Parameter(Mandatory)][string]$FilePath,
+        [string[]]$Arguments = @()
+    )
+
+    $previous = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        $output = & $FilePath @Arguments 2>&1 | Out-String
+        return [pscustomobject]@{
+            Output   = $output
+            ExitCode = $LASTEXITCODE
+        }
+    } finally {
+        $ErrorActionPreference = $previous
+    }
+}
+
+<#
+.SYNOPSIS
     Refresca el PATH del procés actual des del registre (màquina + usuari).
 .DESCRIPTION
     Necessari després d'instal·lar paquets: l'installer actualitza el registre però
@@ -763,7 +795,8 @@ function Select-CatalogPackages {
 Export-ModuleMember -Function `
     Set-ProvisionContext, Get-ProvisionCheckMode, Write-Play, Write-Banner, Write-Info,
     Write-TaskResult, Write-PlayRecap, Get-ProvisionResults, Clear-ProvisionResults,
-    Test-Elevated, Invoke-Elevated, Test-CommandExists, Update-SessionPath, Add-PathEntry,
+    Test-Elevated, Invoke-Elevated, Test-CommandExists, Invoke-NativeCommand,
+    Update-SessionPath, Add-PathEntry,
     Set-FileContent, Set-RegistryValue, Set-SymbolicLink,
     Test-WingetAvailable, Test-ChocoAvailable, Test-ScoopAvailable,
     Get-ArpEntry, Resolve-UrlAsset, Install-UrlPackage,

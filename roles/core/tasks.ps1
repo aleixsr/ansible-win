@@ -184,21 +184,40 @@ Set-Alias -Name s -Value sudo -Scope Global -Force -ErrorAction SilentlyContinue
     }
 
     # --- cache de credencials --------------------------------------------------
+    # gsudo espera un TimeSpan, no una paraula: 'Disabled' peta amb una
+    # FormatException. Zero segons és 00:00:00. A més, CacheDuration és un
+    # ajust global del sistema i escriure'l demana elevació.
     $cache = 0
     if ($null -ne $sudoCfg.cache_seconds) { $cache = [int]$sudoCfg.cache_seconds }
-    $value = "$cache"
-    if ($cache -le 0) { $value = 'Disabled' }
+    if ($cache -lt 0) { $cache = 0 }
+    $value = [TimeSpan]::FromSeconds($cache).ToString('hh\:mm\:ss')
 
     if (Get-ProvisionCheckMode) {
         Write-TaskResult -Task 'cache de gsudo' -Status 'changed' -Message "posaria CacheDuration = $value"
     } else {
         try {
-            $current = (& $gsudoCmd.Source config CacheDuration 2>$null | Out-String).Trim()
+            $probe = Invoke-NativeCommand -FilePath $gsudoCmd.Source -Arguments @('config', 'CacheDuration')
+            $current = $probe.Output.Trim()
+
             if ($current -match [regex]::Escape($value)) {
                 Write-TaskResult -Task 'cache de gsudo' -Status 'ok' -Message $current
             } else {
-                & $gsudoCmd.Source config CacheDuration $value | Out-Null
-                Write-TaskResult -Task 'cache de gsudo' -Status 'changed' -Message "CacheDuration = $value"
+                $set = Invoke-NativeCommand -FilePath $gsudoCmd.Source `
+                         -Arguments @('config', 'CacheDuration', $value)
+
+                # gsudo torna 0 encara que no hagi pogut escriure (per exemple
+                # si l'elevació es cancel·la), així que ho rellegim per saber
+                # de debò si ha quedat.
+                $after = (Invoke-NativeCommand -FilePath $gsudoCmd.Source `
+                            -Arguments @('config', 'CacheDuration')).Output.Trim()
+
+                if ($after -match [regex]::Escape($value)) {
+                    Write-TaskResult -Task 'cache de gsudo' -Status 'changed' -Message "CacheDuration = $value"
+                } else {
+                    $detail = $set.Output.Trim()
+                    if (-not $detail) { $detail = "segueix a $after" }
+                    Write-TaskResult -Task 'cache de gsudo' -Status 'failed' -Message $detail
+                }
             }
         } catch {
             Write-TaskResult -Task 'cache de gsudo' -Status 'failed' -Message $_.Exception.Message

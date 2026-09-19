@@ -102,13 +102,13 @@ Serveix per comprovar d'un cop d'ull que cap app del Mac s'ha quedat pel camí.
 | --- | --- | --- | --- | --- |
 | `microsoft-auto-update` | **sense equivalent** — Específic de macOS. A Windows actualitza Click-to-Run / Windows Update. | — | — | — |
 | `microsoft-azure-storage-explorer` | Azure Storage Explorer | `Microsoft.Azure.StorageExplorer` | `microsoftazurestorageexplorer` | — |
-| `microsoft-office` | Microsoft 365 | `Microsoft.Office` | — | — |
+| `microsoft-office` | **sense equivalent** — El manifest de winget te el hash trencat de forma cronica (officecdn). Instal-la'l des de portal.office.com; Click-to-Run ja s'actualitza sol. | — | — | — |
 
 ## `networking`
 
 | A ansible-mac | A Windows | winget | Chocolatey | Scoop |
 | --- | --- | --- | --- | --- |
-| `iperf3` | iperf3 | — | `iperf3` | — |
+| `iperf3` | iperf3 | `ar51an.iPerf3` | — | — |
 | `mtr` | WinMTR | — | `winmtr-redux` | — |
 | `nmap` | Nmap | `Insecure.Nmap` | `nmap` | — |
 | `rustscan` | RustScan | `bee-san.RustScan` | — | — |
@@ -190,7 +190,7 @@ Serveix per comprovar d'un cop d'ull que cap app del Mac s'ha quedat pel camí.
 ---
 
 **95 entrades** en 17 categories, de les quals
-**77 s'instal·len** i **18 no tenen equivalent** a Windows.
+**76 s'instal·len** i **19 no tenen equivalent** a Windows.
 
 Les que no en tenen surten com a `skipped` quan executes `run.ps1`, amb el
 motiu al costat: no són errors, són decisions documentades.

@@ -142,8 +142,8 @@ if ($npmGlobals.Count -eq 0) {
             Write-TaskResult -Task "npm -g $p" -Status 'changed' -Message 'instal·laria'
         } else {
             try {
-                & npm install -g $p 2>&1 | Out-Null
-                if ($LASTEXITCODE -ne 0) { throw "npm ha retornat $LASTEXITCODE" }
+                $r = Invoke-NativeCommand -FilePath 'npm' -Arguments @('install', '-g', $p)
+                if ($r.ExitCode -ne 0) { throw "npm ha retornat $($r.ExitCode): $($r.Output.Trim())" }
                 Write-TaskResult -Task "npm -g $p" -Status 'changed'
             } catch {
                 Write-TaskResult -Task "npm -g $p" -Status 'failed' -Message $_.Exception.Message
@@ -169,8 +169,8 @@ if ($uvTools.Count -eq 0) {
             Write-TaskResult -Task "uv tool $t" -Status 'changed' -Message 'instal·laria'
         } else {
             try {
-                & uv tool install $t 2>&1 | Out-Null
-                if ($LASTEXITCODE -ne 0) { throw "uv ha retornat $LASTEXITCODE" }
+                $r = Invoke-NativeCommand -FilePath 'uv' -Arguments @('tool', 'install', $t)
+                if ($r.ExitCode -ne 0) { throw "uv ha retornat $($r.ExitCode): $($r.Output.Trim())" }
                 Write-TaskResult -Task "uv tool $t" -Status 'changed'
             } catch {
                 Write-TaskResult -Task "uv tool $t" -Status 'failed' -Message $_.Exception.Message
@@ -196,7 +196,8 @@ if ($extensions.Count -eq 0) {
             Write-TaskResult -Task "code --install-extension $ext" -Status 'changed' -Message 'instal·laria'
         } else {
             try {
-                & code --install-extension $ext --force 2>&1 | Out-Null
+                $r = Invoke-NativeCommand -FilePath 'code' -Arguments @('--install-extension', $ext, '--force')
+                if ($r.ExitCode -ne 0) { throw "code ha retornat $($r.ExitCode): $($r.Output.Trim())" }
                 Write-TaskResult -Task "code --install-extension $ext" -Status 'changed'
             } catch {
                 Write-TaskResult -Task "code --install-extension $ext" -Status 'failed' -Message $_.Exception.Message
