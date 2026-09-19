@@ -179,8 +179,19 @@ if (-not (Test-Elevated) -and -not $NoElevate -and -not $Check) {
         if ($Groups) { $relaunch += @('-Groups', ($Groups -join ',')) }
         if ($Upgrade) { $relaunch += '-Upgrade' }
 
-        & $gsudo.Source @relaunch
-        $elevatedCode = $LASTEXITCODE
+        # $ErrorActionPreference = 'Stop' i els executables natius es porten
+        # malament a PowerShell 5.1: qualsevol cosa que gsudo escrigui a stderr
+        # (com "operation was canceled by the user" quan es rebutja l'UAC)
+        # avorta l'script aquí mateix, i el missatge d'ajuda de sota no s'arriba
+        # a imprimir mai.
+        $previousEap = $ErrorActionPreference
+        $ErrorActionPreference = 'Continue'
+        try {
+            & $gsudo.Source @relaunch
+            $elevatedCode = $LASTEXITCODE
+        } finally {
+            $ErrorActionPreference = $previousEap
+        }
 
         # 231 i 1223 volen dir que algú ha dit que no al diàleg d'UAC. Sense
         # això, el run mor amb un "Error: The operation was canceled by the

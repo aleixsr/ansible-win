@@ -168,10 +168,13 @@ packages:
 
   # --- networking  (packagesnetworking) --------------------------------------
   networking:
+    # winget i no choco: el paquet iperf3 de Chocolatey baixa de
+    # files.budman.pw, i aquell servidor retorna HTML en comptes del ZIP, aixi
+    # que el checksum falla sempre. ar51an es qui manté les builds oficials de
+    # Windows (github.com/ar51an/iperf3-win-builds).
     - id: iperf3
       name: iperf3
-      choco: iperf3
-      provider: choco
+      winget: ar51an.iPerf3
       mac: iperf3
       test: iperf3
     - id: rustscan
