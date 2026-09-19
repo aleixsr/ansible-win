@@ -160,18 +160,18 @@ Serveix per comprovar d'un cop d'ull que cap app del Mac s'ha quedat pel camí.
 | A ansible-mac | A Windows | winget | Chocolatey | Scoop |
 | --- | --- | --- | --- | --- |
 | `balenaetcher` | balenaEtcher | `Balena.Etcher` | `etcher` | — |
-| `betterdisplay` | Twinkle Tray | `xanderfrangos.twinkletray` | — | — |
+| `betterdisplay` | **sense equivalent** — Descartat: Twinkle Tray nomes fa brillantor i contrast per DDC/CI. BetterDisplay no te equivalent real a Windows (resolucions HiDPI, pantalles virtuals, escalat). | — | — | — |
 | `bluesnooze` | **sense equivalent** — Específic de macOS (evita que el Bluetooth desperti el Mac). A Windows es gestiona des de l'Administrador de dispositius. | — | — | — |
 | `disk-inventory-x` | WizTree | `AntibodySoftware.WizTree` | `wiztree` | — |
-| `htop` | btop4win | `aristocratos.btop4win` | — | — |
+| `htop` | **sense equivalent** — Descartat: el port btop4win a Windows esta practicament abandonat. Per veure consum, l'Administrador de tasques de Windows 11 o Process Explorer (Sysinternals, ja inclos). | — | — | — |
 | `karabiner-elements` | PowerToys | `Microsoft.PowerToys` | `powertoys` | — |
 | `licecap` | ScreenToGif | `NickeManarin.ScreenToGif` | `screentogif` | — |
-| `macfuse` | WinFsp | — | `winfsp` | — |
+| `macfuse` | **sense equivalent** — Descartat: no cal a Windows. Si algun dia has de muntar sistemes de fitxers en espai d'usuari (rclone mount, sshfs-win), instal-la WinFsp a ma. | — | — | — |
 | `mas` | **sense equivalent** — A Windows no cal: winget ja parla amb la Microsoft Store (--source msstore). | — | — | — |
 | `novabench` | Novabench | `NovabenchInc.Novabench` | — | — |
 | `powershell` | PowerShell 7 | `Microsoft.PowerShell` | `powershell-core` | — |
 | `resolutionator` | **sense equivalent** — Específic de macOS. A Windows, canvi de resolució natiu (Win+P / Configuració de pantalla). | — | — | — |
-| `superduper` | Veeam Agent for Windows | `Veeam.VeeamAgent` | — | — |
+| `superduper` | **sense equivalent** — Descartat: Veeam Agent es backup empresarial, no clonatge simple com SuperDuper!. Alternativa nativa: Historial de fitxers o imatge del sistema de Windows. | — | — | — |
 | `wins` | **sense equivalent** — Específic de macOS (canviador de finestres). A Windows: Alt+Tab natiu / PowerToys. | — | — | — |
 | `xca` | XCA | — | `xca` | — |
 
@@ -186,7 +186,7 @@ Serveix per comprovar d'un cop d'ull que cap app del Mac s'ha quedat pel camí.
 ---
 
 **91 entrades** en 17 categories, de les quals
-**74 s'instal·len** i **17 no tenen equivalent** a Windows.
+**70 s'instal·len** i **21 no tenen equivalent** a Windows.
 
 Les que no en tenen surten com a `skipped` quan executes `run.ps1`, amb el
 motiu al costat: no són errors, són decisions documentades.

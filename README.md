@@ -157,7 +157,7 @@ choco search <nom>
 | Development | GitHub CLI, Git, Node.js LTS, Python 3.14, Apache Directory Studio, GitHub Copilot CLI, DBeaver Community, draw.io, GitHub Desktop, SoapUI, Sublime Text, Visual Studio Code, Visual Studio Code Insiders |
 | Cloud / DevOps | Azure CLI, OCI CLI |
 | Networking | iperf3, RustScan, WinMTR, Nmap, Speedtest CLI, tcping, wget |
-| System utilities | btop4win, PowerShell 7, balenaEtcher, Twinkle Tray, WizTree, PowerToys, ScreenToGif, WinFsp, Novabench, Veeam Agent, XCA |
+| System utilities | PowerShell 7, balenaEtcher, WizTree, PowerToys, ScreenToGif, Novabench, XCA |
 | Shell (via `roles/shell`) | Starship, PSReadLine, Terminal-Icons, posh-git, powershell-yaml |
 
 ### Aplicacions gràfiques
@@ -216,6 +216,10 @@ substitut, i surten com a `skipped` quan executes `run.ps1`.
 | `macdown` | El cobreix Mark Text |
 | `Ping Status` | Alternativa: PingInfoView o `Test-Connection` |
 | `MuteKey` | PowerToys Video Conference Mute (Win+Maj+A) |
+| `htop` | El port btop4win està abandonat. Administrador de tasques o Process Explorer |
+| `betterdisplay` | Descartat: Twinkle Tray només fa brillantor DDC/CI, no cobreix resolucions ni escalat |
+| `macfuse` | Descartat: instal·la WinFsp a mà si mai has de muntar FS en espai d'usuari |
+| `superduper` | Descartat: Veeam Agent és backup empresarial, no clonatge simple |
 
 La taula completa, paquet per paquet i amb els identificadors de cada gestor, és
 a [docs/APPS.md](docs/APPS.md). Es regenera des de `config.yml` amb:
@@ -406,6 +410,9 @@ docs/APPS.md                     Taula de paritat macOS ↔ Windows
 - El perfil de PowerShell s'instal·la a les rutes de Windows PowerShell 5.1 **i**
   de PowerShell 7, i també a les de OneDrive si té la carpeta Documents
   redirigida
+- Treure un paquet del catàleg **no el desinstal·la** de les màquines on ja hi és:
+  el repo declara què hi ha d'haver, no què no hi ha d'haver. Cal fer-ho a mà amb
+  `winget uninstall` o `choco uninstall`
 - Instal·lar el catàleg sencer en una màquina neta triga **hores**, no minuts:
   són desenes de descàrregues i instal·ladors MSI, que Windows serialitza
 

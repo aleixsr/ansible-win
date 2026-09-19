@@ -212,8 +212,8 @@ packages:
   systemutilities:
     - id: btop
       name: btop4win
-      winget: aristocratos.btop4win
       mac: htop
+      note: "Descartat: el port btop4win a Windows esta practicament abandonat. Per veure consum, l'Administrador de tasques de Windows 11 o Process Explorer (Sysinternals, ja inclos)."
     - id: powershell
       name: PowerShell 7
       winget: Microsoft.PowerShell
@@ -231,8 +231,8 @@ packages:
       mac: balenaetcher
     - id: twinkle-tray
       name: Twinkle Tray
-      winget: xanderfrangos.twinkletray
       mac: betterdisplay
+      note: "Descartat: Twinkle Tray nomes fa brillantor i contrast per DDC/CI. BetterDisplay no te equivalent real a Windows (resolucions HiDPI, pantalles virtuals, escalat)."
     - id: bluesnooze
       name: Bluesnooze
       mac: bluesnooze
@@ -254,9 +254,8 @@ packages:
       mac: licecap
     - id: winfsp
       name: WinFsp
-      choco: winfsp
-      provider: choco
       mac: macfuse
+      note: "Descartat: no cal a Windows. Si algun dia has de muntar sistemes de fitxers en espai d'usuari (rclone mount, sshfs-win), instal-la WinFsp a ma."
     - id: novabench
       name: Novabench
       winget: NovabenchInc.Novabench
@@ -267,8 +266,8 @@ packages:
       note: "Específic de macOS. A Windows, canvi de resolució natiu (Win+P / Configuració de pantalla)."
     - id: veeam-agent
       name: Veeam Agent for Windows
-      winget: Veeam.VeeamAgent
       mac: superduper
+      note: "Descartat: Veeam Agent es backup empresarial, no clonatge simple com SuperDuper!. Alternativa nativa: Historial de fitxers o imatge del sistema de Windows."
     - id: wins
       name: Wins
       mac: wins
@@ -569,9 +568,7 @@ packages:
 #  HKCU:\Software\Microsoft\Windows\CurrentVersion\Run.
 #  `path` accepta variables d'entorn amb la sintaxi $env:NOM.
 startup_apps:
-  - name: Twinkle Tray
-    path: $env:LOCALAPPDATA\Programs\twinkle-tray\Twinkle Tray.exe
-    mac: BetterDisplay
+  # BetterDisplay (Login Item al Mac) no te contrapartida: Twinkle Tray descartat.
   - name: ShareX
     path: $env:ProgramFiles\ShareX\ShareX.exe
     mac: Shottr
@@ -579,7 +576,7 @@ startup_apps:
     path: $env:ProgramFiles\HWiNFO64\HWiNFO64.exe
     mac: Stats
   - name: PowerToys
-    path: $env:ProgramFiles\PowerToys\PowerToys.exe
+    path: $env:LOCALAPPDATA\PowerToys\PowerToys.exe
     mac: MuteKey
   - name: OneDrive
     path: $env:LOCALAPPDATA\Microsoft\OneDrive\OneDrive.exe
