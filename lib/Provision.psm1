@@ -329,16 +329,139 @@ function Test-ScoopAvailable { return (Test-CommandExists 'scoop') }
 
 <#
 .SYNOPSIS
+    Busca una entrada de "Programes i característiques" pel seu nom visible.
+.DESCRIPTION
+    És l'única manera de saber si un paquet instal·lat per URL hi és: no hi ha
+    cap gestor a qui preguntar-ho. El patró admet comodins (-like).
+#>
+function Get-ArpEntry {
+    param([Parameter(Mandatory)][string]$Pattern)
+
+    $paths = @(
+        'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*',
+        'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*',
+        'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*'
+    )
+    return @(Get-ItemProperty -Path $paths -ErrorAction SilentlyContinue |
+             Where-Object { $_.DisplayName -and $_.DisplayName -like $Pattern }) |
+           Select-Object -First 1
+}
+
+<#
+.SYNOPSIS
+    Resol la secció url: d'un paquet a una descàrrega concreta.
+.DESCRIPTION
+    Dos modes:
+      source: <url>              descàrrega fixa, reproduïble, però es podreix
+      github: <owner/repo>       + asset: <patró> -> resol l'última release
+    El mode github existeix perquè els noms dels fitxers canvien: OpenTV ja va
+    passar de dir-se open-tv a Fred.TV enmig de les releases.
+#>
+function Resolve-UrlAsset {
+    param([Parameter(Mandatory)][hashtable]$Spec)
+
+    if ($Spec.source) {
+        $clean = ($Spec.source -split '\?')[0]
+        return [pscustomobject]@{
+            Url      = $Spec.source
+            FileName = [System.IO.Path]::GetFileName($clean)
+            Version  = "$($Spec.version)"
+        }
+    }
+
+    if ($Spec.github) {
+        if (-not $Spec.asset) { throw "url.github necessita també url.asset (patró del fitxer)" }
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        $api = "https://api.github.com/repos/$($Spec.github)/releases/latest"
+        $rel = Invoke-RestMethod -Uri $api -UseBasicParsing -Headers @{
+            'User-Agent' = 'ansible-win'
+            'Accept'     = 'application/vnd.github+json'
+        }
+        $asset = @($rel.assets | Where-Object { $_.name -like $Spec.asset }) | Select-Object -First 1
+        if (-not $asset) {
+            $noms = ($rel.assets | ForEach-Object { $_.name }) -join ', '
+            throw "cap asset de $($Spec.github) coincideix amb '$($Spec.asset)'. Hi ha: $noms"
+        }
+        return [pscustomobject]@{
+            Url      = $asset.browser_download_url
+            FileName = $asset.name
+            Version  = ($rel.tag_name -replace '^v', '')
+        }
+    }
+
+    throw "la secció url: necessita 'source' o 'github'"
+}
+
+<#
+.SYNOPSIS
+    Descarrega i executa un instal·lador que no és a cap gestor de paquets.
+#>
+function Install-UrlPackage {
+    param([Parameter(Mandatory)][hashtable]$Spec)
+
+    $asset = Resolve-UrlAsset -Spec $Spec
+
+    $cache = Join-Path $env:TEMP 'ansible-win-downloads'
+    if (-not (Test-Path -LiteralPath $cache)) {
+        New-Item -ItemType Directory -Path $cache -Force | Out-Null
+    }
+    $file = Join-Path $cache $asset.FileName
+
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    # Sense això, Invoke-WebRequest a PS 5.1 va ridículament lent per culpa de
+    # la barra de progrés.
+    $oldProgress = $ProgressPreference
+    $ProgressPreference = 'SilentlyContinue'
+    try {
+        Invoke-WebRequest -Uri $asset.Url -OutFile $file -UseBasicParsing
+    } finally {
+        $ProgressPreference = $oldProgress
+    }
+
+    if ($Spec.sha256) {
+        $hash = (Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash
+        if ($hash -ne $Spec.sha256.ToUpperInvariant()) {
+            Remove-Item -LiteralPath $file -Force -ErrorAction SilentlyContinue
+            throw "el checksum no coincideix. Esperat $($Spec.sha256.ToUpperInvariant()), obtingut $hash"
+        }
+    }
+
+    $ext = [System.IO.Path]::GetExtension($file).ToLowerInvariant()
+    if ($ext -eq '.msi') {
+        $arguments = @('/i', "`"$file`"", '/qn', '/norestart')
+        $proc = Start-Process -FilePath 'msiexec.exe' -ArgumentList $arguments -Wait -PassThru
+    } else {
+        # Per defecte /S, que és el silenci d'NSIS (i el que fa servir Tauri).
+        $arguments = @('/S')
+        if ($Spec.args) { $arguments = @($Spec.args) }
+        $proc = Start-Process -FilePath $file -ArgumentList $arguments -Wait -PassThru
+    }
+
+    # 3010 i 1641 volen dir "cal reiniciar", no són errors.
+    if ($proc.ExitCode -notin 0, 3010, 1641) {
+        throw "l'instal·lador ha retornat $($proc.ExitCode)"
+    }
+    return $asset.Version
+}
+
+<#
+.SYNOPSIS
     Comprova si un paquet ja està instal·lat amb el proveïdor indicat.
 #>
 function Test-PackageInstalled {
     param(
-        [Parameter(Mandatory)][ValidateSet('winget', 'choco', 'scoop')][string]$Provider,
+        [Parameter(Mandatory)][ValidateSet('winget', 'choco', 'scoop', 'url')][string]$Provider,
         [Parameter(Mandatory)][string]$Id,
-        [string]$Source
+        [string]$Source,
+        [hashtable]$UrlSpec
     )
 
     switch ($Provider) {
+        'url' {
+            # Sense gestor, l'únic registre fiable és Programes i característiques.
+            if (-not $UrlSpec -or -not $UrlSpec.arp) { return $false }
+            return [bool](Get-ArpEntry -Pattern $UrlSpec.arp)
+        }
         'winget' {
             if (-not (Test-WingetAvailable)) { return $false }
             $listArgs = @('list', '--id', $Id, '--exact', '--accept-source-agreements')
@@ -368,15 +491,21 @@ function Test-PackageInstalled {
 #>
 function Install-ProviderPackage {
     param(
-        [Parameter(Mandatory)][ValidateSet('winget', 'choco', 'scoop')][string]$Provider,
+        [Parameter(Mandatory)][ValidateSet('winget', 'choco', 'scoop', 'url')][string]$Provider,
         [Parameter(Mandatory)][string]$Id,
         [string]$Scope,
         [string]$Source,
+        [hashtable]$UrlSpec,
         [string[]]$ExtraArgs = @(),
         [switch]$Upgrade
     )
 
     switch ($Provider) {
+        'url' {
+            if (-not $UrlSpec) { throw "el paquet no té secció url:" }
+            $null = Install-UrlPackage -Spec $UrlSpec
+            return
+        }
         'winget' {
             $verb = 'install'
             if ($Upgrade) { $verb = 'upgrade' }
@@ -443,11 +572,19 @@ function Resolve-PackageProvider {
             'winget' { Test-WingetAvailable }
             'choco' { Test-ChocoAvailable }
             'scoop' { Test-ScoopAvailable }
+            'url' { $true }   # no depèn de cap gestor instal·lat
             default { $false }
         }
-        if ($available) {
-            return [pscustomobject]@{ Provider = $p; Id = $Package[$p] }
+        if (-not $available) { continue }
+
+        # Per a 'url', $Package['url'] és una taula: l'Id és només per ensenyar.
+        $id = $Package[$p]
+        if ($p -eq 'url') {
+            if ($Package.url.github) { $id = "github:$($Package.url.github)" }
+            elseif ($Package.url.source) { $id = $Package.url.source }
+            else { $id = 'url' }
         }
+        return [pscustomobject]@{ Provider = $p; Id = $id }
     }
     return $null
 }
@@ -494,7 +631,8 @@ function Install-CatalogPackage {
     $alreadyThere = $false
     if ($Package.test -and (Test-CommandExists $Package.test)) {
         $alreadyThere = $true
-    } elseif (Test-PackageInstalled -Provider $resolved.Provider -Id $resolved.Id -Source $Package.source) {
+    } elseif (Test-PackageInstalled -Provider $resolved.Provider -Id $resolved.Id `
+                                    -Source $Package.source -UrlSpec $Package.url) {
         $alreadyThere = $true
     }
 
@@ -514,7 +652,8 @@ function Install-CatalogPackage {
         $extra = @()
         if ($Package.args) { $extra = @($Package.args) }
         Install-ProviderPackage -Provider $resolved.Provider -Id $resolved.Id `
-            -Scope $Package.scope -Source $Package.source -ExtraArgs $extra -Upgrade:$Upgrade
+            -Scope $Package.scope -Source $Package.source -UrlSpec $Package.url `
+            -ExtraArgs $extra -Upgrade:$Upgrade
         Update-SessionPath
         $verb = 'instal·lat'
         if ($Upgrade -and $alreadyThere) { $verb = 'actualitzat' }
@@ -627,5 +766,6 @@ Export-ModuleMember -Function `
     Test-Elevated, Invoke-Elevated, Test-CommandExists, Update-SessionPath, Add-PathEntry,
     Set-FileContent, Set-RegistryValue, Set-SymbolicLink,
     Test-WingetAvailable, Test-ChocoAvailable, Test-ScoopAvailable,
+    Get-ArpEntry, Resolve-UrlAsset, Install-UrlPackage,
     Test-PackageInstalled, Install-ProviderPackage, Resolve-PackageProvider,
     Install-CatalogPackage, Import-ProvisionConfig, Merge-Hashtable, Select-CatalogPackages

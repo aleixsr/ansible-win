@@ -193,10 +193,15 @@ packages:
       winget: Ookla.Speedtest.CLI
       choco: speedtest
       mac: speedtest
+    # swaks es un script Perl i no te paquet a Windows. mailsend-go fa la
+    # mateixa feina (provar SMTP des de la linia d'ordres: auth, STARTTLS,
+    # adjunts) i es un binari Go sense dependencies.
+    # Si vols el swaks de debo: winget install StrawberryPerl.StrawberryPerl i
+    # despres baixa l'script de jetmore.org/john/code/swaks/.
     - id: swaks
-      name: swaks
+      name: mailsend-go
+      winget: muquit.mailsend-go
       mac: swaks
-      note: "Script Perl sense paquet a Windows. Alternativa: Send-MailMessage o swaks sota WSL."
     - id: tcping
       name: tcping
       choco: tcping
@@ -360,10 +365,20 @@ packages:
       name: DockDoor
       mac: dockdoor
       note: "Porta a macOS la previsualització de finestres de la barra de tasques. A Windows ja hi és."
+    # Keka al Mac es una GUI d'arxius multiformat sense CLI: PeaZip n'es la
+    # traduccio mes fidel. El 7-Zip hi es igualment perque el que aporta no es
+    # la GUI, es 7z.exe: la CLI que fan servir scripts, CI i mitja Internet.
+    # A mes, PeaZip no comprimeix: fa de front-end i per al format 7z el backend
+    # es justament el 7-Zip.
     - id: keka
       name: 7-Zip
       winget: 7zip.7zip
       choco: 7zip
+      mac: keka
+    - id: peazip
+      name: PeaZip
+      winget: Giorgiotani.Peazip
+      choco: peazip
       mac: keka
     - id: maccy
       name: Maccy
@@ -380,10 +395,18 @@ packages:
       winget: Notion.Notion
       choco: notion
       mac: notion
+    # Calculadora d'estil bloc de notes, alternativa explicita al Numi. No es a
+    # cap gestor: URL fixa amb checksum. Cal pujar version/source/sha256 a ma
+    # quan surti una versio nova.
     - id: numi
-      name: Qalculate!
-      choco: qalculate
-      provider: choco
+      name: Calcator
+      provider: url
+      url:
+        source: https://calcator.app/downloads/Calcator_0.2.4_x64-setup.exe
+        version: "0.2.4"
+        sha256: "F3556BF23683B1CB0640011DAF7577887A54AA6CBB4D0E1A08ABB9FE34E6147F"
+        args: ["/S"]
+        arp: "Calcator*"
       mac: numi
     - id: rectangle
       name: FancyZones (PowerToys)
@@ -401,10 +424,12 @@ packages:
       winget: ShareX.ShareX
       choco: sharex
       mac: shottr
+    # provider: choco a proposit. El manifest de winget (REALiX.HWiNFO) apunta a
+    # una URL de descarrega morta i falla amb 404 (codi -2145844844).
     - id: stats
       name: HWiNFO
-      winget: REALiX.HWiNFO
-      choco: hwinfo
+      choco: hwinfo.install
+      provider: choco
       mac: stats
 
   # --- networkingvpn  (casksnetworkingvpn) -----------------------------------
@@ -485,6 +510,40 @@ packages:
       winget: VideoLAN.VLC
       choco: vlc
       mac: vlc
+    # --- afegits nomes a Windows (no son a ansible-mac) ---
+    # mpv: reproductor lleuger i scriptable. Complementa el VLC, no el
+    # substitueix: el VLC obre qualsevol cosa, l'mpv va fi i es configurable.
+    - id: mpv
+      name: mpv
+      winget: shinchiro.mpv
+      choco: mpv
+      mac: "(no hi es a ansible-mac)"
+    # ffmpeg: el motor que hi ha sota mig catalog multimedia, i el que necessita
+    # yt-dlp per ajuntar video i audio separats.
+    - id: ffmpeg
+      name: FFmpeg
+      winget: Gyan.FFmpeg
+      choco: ffmpeg
+      mac: "(no hi es a ansible-mac)"
+      test: ffmpeg
+    - id: yt-dlp
+      name: yt-dlp
+      winget: yt-dlp.yt-dlp
+      choco: yt-dlp
+      mac: "(no hi es a ansible-mac)"
+      test: yt-dlp
+    # Open TV (Fredolx): client IPTV. No es a cap gestor, nomes releases de
+    # GitHub. El nom del fitxer ja ha canviat un cop (open-tv -> Fred.TV), per
+    # aixo es fa servir el mode github+asset i no una URL fixa.
+    - id: opentv
+      name: Open TV
+      provider: url
+      url:
+        github: Fredolx/open-tv
+        asset: "*_x64_en-US.msi"
+        # Es diu "Fred TV" a Programes i caracteristiques, no "Open TV".
+        arp: "Fred TV*"
+      mac: "(no hi es a ansible-mac)"
 
   # --- documents  (casksdocuments) -------------------------------------------
   documents:

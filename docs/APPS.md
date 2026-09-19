@@ -89,6 +89,10 @@ Serveix per comprovar d'un cop d'ull que cap app del Mac s'ha quedat pel camí.
 
 | A ansible-mac | A Windows | winget | Chocolatey | Scoop |
 | --- | --- | --- | --- | --- |
+| `(no hi es a ansible-mac)` | FFmpeg | `Gyan.FFmpeg` | `ffmpeg` | — |
+| `(no hi es a ansible-mac)` | yt-dlp | `yt-dlp.yt-dlp` | `yt-dlp` | — |
+| `(no hi es a ansible-mac)` | **sense equivalent** —  | — | — | — |
+| `(no hi es a ansible-mac)` | mpv | `shinchiro.mpv` | `mpv` | — |
 | `handbrake-app` | HandBrake | `HandBrake.HandBrake` | `handbrake` | — |
 | `vlc` | VLC | `VideoLAN.VLC` | `vlc` | — |
 
@@ -109,7 +113,7 @@ Serveix per comprovar d'un cop d'ull que cap app del Mac s'ha quedat pel camí.
 | `nmap` | Nmap | `Insecure.Nmap` | `nmap` | — |
 | `rustscan` | RustScan | `bee-san.RustScan` | — | — |
 | `speedtest` | Speedtest CLI | `Ookla.Speedtest.CLI` | `speedtest` | — |
-| `swaks` | **sense equivalent** — Script Perl sense paquet a Windows. Alternativa: Send-MailMessage o swaks sota WSL. | — | — | — |
+| `swaks` | mailsend-go | `muquit.mailsend-go` | — | — |
 | `tcping` | tcping | — | `tcping` | — |
 | `wget` | wget | `JernejSimoncic.Wget` | `wget` | — |
 
@@ -131,13 +135,14 @@ Serveix per comprovar d'un cop d'ull que cap app del Mac s'ha quedat pel camí.
 | `caffeine` | **sense equivalent** — Equivalent a Windows: PowerToys Awake, que ja s'instal·la a systemutilities. | — | — | — |
 | `claude` | Claude Desktop | `Anthropic.Claude` | — | — |
 | `dockdoor` | **sense equivalent** — Porta a macOS la previsualització de finestres de la barra de tasques. A Windows ja hi és. | — | — | — |
+| `keka` | PeaZip | `Giorgiotani.Peazip` | `peazip` | — |
 | `keka` | 7-Zip | `7zip.7zip` | `7zip` | — |
 | `maccy` | **sense equivalent** — Historial de porta-retalls. A Windows és natiu: Win+V. | — | — | — |
 | `notion` | Notion | `Notion.Notion` | `notion` | — |
-| `numi` | Qalculate! | — | `qalculate` | — |
+| `numi` | **sense equivalent** —  | — | — | — |
 | `rectangle` | **sense equivalent** — Gestió de finestres: PowerToys FancyZones + Win+fletxes, ja cobert a systemutilities. | — | — | — |
 | `shottr` | ShareX | `ShareX.ShareX` | `sharex` | — |
-| `stats` | HWiNFO | `REALiX.HWiNFO` | `hwinfo` | — |
+| `stats` | HWiNFO | — | `hwinfo.install` | — |
 
 ## `remoteaccess`
 
@@ -184,8 +189,8 @@ Serveix per comprovar d'un cop d'ull que cap app del Mac s'ha quedat pel camí.
 
 ---
 
-**90 entrades** en 17 categories, de les quals
-**73 s'instal·len** i **17 no tenen equivalent** a Windows.
+**95 entrades** en 17 categories, de les quals
+**77 s'instal·len** i **18 no tenen equivalent** a Windows.
 
 Les que no en tenen surten com a `skipped` quan executes `run.ps1`, amb el
 motiu al costat: no són errors, són decisions documentades.

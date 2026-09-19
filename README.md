@@ -156,7 +156,7 @@ choco search <nom>
 |---|---|
 | Development | GitHub CLI, Git, Node.js LTS, Python 3.14, Apache Directory Studio, GitHub Copilot CLI, DBeaver Community, draw.io, GitHub Desktop, SoapUI, Sublime Text, Visual Studio Code, Visual Studio Code Insiders |
 | Cloud / DevOps | Azure CLI, OCI CLI |
-| Networking | iperf3, RustScan, WinMTR, Nmap, Speedtest CLI, tcping, wget |
+| Networking | iperf3, RustScan, WinMTR, Nmap, Speedtest CLI, mailsend-go, tcping, wget |
 | System utilities | PowerShell 7, balenaEtcher, WizTree, PowerToys, ScreenToGif, Novabench, XCA |
 | Shell (via `roles/shell`) | Starship, PSReadLine, Terminal-Icons, posh-git, powershell-yaml |
 
@@ -165,14 +165,14 @@ choco search <nom>
 | Categoria | Apps |
 |---|---|
 | Browsers | Brave, Chromium, Firefox, Google Chrome, Microsoft Edge |
-| Terminal | Windows Terminal, Tabby, Warp |
+| Terminal | Windows Terminal, Tabby, Warp, Wave Terminal |
 | Communication | Mailspring, Microsoft Teams, Telegram, WhatsApp |
-| Productivity | Claude Desktop, 7-Zip, Notion, Qalculate!, Charmy (hot corners), ShareX, HWiNFO |
+| Productivity | Claude Desktop, 7-Zip, PeaZip, Obsidian, Notion, Calcator, Charmy (hot corners), ShareX, HWiNFO |
 | Networking & VPN | SwitchHosts, Tailscale, OpenVPN Connect |
 | Remote access | Royal TS, RustDesk |
 | File management & cloud | Box Drive, LocalSend, Synology Drive Client |
 | Microsoft suite | Microsoft 365, Azure Storage Explorer |
-| Media | HandBrake, VLC |
+| Media | HandBrake, VLC, mpv, FFmpeg, yt-dlp, Open TV |
 | Documents | Adobe Acrobat Reader, Mark Text, Modern CSV, ONLYOFFICE, PDF24 Creator, Xournal++ |
 | Hardware | Logi Options+ |
 | Fonts (via `roles/shell`) | Meslo LG Nerd Font |
@@ -190,7 +190,8 @@ choco search <nom>
 > Com que `run.ps1` s'auto-eleva, les instal·la **abans** d'elevar-se, mentre
 > encara és al context d'usuari. Si n'executes una elevat, la tasca surt com a
 > `skipped` amb la comanda a fer:
-> `.un.ps1 -Roles apps -Groups store -NoElevate`
+> `.
+un.ps1 -Roles apps -Groups store -NoElevate`
 
 ### Aplicacions d'inici
 
@@ -206,7 +207,6 @@ substitut, i surten com a `skipped` quan executes `run.ps1`.
 
 | Al Mac | Per què no hi és |
 |---|---|
-| `swaks` | Script Perl sense paquet a Windows. Alternativa: `Send-MailMessage` o swaks sota WSL |
 | `mas` | No cal: winget ja parla amb la Microsoft Store |
 | `bluesnooze` | Específic de macOS. A Windows es gestiona des de l'Administrador de dispositius |
 | `resolutionator` | Canvi de resolució natiu (Win+P) |
@@ -242,6 +242,44 @@ a [docs/APPS.md](docs/APPS.md). Es regenera des de `config.yml` amb:
 ```powershell
 .\scripts\Export-AppsTable.ps1
 ```
+
+## Paquets que no són a cap gestor
+
+Dos del catàleg no existeixen ni a winget, ni a Chocolatey, ni a Scoop:
+**Calcator** i **Open TV**. Per a aquests hi ha el proveïdor `url`, que baixa
+l'instal·lador i l'executa.
+
+```yaml
+# URL fixa: reproduïble, però s'ha de pujar la versió a mà
+- id: numi
+  name: Calcator
+  provider: url
+  url:
+    source: https://calcator.app/downloads/Calcator_0.2.4_x64-setup.exe
+    version: "0.2.4"
+    sha256: "F3556BF2…"      # opcional; si hi és, es verifica
+    args: ["/S"]             # per defecte /S (silenci d'NSIS)
+    arp: "Calcator*"         # com es detecta que ja hi és
+
+# Release de GitHub: es resol l'última, amb un patró per a l'asset
+- id: opentv
+  name: Open TV
+  provider: url
+  url:
+    github: Fredolx/open-tv
+    asset: "*_x64_en-US.msi"
+    arp: "Fred TV*"
+```
+
+El mode `github` existeix perquè els noms dels fitxers es podreixen: Open TV ja
+va passar de `open-tv` a `Fred.TV` enmig de les releases, i una URL fixa hauria
+petat.
+
+**Aquest proveïdor és el punt feble del repo, i val més dir-ho.** Sense gestor de
+paquets no hi ha a qui preguntar si una cosa està instal·lada, així que la
+detecció va per `arp:`, el nom a «Programes i característiques» — que el
+fabricant pot canviar quan vulgui. `provider: url` només per a coses que
+realment no siguin a cap gestor.
 
 ## Ajustos que aplica
 
