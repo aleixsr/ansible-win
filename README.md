@@ -187,7 +187,7 @@ choco search <nom>
 
 ### Aplicacions d'inici
 
-Twinkle Tray, ShareX, HWiNFO, PowerToys, OneDrive.
+ShareX, HWiNFO, PowerToys, OneDrive.
 
 Només s'afegeixen si l'executable existeix: si encara no has instal·lat l'app, la
 tasca surt com a `skipped` en comptes de deixar una entrada morta al registre.
@@ -216,10 +216,18 @@ substitut, i surten com a `skipped` quan executes `run.ps1`.
 | `macdown` | El cobreix Mark Text |
 | `Ping Status` | Alternativa: PingInfoView o `Test-Connection` |
 | `MuteKey` | PowerToys Video Conference Mute (Win+Maj+A) |
-| `htop` | El port btop4win està abandonat. Administrador de tasques o Process Explorer |
-| `betterdisplay` | Descartat: Twinkle Tray només fa brillantor DDC/CI, no cobreix resolucions ni escalat |
-| `macfuse` | Descartat: instal·la WinFsp a mà si mai has de muntar FS en espai d'usuari |
-| `superduper` | Descartat: Veeam Agent és backup empresarial, no clonatge simple |
+
+### Descartats a propòsit
+
+Aquests quatre **existeixen** a Windows, però el substitut no valia la pena i
+s'han tret del catàleg. No s'instal·len i no hi ha cap entrada a `config.yml`:
+
+| Al Mac | El substitut descartat | Per què |
+|---|---|---|
+| `htop` | btop4win | El port a Windows està abandonat. Administrador de tasques o Process Explorer |
+| `betterdisplay` | Twinkle Tray | Només fa brillantor i contrast per DDC/CI; no cobreix resolucions ni escalat |
+| `macfuse` | WinFsp | No cal si no muntes sistemes de fitxers en espai d'usuari. Instal·la'l a mà si algun dia et fa falta |
+| `superduper` | Veeam Agent | Backup empresarial, no clonatge d'arrencada simple |
 
 La taula completa, paquet per paquet i amb els identificadors de cada gestor, és
 a [docs/APPS.md](docs/APPS.md). Es regenera des de `config.yml` amb:

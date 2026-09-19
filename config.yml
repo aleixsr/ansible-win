@@ -210,10 +210,6 @@ packages:
 
   # --- systemutilities  (packagessystemutilities + caskssystemutilities) -----
   systemutilities:
-    - id: btop
-      name: btop4win
-      mac: htop
-      note: "Descartat: el port btop4win a Windows esta practicament abandonat. Per veure consum, l'Administrador de tasques de Windows 11 o Process Explorer (Sysinternals, ja inclos)."
     - id: powershell
       name: PowerShell 7
       winget: Microsoft.PowerShell
@@ -229,10 +225,6 @@ packages:
       winget: Balena.Etcher
       choco: etcher
       mac: balenaetcher
-    - id: twinkle-tray
-      name: Twinkle Tray
-      mac: betterdisplay
-      note: "Descartat: Twinkle Tray nomes fa brillantor i contrast per DDC/CI. BetterDisplay no te equivalent real a Windows (resolucions HiDPI, pantalles virtuals, escalat)."
     - id: bluesnooze
       name: Bluesnooze
       mac: bluesnooze
@@ -252,10 +244,6 @@ packages:
       winget: NickeManarin.ScreenToGif
       choco: screentogif
       mac: licecap
-    - id: winfsp
-      name: WinFsp
-      mac: macfuse
-      note: "Descartat: no cal a Windows. Si algun dia has de muntar sistemes de fitxers en espai d'usuari (rclone mount, sshfs-win), instal-la WinFsp a ma."
     - id: novabench
       name: Novabench
       winget: NovabenchInc.Novabench
@@ -264,10 +252,6 @@ packages:
       name: Resolutionator
       mac: resolutionator
       note: "Específic de macOS. A Windows, canvi de resolució natiu (Win+P / Configuració de pantalla)."
-    - id: veeam-agent
-      name: Veeam Agent for Windows
-      mac: superduper
-      note: "Descartat: Veeam Agent es backup empresarial, no clonatge simple com SuperDuper!. Alternativa nativa: Historial de fitxers o imatge del sistema de Windows."
     - id: wins
       name: Wins
       mac: wins
