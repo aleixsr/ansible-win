@@ -116,7 +116,7 @@ if ($sudoCfg.provider -ne 'gsudo') {
         # contingut no els interpreta PowerShell.
         $shim = @'
 @echo off
-rem Generat per ansible_windows (rol core). No editar a ma.
+rem Generat per ansible-win (rol core). No editar a ma.
 rem Redirigeix "sudo" a gsudo, evitant el sudo.exe natiu de Windows 11.
 "__GSUDO__" %*
 '@.Replace('__GSUDO__', $gsudoCmd.Source)
@@ -153,7 +153,7 @@ rem Redirigeix "sudo" a gsudo, evitant el sudo.exe natiu de Windows 11.
         $snippetDir = Join-Path $RepoRoot 'files\profile.d'
         $snippetPath = Join-Path $snippetDir '10-sudo.ps1'
         $snippet = @'
-# Generat per ansible_windows (rol core). No editar a mà.
+# Generat per ansible-win (rol core). No editar a mà.
 # "sudo" -> gsudo. Una funció de PowerShell té precedència sobre qualsevol
 # executable del PATH, també sobre C:\Windows\System32\sudo.exe.
 $script:GsudoPath = '__GSUDO__'

@@ -1,5 +1,5 @@
 ﻿# =============================================================================
-#  Perfil de PowerShell - ansible_windows
+#  Perfil de PowerShell - ansible-win
 # =============================================================================
 #  El perfil que hi ha a Documents\ és només un carregador d'una línia que fa
 #  dot-source d'aquest fitxer. Per tant, editar aquí (i fer commit) actualitza
@@ -108,7 +108,7 @@ function gb { git branch @args }
 function lg { lazygit @args }
 
 # -----------------------------------------------------------------------------
-# ansible_windows
+# ansible-win
 # -----------------------------------------------------------------------------
 function prov {
     <#
@@ -118,12 +118,14 @@ function prov {
     & (Join-Path $AnsibleWindowsRoot 'run.ps1') @args
 }
 
-function prov-edit {
+# Sense guió al nom: amb guió, PowerShell ho llegeix com a Verb-Nom i es queixa
+# que "prov" no és un verb aprovat.
+function provedit {
     <#
     .SYNOPSIS
         Obre el catàleg de paquets a l'editor.
     #>
-    $catalog = Join-Path $AnsibleWindowsRoot 'group_vars\all.yml'
+    $catalog = Join-Path $AnsibleWindowsRoot 'config.yml'
     if (Get-Command code -ErrorAction SilentlyContinue) { code $catalog }
     else { notepad $catalog }
 }

@@ -1,6 +1,6 @@
 ﻿<#
 .SYNOPSIS
-    Rol apps: instal·la el catàleg d'aplicacions de group_vars/all.yml.
+    Rol apps: instal·la el catàleg d'aplicacions de config.yml.
 #>
 param(
     [Parameter(Mandatory)]$Config,

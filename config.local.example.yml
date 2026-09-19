@@ -1,0 +1,60 @@
+---
+# =============================================================================
+#  Overrides locals  -  copia'l a config.local.yml (que git ignora)
+# =============================================================================
+#  Es fusiona RECURSIVAMENT sobre config.yml, així que només cal escriure el que
+#  vulguis canviar. Les llistes NO es fusionen: si en redefineixes una, la
+#  substitueixes sencera.
+#
+#  És l'equivalent de tenir un config.yml propi a ansible-mac (que allà està
+#  al .gitignore).
+# =============================================================================
+
+# En aquesta màquina només vull aquestes categories:
+default_groups:
+  - development
+  - clouddevops
+  - networking
+  - systemutilities
+  - browsers
+  - terminal
+  - fonts
+
+# El sudo natiu de Windows 11 ja em va bé en aquest equip:
+# sudo:
+#   provider: native
+
+dev:
+  git:
+    user_name: "Aleix Solà"
+    user_email: "asola@asmtch.com"
+  npm_globals:
+    - pnpm
+    - typescript
+  uv_tools:
+    - ruff
+  vscode_extensions:
+    - ms-vscode.PowerShell
+    - eamodio.gitlens
+    - redhat.vscode-yaml
+
+shell:
+  # oh-my-posh en comptes de starship (per defecte s'usa starship, com al Mac)
+  prompt: oh-my-posh
+  oh_my_posh_theme: jandedobbeleer
+
+system:
+  taskbar:
+    align_left: false
+  power:
+    plan: balanced
+
+# Aplicacions d'inici només d'aquesta màquina:
+# startup_apps:
+#   - name: Tailscale
+#     path: $env:ProgramFiles\Tailscale\tailscale-ipn.exe
+
+dotfiles:
+  links:
+    - src: dotfiles/.gitconfig.local
+      dest: $env:USERPROFILE\.gitconfig.local

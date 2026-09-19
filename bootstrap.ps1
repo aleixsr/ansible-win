@@ -14,7 +14,7 @@
 
     Es pot executar directament des d'Internet:
 
-        irm https://raw.githubusercontent.com/<usuari>/ansible_windows/main/bootstrap.ps1 | iex
+        irm https://raw.githubusercontent.com/aleixsr/ansible-win/main/bootstrap.ps1 | iex
 
 .PARAMETER Run
     Encadena run.ps1 quan el bootstrap acabi.
@@ -23,13 +23,13 @@
     D'on clonar si el bootstrap s'executa fora d'un clon del repo.
 
 .PARAMETER Path
-    On clonar el repo. Per defecte %USERPROFILE%\ansible_windows.
+    On clonar el repo. Per defecte %USERPROFILE%\ansible-win.
 #>
 [CmdletBinding()]
 param(
     [switch]$Run,
-    [string]$RepoUrl = 'https://github.com/REPLACE_ME/ansible_windows.git',
-    [string]$Path = (Join-Path $env:USERPROFILE 'ansible_windows')
+    [string]$RepoUrl = 'https://github.com/aleixsr/ansible-win.git',
+    [string]$Path = (Join-Path $env:USERPROFILE 'ansible-win')
 )
 
 $ErrorActionPreference = 'Stop'
@@ -69,7 +69,7 @@ function Test-Admin {
 }
 
 Write-Host ''
-Write-Host '  ansible_windows - bootstrap' -ForegroundColor Magenta
+Write-Host '  ansible-win - bootstrap' -ForegroundColor Magenta
 Write-Host '  ---------------------------' -ForegroundColor DarkGray
 
 # -----------------------------------------------------------------------------
@@ -177,10 +177,6 @@ if ($here -and (Test-Path -LiteralPath (Join-Path $here 'run.ps1'))) {
     Pop-Location
     Write-Ok "actualitzat: $repoPath"
 } else {
-    if ($RepoUrl -like '*REPLACE_ME*') {
-        Write-Warn 'RepoUrl no configurada. Clona el repo a mà i torna a executar bootstrap.ps1 des de dins.'
-        exit 1
-    }
     & git clone $RepoUrl $Path
     $repoPath = $Path
     Write-Ok "clonat a: $repoPath"

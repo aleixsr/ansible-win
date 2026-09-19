@@ -1,0 +1,7 @@
+{
+  "name": "tabby-plugins",
+  "private": true,
+  "dependencies": {
+    "terminus-cloud-settings-sync": "^1.6.5"
+  }
+}

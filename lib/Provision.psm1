@@ -1,7 +1,7 @@
 ﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
-    Motor de provisionament d'ansible_windows.
+    Motor de provisionament d'ansible-win.
 .DESCRIPTION
     Helpers idempotents d'estil Ansible: cada tasca reporta ok / changed / skipped /
     failed i el run acaba amb un PLAY RECAP. Compatible amb Windows PowerShell 5.1
@@ -334,13 +334,16 @@ function Test-ScoopAvailable { return (Test-CommandExists 'scoop') }
 function Test-PackageInstalled {
     param(
         [Parameter(Mandatory)][ValidateSet('winget', 'choco', 'scoop')][string]$Provider,
-        [Parameter(Mandatory)][string]$Id
+        [Parameter(Mandatory)][string]$Id,
+        [string]$Source
     )
 
     switch ($Provider) {
         'winget' {
             if (-not (Test-WingetAvailable)) { return $false }
-            $null = & winget list --id $Id --exact --accept-source-agreements 2>$null
+            $listArgs = @('list', '--id', $Id, '--exact', '--accept-source-agreements')
+            if ($Source) { $listArgs += @('--source', $Source) }
+            $null = & winget @listArgs 2>$null
             return ($LASTEXITCODE -eq 0)
         }
         'choco' {
@@ -368,6 +371,7 @@ function Install-ProviderPackage {
         [Parameter(Mandatory)][ValidateSet('winget', 'choco', 'scoop')][string]$Provider,
         [Parameter(Mandatory)][string]$Id,
         [string]$Scope,
+        [string]$Source,
         [string[]]$ExtraArgs = @(),
         [switch]$Upgrade
     )
@@ -381,6 +385,9 @@ function Install-ProviderPackage {
                 '--accept-package-agreements', '--accept-source-agreements',
                 '--disable-interactivity'
             )
+            # Les apps de la Microsoft Store (l'equivalent de `mas` al Mac) cal
+            # demanar-les explícitament a la font msstore.
+            if ($Source) { $wingetArgs += @('--source', $Source) }
             if ($Scope) { $wingetArgs += @('--scope', $Scope) }
             $wingetArgs += $ExtraArgs
             $output = & winget @wingetArgs 2>&1 | Out-String
@@ -464,7 +471,11 @@ function Install-CatalogPackage {
 
     $resolved = Resolve-PackageProvider -Package $Package -ProviderOrder $ProviderOrder
     if (-not $resolved) {
-        Write-TaskResult -Task $label -Status 'skipped' -Message 'cap proveïdor disponible per a aquest paquet'
+        # Paquets del catàleg del Mac que a Windows no existeixen: porten 'note'
+        # explicant per què i quin és el substitut. No són un error.
+        $why = $Package.note
+        if (-not $why) { $why = 'cap proveïdor disponible per a aquest paquet' }
+        Write-TaskResult -Task $label -Status 'skipped' -Message $why
         return
     }
 
@@ -473,7 +484,7 @@ function Install-CatalogPackage {
     $alreadyThere = $false
     if ($Package.test -and (Test-CommandExists $Package.test)) {
         $alreadyThere = $true
-    } elseif (Test-PackageInstalled -Provider $resolved.Provider -Id $resolved.Id) {
+    } elseif (Test-PackageInstalled -Provider $resolved.Provider -Id $resolved.Id -Source $Package.source) {
         $alreadyThere = $true
     }
 
@@ -493,7 +504,7 @@ function Install-CatalogPackage {
         $extra = @()
         if ($Package.args) { $extra = @($Package.args) }
         Install-ProviderPackage -Provider $resolved.Provider -Id $resolved.Id `
-            -Scope $Package.scope -ExtraArgs $extra -Upgrade:$Upgrade
+            -Scope $Package.scope -Source $Package.source -ExtraArgs $extra -Upgrade:$Upgrade
         Update-SessionPath
         $verb = 'instal·lat'
         if ($Upgrade -and $alreadyThere) { $verb = 'actualitzat' }
@@ -509,7 +520,7 @@ function Install-CatalogPackage {
 
 <#
 .SYNOPSIS
-    Carrega group_vars/all.yml i hi fusiona group_vars/local.yml si existeix.
+    Carrega config.yml i hi fusiona config.local.yml si existeix.
 #>
 function Import-ProvisionConfig {
     param([Parameter(Mandatory)][string]$Root)
@@ -519,7 +530,7 @@ function Import-ProvisionConfig {
     }
     Import-Module powershell-yaml -ErrorAction Stop
 
-    $allPath = Join-Path $Root 'group_vars\all.yml'
+    $allPath = Join-Path $Root 'config.yml'
     if (-not (Test-Path -LiteralPath $allPath)) {
         throw "No trobo el catàleg: $allPath"
     }
@@ -527,7 +538,7 @@ function Import-ProvisionConfig {
     # els accents del catàleg.
     $config = ConvertFrom-Yaml (Get-Content -LiteralPath $allPath -Raw -Encoding UTF8)
 
-    $localPath = Join-Path $Root 'group_vars\local.yml'
+    $localPath = Join-Path $Root 'config.local.yml'
     if (Test-Path -LiteralPath $localPath) {
         $local = ConvertFrom-Yaml (Get-Content -LiteralPath $localPath -Raw -Encoding UTF8)
         $config = Merge-Hashtable -Base $config -Override $local

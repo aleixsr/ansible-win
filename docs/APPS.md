@@ -1,195 +1,193 @@
-﻿# Paritat d'aplicacions: macOS ↔ Windows
+﻿# Paritat d'aplicacions: `ansible-mac` ↔ `ansible-win`
 
 > Generat automàticament per `scripts/Export-AppsTable.ps1` a partir de
-> `group_vars/all.yml`. No l'editis a mà.
+> `config.yml`. No l'editis a mà.
 
-La columna **Homebrew** és l'equivalent a `ansible_mac`. Serveix per veure
-d'un cop d'ull què té paritat real, què té un substitut i què no existeix
-per a l'altra plataforma.
+La columna **A ansible-mac** és la fórmula o el cask del repo de macOS.
+Serveix per comprovar d'un cop d'ull que cap app del Mac s'ha quedat pel camí.
 
 
 ## `browsers`
 
-| Aplicació | winget | Chocolatey | Scoop | Homebrew (mac) |
+| A ansible-mac | A Windows | winget | Chocolatey | Scoop |
 | --- | --- | --- | --- | --- |
-| Brave | `Brave.Brave` | `brave` | — | `brave-browser` |
-| Google Chrome | `Google.Chrome` | `googlechrome` | — | `google-chrome` |
-| Mozilla Firefox | `Mozilla.Firefox` | `firefox` | — | `firefox` |
+| `brave-browser` | Brave | `Brave.Brave` | `brave` | — |
+| `chromium` | Chromium | `Hibbiki.Chromium` | `chromium` | — |
+| `firefox` | Mozilla Firefox | `Mozilla.Firefox` | `firefox` | — |
+| `google-chrome` | Google Chrome | `Google.Chrome` | `googlechrome` | — |
+| `microsoft-edge` | Microsoft Edge | `Microsoft.Edge` | — | — |
 
-## `cli`
+## `clouddevops`
 
-| Aplicació | winget | Chocolatey | Scoop | Homebrew (mac) |
+| A ansible-mac | A Windows | winget | Chocolatey | Scoop |
 | --- | --- | --- | --- | --- |
-| bat | `sharkdp.bat` | `bat` | — | `bat` |
-| btop4win | `aristocratos.btop4win` | — | — | `btop` |
-| curl | `cURL.cURL` | `curl` | — | `curl` |
-| dust | `bootandy.dust` | — | `dust` | `dust` |
-| eza | `eza-community.eza` | — | `eza` | `eza` |
-| fd | `sharkdp.fd` | `fd` | — | `fd` |
-| fzf | `junegunn.fzf` | `fzf` | — | `fzf` |
-| Git | `Git.Git` | `git` | — | `git` |
-| git-delta | `dandavison.delta` | `delta` | — | `git-delta` |
-| GitHub CLI | `GitHub.cli` | `gh` | — | `gh` |
-| GNU Make | `ezwinports.make` | `make` | — | `make` |
-| Gpg4win | `GnuPG.Gpg4win` | `gpg4win` | — | `gnupg` |
-| HTTPie | `HTTPie.HTTPie` | `httpie` | — | `httpie` |
-| hyperfine | `sharkdp.hyperfine` | `hyperfine` | — | `hyperfine` |
-| ImageMagick | `ImageMagick.ImageMagick` | `imagemagick` | — | `imagemagick` |
-| jq | `jqlang.jq` | `jq` | — | `jq` |
-| just | `Casey.Just` | `just` | — | `just` |
-| lazygit | `JesseDuffield.lazygit` | `lazygit` | — | `lazygit` |
-| micro | `zyedidia.micro` | `micro` | — | `micro` |
-| Neovim | `Neovim.Neovim` | `neovim` | — | `neovim` |
-| Nushell | `Nushell.Nushell` | `nushell` | — | `nushell` |
-| OpenSSL | `FireDaemon.OpenSSL` | `openssl` | — | `openssl` |
-| Pandoc | `JohnMacFarlane.Pandoc` | `pandoc` | — | `pandoc` |
-| ripgrep | `BurntSushi.ripgrep.MSVC` | `ripgrep` | — | `ripgrep` |
-| tldr (tlrc) | `tldr-pages.tlrc` | — | — | `tldr` |
-| wget | `JernejSimoncic.Wget` | `wget` | — | `wget` |
-| yq | `MikeFarah.yq` | `yq` | — | `yq` |
-| zoxide | `ajeetdsouza.zoxide` | `zoxide` | — | `zoxide` |
+| `azure-cli` | Azure CLI | `Microsoft.AzureCLI` | `azure-cli` | — |
+| `oci-cli` | OCI CLI (Oracle Cloud) | — | `oci-cli` | — |
 
 ## `communication`
 
-| Aplicació | winget | Chocolatey | Scoop | Homebrew (mac) |
+| A ansible-mac | A Windows | winget | Chocolatey | Scoop |
 | --- | --- | --- | --- | --- |
-| Discord | `Discord.Discord` | `discord` | — | `discord` |
-| Microsoft Teams | `Microsoft.Teams` | — | — | `microsoft-teams` |
-| Slack | `SlackTechnologies.Slack` | `slack` | — | `slack` |
-| Telegram | `Telegram.TelegramDesktop` | `telegram` | — | `telegram` |
-| Zoom | `Zoom.Zoom` | `zoom` | — | `zoom` |
+| `mailspring` | Mailspring | — | `mailspring` | — |
+| `microsoft-teams` | Microsoft Teams | `Microsoft.Teams` | — | — |
+| `shortwave` | **sense equivalent** — Només macOS i web. A Windows, fes-lo servir des del navegador (app.shortwave.com). | — | — | — |
+| `telegram` | Telegram | `Telegram.TelegramDesktop` | `telegram` | — |
+| `whatsapp` | WhatsApp | `9NKSQGP7F2NH` | — | — |
+| `zoho-mail` | **sense equivalent** — Sense client d'escriptori per a Windows. Fes-lo servir des del navegador o afegeix el compte a Outlook. | — | — | — |
 
-## `core`
+## `development`
 
-| Aplicació | winget | Chocolatey | Scoop | Homebrew (mac) |
+| A ansible-mac | A Windows | winget | Chocolatey | Scoop |
 | --- | --- | --- | --- | --- |
-| 7-Zip | `7zip.7zip` | `7zip` | — | `p7zip` |
-| gsudo | `gerardog.gsudo` | `gsudo` | — | (built-in sudo) |
-| PowerShell 7 | `Microsoft.PowerShell` | `powershell-core` | — | `powershell` |
-| Sysinternals Suite | `Microsoft.Sysinternals.Suite` | `sysinternals` | — | (n/a) |
-| Visual C++ Redistributable | `Microsoft.VCRedist.2015+.x64` | `vcredist140` | — | (n/a) |
-| Windows Terminal | `Microsoft.WindowsTerminal` | — | — | `iterm2` |
+| `apache-directory-studio` | Apache Directory Studio | `Apache.DirectoryStudio` | — | — |
+| `copilot-cli` | GitHub Copilot CLI | `GitHub.Copilot` | — | — |
+| `dbeaver-community` | DBeaver Community | `DBeaver.DBeaver.Community` | `dbeaver` | — |
+| `drawio` | draw.io | `JGraph.Draw` | `drawio` | — |
+| `gh` | GitHub CLI | `GitHub.cli` | `gh` | — |
+| `git` | Git | `Git.Git` | `git` | — |
+| `github` | GitHub Desktop | `GitHub.GitHubDesktop` | `github-desktop` | — |
+| `node` | Node.js LTS | `OpenJS.NodeJS.LTS` | `nodejs-lts` | — |
+| `python@3.14` | Python 3.14 | `Python.Python.3.14` | `python314` | — |
+| `soapui` | SoapUI | — | `soapui` | — |
+| `sublime-text` | Sublime Text | `SublimeHQ.SublimeText.4` | `sublimetext4` | — |
+| `visual-studio-code` | Visual Studio Code | `Microsoft.VisualStudioCode` | `vscode` | — |
+| `visual-studio-code@insiders` | Visual Studio Code Insiders | `Microsoft.VisualStudioCode.Insiders` | `vscode-insiders` | — |
 
-## `dev`
+## `documents`
 
-| Aplicació | winget | Chocolatey | Scoop | Homebrew (mac) |
+| A ansible-mac | A Windows | winget | Chocolatey | Scoop |
 | --- | --- | --- | --- | --- |
-| .NET SDK 8 | `Microsoft.DotNet.SDK.8` | `dotnet-8.0-sdk` | — | `dotnet-sdk` |
-| AWS CLI | `Amazon.AWSCLI` | `awscli` | — | `awscli` |
-| Azure CLI | `Microsoft.AzureCLI` | `azure-cli` | — | `azure-cli` |
-| Claude Code | `Anthropic.ClaudeCode` | — | — | `claude-code` |
-| Claude Desktop | `Anthropic.Claude` | — | — | `claude` |
-| DBeaver Community | `DBeaver.DBeaver.Community` | `dbeaver` | — | `dbeaver-community` |
-| Docker Desktop | `Docker.DockerDesktop` | `docker-desktop` | — | `docker` |
-| fnm (gestor de versions de Node) | `Schniz.fnm` | `fnm` | — | `fnm` |
-| Go | `GoLang.Go` | `golang` | — | `go` |
-| Helm | `Helm.Helm` | `kubernetes-helm` | — | `helm` |
-| k9s | `Derailed.k9s` | `k9s` | — | `k9s` |
-| kubectl | `Kubernetes.kubectl` | `kubernetes-cli` | — | `kubernetes-cli` |
-| Node.js LTS | `OpenJS.NodeJS.LTS` | `nodejs-lts` | — | `node` |
-| Postman | `Postman.Postman` | `postman` | — | `postman` |
-| Python 3 | `Python.Python.3.13` | `python313` | — | `python@3.13` |
-| Rust (rustup) | `Rustlang.Rustup` | `rustup.install` | — | `rustup` |
-| Temurin JDK 21 | `EclipseAdoptium.Temurin.21.JDK` | `temurin21` | — | `temurin` |
-| Terraform | `Hashicorp.Terraform` | `terraform` | — | `terraform` |
-| uv | `astral-sh.uv` | — | `uv` | `uv` |
-| Visual Studio Code | `Microsoft.VisualStudioCode` | `vscode` | — | `visual-studio-code` |
-| WinMerge | `WinMerge.WinMerge` | `winmerge` | — | `meld` |
+| `adobe-acrobat-reader` | Adobe Acrobat Reader | `Adobe.Acrobat.Reader.64-bit` | `adobereader` | — |
+| `macdown` | **sense equivalent** — Específic de macOS. A Windows el cobreix Mark Text, que ja és en aquesta categoria. | — | — | — |
+| `mark-text` | Mark Text | — | `marktext` | — |
+| `modern-csv` | Modern CSV | `PFOJEnterprisesLLC.ModernCSV` | — | — |
+| `onlyoffice` | ONLYOFFICE Desktop Editors | `ONLYOFFICE.DesktopEditors` | `onlyoffice` | — |
+| `revpdf-editor` | PDF24 Creator | `geeksoftwareGmbH.PDF24Creator` | `pdf24` | — |
+| `xournal++` | Xournal++ | `Xournal++.Xournal++` | `xournalplusplus` | — |
+
+## `filemanagementcloud`
+
+| A ansible-mac | A Windows | winget | Chocolatey | Scoop |
+| --- | --- | --- | --- | --- |
+| `box-drive` | Box Drive | `Box.Box` | — | — |
+| `localsend` | LocalSend | `LocalSend.LocalSend` | `localsend` | — |
+| `synology-drive` | Synology Drive Client | `Synology.DriveClient` | — | — |
 
 ## `fonts`
 
-| Aplicació | winget | Chocolatey | Scoop | Homebrew (mac) |
+| A ansible-mac | A Windows | winget | Chocolatey | Scoop |
 | --- | --- | --- | --- | --- |
-| CascadiaCode Nerd Font | — | `nerd-fonts-cascadiacode` | — | `font-caskaydia-cove-nerd-font` |
-| FiraCode Nerd Font | — | `nerd-fonts-firacode` | — | `font-fira-code-nerd-font` |
-| JetBrainsMono Nerd Font | — | `nerd-fonts-jetbrainsmono` | — | `font-jetbrains-mono-nerd-font` |
+| `font-meslo-lg-nerd-font` | Meslo LG Nerd Font | — | `nerd-fonts-meslo` | — |
 
-## `gaming` _(opcional)_
+## `hardware`
 
-| Aplicació | winget | Chocolatey | Scoop | Homebrew (mac) |
+| A ansible-mac | A Windows | winget | Chocolatey | Scoop |
 | --- | --- | --- | --- | --- |
-| Steam | `Valve.Steam` | `steam` | — | `steam` |
-
-## `hardware` _(opcional)_
-
-| Aplicació | winget | Chocolatey | Scoop | Homebrew (mac) |
-| --- | --- | --- | --- | --- |
-| CrystalDiskInfo | `CrystalDewWorld.CrystalDiskInfo` | `crystaldiskinfo` | — | (n/a) |
-| HWiNFO | `REALiX.HWiNFO` | `hwinfo` | — | (istat menus) |
-| Novabench | `NovabenchInc.Novabench` | — | — | (n/a) |
+| `logi-options+` | Logi Options+ | `Logitech.OptionsPlus` | — | — |
 
 ## `media`
 
-| Aplicació | winget | Chocolatey | Scoop | Homebrew (mac) |
+| A ansible-mac | A Windows | winget | Chocolatey | Scoop |
 | --- | --- | --- | --- | --- |
-| FFmpeg | `Gyan.FFmpeg` | `ffmpeg` | — | `ffmpeg` |
-| GIMP | `GIMP.GIMP` | `gimp` | — | `gimp` |
-| HandBrake | `HandBrake.HandBrake` | `handbrake` | — | `handbrake` |
-| Inkscape | `Inkscape.Inkscape` | `inkscape` | — | `inkscape` |
-| OBS Studio | `OBSProject.OBSStudio` | `obs-studio` | — | `obs` |
-| Spotify | `Spotify.Spotify` | `spotify` | — | `spotify` |
-| VLC | `VideoLAN.VLC` | `vlc` | — | `vlc` |
+| `handbrake-app` | HandBrake | `HandBrake.HandBrake` | `handbrake` | — |
+| `vlc` | VLC | `VideoLAN.VLC` | `vlc` | — |
+
+## `microsoftsuite`
+
+| A ansible-mac | A Windows | winget | Chocolatey | Scoop |
+| --- | --- | --- | --- | --- |
+| `microsoft-auto-update` | **sense equivalent** — Específic de macOS. A Windows actualitza Click-to-Run / Windows Update. | — | — | — |
+| `microsoft-azure-storage-explorer` | Azure Storage Explorer | `Microsoft.Azure.StorageExplorer` | `microsoftazurestorageexplorer` | — |
+| `microsoft-office` | Microsoft 365 | `Microsoft.Office` | — | — |
+
+## `networking`
+
+| A ansible-mac | A Windows | winget | Chocolatey | Scoop |
+| --- | --- | --- | --- | --- |
+| `iperf3` | iperf3 | — | `iperf3` | — |
+| `mtr` | WinMTR | — | `winmtr-redux` | — |
+| `nmap` | Nmap | `Insecure.Nmap` | `nmap` | — |
+| `rustscan` | RustScan | `bee-san.RustScan` | — | — |
+| `speedtest` | Speedtest CLI | `Ookla.Speedtest.CLI` | `speedtest` | — |
+| `swaks` | **sense equivalent** — Script Perl sense paquet a Windows. Alternativa: Send-MailMessage o swaks sota WSL. | — | — | — |
+| `tcping` | tcping | — | `tcping` | — |
+| `wget` | wget | `JernejSimoncic.Wget` | `wget` | — |
+
+## `networkingvpn`
+
+| A ansible-mac | A Windows | winget | Chocolatey | Scoop |
+| --- | --- | --- | --- | --- |
+| `switchhosts` | SwitchHosts | `oldj.switchhosts` | `switchhosts` | — |
+| `tailscale-app` | Tailscale | `Tailscale.Tailscale` | `tailscale` | — |
+| `tunnelblick` | OpenVPN Connect | `OpenVPNTechnologies.OpenVPNConnect` | `openvpn-connect` | — |
 
 ## `productivity`
 
-| Aplicació | winget | Chocolatey | Scoop | Homebrew (mac) |
+| A ansible-mac | A Windows | winget | Chocolatey | Scoop |
 | --- | --- | --- | --- | --- |
-| Adobe Acrobat Reader | `Adobe.Acrobat.Reader.64-bit` | `adobereader` | — | `adobe-acrobat-reader` |
-| LibreOffice | `TheDocumentFoundation.LibreOffice` | `libreoffice-fresh` | — | `libreoffice` |
-| Microsoft 365 | `Microsoft.Office` | — | — | `microsoft-office` |
-| Notepad++ | `Notepad++.Notepad++` | `notepadplusplus` | — | (n/a) |
-| Notion | `Notion.Notion` | `notion` | — | `notion` |
-| Obsidian | `Obsidian.Obsidian` | `obsidian` | — | `obsidian` |
+| `alt-tab` | **sense equivalent** — Porta a macOS l'Alt+Tab de Windows. A Windows ja hi és de sèrie. | — | — | — |
+| `caffeine` | **sense equivalent** — Equivalent a Windows: PowerToys Awake, que ja s'instal·la a systemutilities. | — | — | — |
+| `claude` | Claude Desktop | `Anthropic.Claude` | — | — |
+| `dockdoor` | **sense equivalent** — Porta a macOS la previsualització de finestres de la barra de tasques. A Windows ja hi és. | — | — | — |
+| `keka` | 7-Zip | `7zip.7zip` | `7zip` | — |
+| `maccy` | **sense equivalent** — Historial de porta-retalls. A Windows és natiu: Win+V. | — | — | — |
+| `notion` | Notion | `Notion.Notion` | `notion` | — |
+| `numi` | Qalculate! | — | `qalculate` | — |
+| `rectangle` | **sense equivalent** — Gestió de finestres: PowerToys FancyZones + Win+fletxes, ja cobert a systemutilities. | — | — | — |
+| `shottr` | ShareX | `ShareX.ShareX` | `sharex` | — |
+| `stats` | HWiNFO | `REALiX.HWiNFO` | `hwinfo` | — |
 
-## `remote`
+## `remoteaccess`
 
-| Aplicació | winget | Chocolatey | Scoop | Homebrew (mac) |
+| A ansible-mac | A Windows | winget | Chocolatey | Scoop |
 | --- | --- | --- | --- | --- |
-| AnyDesk | `AnyDesk.AnyDesk` | `anydesk` | — | `anydesk` |
-| FileZilla | — | `filezilla` | — | `filezilla` |
-| PuTTY | `PuTTY.PuTTY` | `putty` | — | (ssh) |
-| RustDesk | — | `rustdesk` | — | `rustdesk` |
-| Tailscale | `Tailscale.Tailscale` | `tailscale` | — | `tailscale` |
-| WinSCP | `WinSCP.WinSCP` | `winscp` | — | `cyberduck` |
+| `royal-tsx` | Royal TS | `RoyalApps.RoyalTS.7` | — | — |
+| `rustdesk` | RustDesk | — | `rustdesk` | — |
+| `windows-app` | **sense equivalent** — El cask windows-app és el client RDP de Microsoft per a macOS. A Windows, mstsc.exe ja ve de sèrie. | — | — | — |
 
-## `security`
+## `store`
 
-| Aplicació | winget | Chocolatey | Scoop | Homebrew (mac) |
+| A ansible-mac | A Windows | winget | Chocolatey | Scoop |
 | --- | --- | --- | --- | --- |
-| Bitwarden | `Bitwarden.Bitwarden` | `bitwarden` | — | `bitwarden` |
-| Cryptomator | `Cryptomator.Cryptomator` | `cryptomator` | — | `cryptomator` |
-| KeePassXC | `KeePassXCTeam.KeePassXC` | `keepassxc` | — | `keepassxc` |
-| VeraCrypt | `IDRIX.VeraCrypt` | `veracrypt` | — | `veracrypt` |
-| Wireshark | `WiresharkFoundation.Wireshark` | `wireshark` | — | `wireshark` |
+| `mas 1158928913 Ping Status` | **sense equivalent** — Només macOS. Alternativa: PingInfoView (NirSoft) o `Test-Connection` a PowerShell. | — | — | — |
+| `mas 1274495053 Microsoft To Do` | Microsoft To Do | `9NBLGGH5R558` | — | — |
+| `mas 1451685025 WireGuard` | WireGuard | `WireGuard.WireGuard` | `wireguard` | — |
+| `mas 1509590766 MuteKey` | **sense equivalent** — Equivalent a Windows: PowerToys Video Conference Mute (Win+Maj+A), ja cobert a systemutilities. | — | — | — |
+| `mas 1553936137 Azure VPN Client` | Azure VPN Client | `9NP355QT2SQB` | — | — |
 
-## `utilities`
+## `systemutilities`
 
-| Aplicació | winget | Chocolatey | Scoop | Homebrew (mac) |
+| A ansible-mac | A Windows | winget | Chocolatey | Scoop |
 | --- | --- | --- | --- | --- |
-| AutoHotkey | `AutoHotkey.AutoHotkey` | `autohotkey` | — | `hammerspoon` |
-| Everything | `voidtools.Everything` | `everything` | — | (spotlight) |
-| Explorer++ | `derceg.Explorer++` | `explorerplusplus` | — | (finder) |
-| PowerToys | `Microsoft.PowerToys` | `powertoys` | — | (rectangle/raycast) |
-| qBittorrent | `qBittorrent.qBittorrent` | `qbittorrent` | — | `qbittorrent` |
-| rclone | `Rclone.Rclone` | `rclone` | — | `rclone` |
-| Rufus | `Rufus.Rufus` | `rufus` | — | `balenaetcher` |
-| ShareX | `ShareX.ShareX` | `sharex` | — | `shottr` |
-| Syncthing | `Syncthing.Syncthing` | `syncthing` | — | `syncthing` |
-| WizTree | `AntibodySoftware.WizTree` | `wiztree` | — | `grandperspective` |
+| `balenaetcher` | balenaEtcher | `Balena.Etcher` | `etcher` | — |
+| `betterdisplay` | Twinkle Tray | `xanderfrangos.twinkletray` | — | — |
+| `bluesnooze` | **sense equivalent** — Específic de macOS (evita que el Bluetooth desperti el Mac). A Windows es gestiona des de l'Administrador de dispositius. | — | — | — |
+| `disk-inventory-x` | WizTree | `AntibodySoftware.WizTree` | `wiztree` | — |
+| `htop` | btop4win | `aristocratos.btop4win` | — | — |
+| `karabiner-elements` | PowerToys | `Microsoft.PowerToys` | `powertoys` | — |
+| `licecap` | ScreenToGif | `NickeManarin.ScreenToGif` | `screentogif` | — |
+| `macfuse` | WinFsp | — | `winfsp` | — |
+| `mas` | **sense equivalent** — A Windows no cal: winget ja parla amb la Microsoft Store (--source msstore). | — | — | — |
+| `novabench` | Novabench | `NovabenchInc.Novabench` | — | — |
+| `powershell` | PowerShell 7 | `Microsoft.PowerShell` | `powershell-core` | — |
+| `resolutionator` | **sense equivalent** — Específic de macOS. A Windows, canvi de resolució natiu (Win+P / Configuració de pantalla). | — | — | — |
+| `superduper` | Veeam Agent for Windows | `Veeam.VeeamAgent` | — | — |
+| `wins` | **sense equivalent** — Específic de macOS (canviador de finestres). A Windows: Alt+Tab natiu / PowerToys. | — | — | — |
+| `xca` | XCA | — | `xca` | — |
 
-## `virtualization` _(opcional)_
+## `terminal`
 
-| Aplicació | winget | Chocolatey | Scoop | Homebrew (mac) |
+| A ansible-mac | A Windows | winget | Chocolatey | Scoop |
 | --- | --- | --- | --- | --- |
-| VirtualBox | `Oracle.VirtualBox` | `virtualbox` | — | `virtualbox` |
+| `iterm2` | Windows Terminal | `Microsoft.WindowsTerminal` | — | — |
+| `tabby` | Tabby | `Eugeny.Tabby` | `tabby` | — |
+| `warp` | Warp | `Warp.Warp` | — | — |
 
 ---
 
-**105 paquets** en 14 grups.
+**91 entrades** en 17 categories, de les quals
+**74 s'instal·len** i **17 no tenen equivalent** a Windows.
 
-Llegenda de la columna Homebrew:
-
-- `` `nom` `` — mateixa aplicació a les dues plataformes.
-- `(alternativa)` — no existeix a l'altra plataforma; entre parèntesis, el substitut habitual.
-- `(n/a)` — específic d'una plataforma, sense equivalent.
+Les que no en tenen surten com a `skipped` quan executes `run.ps1`, amb el
+motiu al costat: no són errors, són decisions documentades.
 

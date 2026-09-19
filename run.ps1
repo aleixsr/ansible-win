@@ -1,7 +1,7 @@
 ﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
-    Provisiona aquesta màquina Windows a partir de group_vars/all.yml.
+    Provisiona aquesta màquina Windows a partir de config.yml.
 
 .DESCRIPTION
     Equivalent a `ansible-playbook playbook.yml` d'ansible_mac. Executa els rols
@@ -137,7 +137,7 @@ $mode = 'aplicant canvis'
 if ($Check) { $mode = 'mode --check (simulació)' }
 if ($Upgrade) { $mode = "$mode, amb -Upgrade" }
 
-Write-Play "ansible_windows - $([Environment]::MachineName)"
+Write-Play "ansible-win - $([Environment]::MachineName)"
 Write-Info "Repo    : $RepoRoot"
 Write-Info "Rols    : $($rolesToRun -join ', ')"
 Write-Info "Mode    : $mode"

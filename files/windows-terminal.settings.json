@@ -21,7 +21,7 @@
     "profiles": {
         "defaults": {
             "font": {
-                "face": "CaskaydiaCove Nerd Font",
+                "face": "MesloLGM Nerd Font",
                 "size": 11,
                 "weight": "normal"
             },

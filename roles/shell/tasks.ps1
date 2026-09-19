@@ -88,7 +88,7 @@ if (-not $theme) { $theme = 'jandedobbeleer' }
 $promptSnippet = switch ($prompt) {
     'oh-my-posh' {
         @'
-# Generat per ansible_windows (rol shell). No editar a mà.
+# Generat per ansible-win (rol shell). No editar a mà.
 if (Get-Command oh-my-posh -ErrorAction SilentlyContinue) {
     $themeFile = Join-Path $env:POSH_THEMES_PATH '__THEME__.omp.json'
     if (Test-Path -LiteralPath $themeFile) {
@@ -101,7 +101,7 @@ if (Get-Command oh-my-posh -ErrorAction SilentlyContinue) {
     }
     'starship' {
         @'
-# Generat per ansible_windows (rol shell). No editar a mà.
+# Generat per ansible-win (rol shell). No editar a mà.
 if (Get-Command starship -ErrorAction SilentlyContinue) {
     Invoke-Expression (&starship init powershell)
 }
@@ -113,6 +113,31 @@ if (Get-Command starship -ErrorAction SilentlyContinue) {
 $changed = Set-FileContent -Path (Join-Path $snippetDir '20-prompt.ps1') -Content $promptSnippet
 $status = 'ok'; if ($changed) { $status = 'changed' }
 Write-TaskResult -Task 'fragment de prompt' -Status $status -Message "shell.prompt = $prompt"
+
+# -----------------------------------------------------------------------------
+# starship.toml
+# -----------------------------------------------------------------------------
+# És literalment el mateix fitxer que a ansible-mac, i starship el busca a la
+# mateixa ruta a les dues plataformes (~/.config/starship.toml). Per tant, el
+# prompt acaba sent idèntic al Mac i al Windows.
+if (-not $shellCfg.install_starship_config) {
+    Write-TaskResult -Task 'starship.toml' -Status 'skipped' -Message 'shell.install_starship_config = false'
+} else {
+    $starshipSource = Join-Path $RepoRoot 'files\starship.toml'
+    if (-not (Test-Path -LiteralPath $starshipSource)) {
+        Write-TaskResult -Task 'starship.toml' -Status 'skipped' -Message 'no hi ha files\starship.toml'
+    } else {
+        $starshipTarget = Join-Path $env:USERPROFILE '.config\starship.toml'
+        try {
+            $content = Get-Content -LiteralPath $starshipSource -Raw -Encoding UTF8
+            $changed = Set-FileContent -Path $starshipTarget -Content $content
+            $status = 'ok'; if ($changed) { $status = 'changed' }
+            Write-TaskResult -Task 'starship.toml' -Status $status -Message $starshipTarget
+        } catch {
+            Write-TaskResult -Task 'starship.toml' -Status 'failed' -Message $_.Exception.Message
+        }
+    }
+}
 
 # -----------------------------------------------------------------------------
 # perfil de PowerShell
@@ -127,7 +152,7 @@ if (-not $shellCfg.install_profile) {
         # El perfil instal·lat és un carregador d'una sola línia: així el contingut
         # real viu al repo i un `git pull` ja actualitza el perfil.
         $loader = @'
-# Generat per ansible_windows (rol shell). No editar a mà: edita el repo.
+# Generat per ansible-win (rol shell). No editar a mà: edita el repo.
 $AnsibleWindowsRoot = '__ROOT__'
 $profileSource = Join-Path $AnsibleWindowsRoot 'files\profile.ps1'
 if (Test-Path -LiteralPath $profileSource) { . $profileSource }
@@ -174,9 +199,9 @@ if (-not $shellCfg.configure_terminal) {
         try {
             $content = Get-Content -LiteralPath $source -Raw -Encoding UTF8
             $needsBackup = (Test-Path -LiteralPath $target) -and
-                           -not (Test-Path -LiteralPath "$target.ansible_windows.bak")
+                           -not (Test-Path -LiteralPath "$target.ansible-win.bak")
             if ($needsBackup -and -not $checkMode) {
-                Copy-Item -LiteralPath $target -Destination "$target.ansible_windows.bak" -Force
+                Copy-Item -LiteralPath $target -Destination "$target.ansible-win.bak" -Force
             }
             $changed = Set-FileContent -Path $target -Content $content
             $status = 'ok'; if ($changed) { $status = 'changed' }

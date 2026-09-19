@@ -1,0 +1,686 @@
+---
+# =============================================================================
+#  ansible-win  ·  configuració centralitzada
+# =============================================================================
+#  Rèplica per a Windows d'aleixsr/ansible-mac. Les categories són les mateixes
+#  que a config.yml del repo de macOS; s'han fusionat els parells
+#  packages<x> + casks<x> perquè a Windows la distinció fórmula/cask no existeix.
+#
+#  Camps d'un paquet:
+#    id        identificador intern (obligatori)
+#    name      nom llegible que surt a la sortida
+#    winget    id de winget       \
+#    choco     id de Chocolatey    >  almenys un, si l'app existeix a Windows
+#    scoop     id de Scoop        /
+#    source    origen de winget ('msstore' per a apps de la Store)
+#    provider  força un proveïdor concret (salta provider_order)
+#    scope     'user' o 'machine' (només winget)
+#    args      arguments extra per al gestor
+#    test      comanda que ha d'existir al PATH; si hi és, es dona per instal·lat
+#    mac       el que hi ha a ansible-mac (fórmula o cask). Documental.
+#    note      per què no hi ha equivalent a Windows. Si hi és i no hi ha cap
+#              proveïdor, la tasca surt com a 'skipped' amb aquest text.
+#
+#  Per personalitzar sense tocar el repo: copia config.local.example.yml a
+#  config.local.yml (ignorat per git); es fusiona recursivament a sobre.
+# =============================================================================
+
+meta:
+  name: ansible-win
+  mirror_of: aleixsr/ansible-mac
+
+provider_order:
+  - winget
+  - choco
+  - scoop
+
+# Rols que executa `run.ps1` sense arguments, en ordre.
+default_roles:
+  - core
+  - apps
+  - shell
+  - dev
+  - tabby
+  - system
+  - startup
+  - dotfiles
+
+# Categories que instal·la el rol `apps` per defecte.
+default_groups:
+  - development
+  - clouddevops
+  - networking
+  - systemutilities
+  - browsers
+  - terminal
+  - communication
+  - productivity
+  - networkingvpn
+  - remoteaccess
+  - filemanagementcloud
+  - microsoftsuite
+  - media
+  - documents
+  - hardware
+  - store
+  - fonts
+
+# -----------------------------------------------------------------------------
+#  Comportament de sudo   (no té equivalent a ansible-mac: allà ja hi ha sudo)
+# -----------------------------------------------------------------------------
+#  Windows 11 porta el seu propi C:\Windows\System32\sudo.exe, que guanya al PATH.
+#  provider: gsudo  -> `sudo` apunta a gsudo (funció al perfil + shim per a cmd)
+#  provider: native -> es deixa el sudo de Microsoft i només s'instal·la gsudo
+sudo:
+  provider: gsudo
+  powershell_alias: true
+  cmd_shim: true
+  cache_seconds: 0
+
+# -----------------------------------------------------------------------------
+#  Paquets
+# -----------------------------------------------------------------------------
+packages:
+
+  # --- development  (packagesdevelopment + casksdevelopment) -----------------
+  development:
+    - id: gh
+      name: GitHub CLI
+      winget: GitHub.cli
+      choco: gh
+      mac: gh
+      test: gh
+    - id: git
+      name: Git
+      winget: Git.Git
+      choco: git
+      mac: git
+      test: git
+    - id: node
+      name: Node.js LTS
+      winget: OpenJS.NodeJS.LTS
+      choco: nodejs-lts
+      mac: node
+      test: node
+    - id: python
+      name: Python 3.14
+      winget: Python.Python.3.14
+      choco: python314
+      mac: python@3.14
+    - id: apache-directory-studio
+      name: Apache Directory Studio
+      winget: Apache.DirectoryStudio
+      mac: apache-directory-studio
+    - id: copilot-cli
+      name: GitHub Copilot CLI
+      winget: GitHub.Copilot
+      mac: copilot-cli
+    - id: dbeaver
+      name: DBeaver Community
+      winget: DBeaver.DBeaver.Community
+      choco: dbeaver
+      mac: dbeaver-community
+    - id: drawio
+      name: draw.io
+      winget: JGraph.Draw
+      choco: drawio
+      mac: drawio
+    - id: github-desktop
+      name: GitHub Desktop
+      winget: GitHub.GitHubDesktop
+      choco: github-desktop
+      mac: github
+    - id: soapui
+      name: SoapUI
+      choco: soapui
+      provider: choco
+      mac: soapui
+    - id: sublime-text
+      name: Sublime Text
+      winget: SublimeHQ.SublimeText.4
+      choco: sublimetext4
+      mac: sublime-text
+    - id: vscode
+      name: Visual Studio Code
+      winget: Microsoft.VisualStudioCode
+      choco: vscode
+      mac: visual-studio-code
+      scope: user
+    - id: vscode-insiders
+      name: Visual Studio Code Insiders
+      winget: Microsoft.VisualStudioCode.Insiders
+      choco: vscode-insiders
+      mac: visual-studio-code@insiders
+      scope: user
+
+  # --- clouddevops  (packagesclouddevops) ------------------------------------
+  clouddevops:
+    - id: azure-cli
+      name: Azure CLI
+      winget: Microsoft.AzureCLI
+      choco: azure-cli
+      mac: azure-cli
+    - id: oci-cli
+      name: OCI CLI (Oracle Cloud)
+      choco: oci-cli
+      provider: choco
+      mac: oci-cli
+
+  # --- networking  (packagesnetworking) --------------------------------------
+  networking:
+    - id: iperf3
+      name: iperf3
+      choco: iperf3
+      provider: choco
+      mac: iperf3
+      test: iperf3
+    - id: rustscan
+      name: RustScan
+      winget: bee-san.RustScan
+      mac: rustscan
+    - id: mtr
+      name: WinMTR
+      choco: winmtr-redux
+      provider: choco
+      mac: mtr
+    - id: nmap
+      name: Nmap
+      winget: Insecure.Nmap
+      choco: nmap
+      mac: nmap
+    - id: speedtest
+      name: Speedtest CLI
+      winget: Ookla.Speedtest.CLI
+      choco: speedtest
+      mac: speedtest
+    - id: swaks
+      name: swaks
+      mac: swaks
+      note: "Script Perl sense paquet a Windows. Alternativa: Send-MailMessage o swaks sota WSL."
+    - id: tcping
+      name: tcping
+      choco: tcping
+      provider: choco
+      mac: tcping
+    - id: wget
+      name: wget
+      winget: JernejSimoncic.Wget
+      choco: wget
+      mac: wget
+
+  # --- systemutilities  (packagessystemutilities + caskssystemutilities) -----
+  systemutilities:
+    - id: btop
+      name: btop4win
+      winget: aristocratos.btop4win
+      mac: htop
+    - id: powershell
+      name: PowerShell 7
+      winget: Microsoft.PowerShell
+      choco: powershell-core
+      mac: powershell
+      test: pwsh
+    - id: mas
+      name: Mac App Store CLI
+      mac: mas
+      note: "A Windows no cal: winget ja parla amb la Microsoft Store (--source msstore)."
+    - id: balenaetcher
+      name: balenaEtcher
+      winget: Balena.Etcher
+      choco: etcher
+      mac: balenaetcher
+    - id: twinkle-tray
+      name: Twinkle Tray
+      winget: xanderfrangos.twinkletray
+      mac: betterdisplay
+    - id: bluesnooze
+      name: Bluesnooze
+      mac: bluesnooze
+      note: "Específic de macOS (evita que el Bluetooth desperti el Mac). A Windows es gestiona des de l'Administrador de dispositius."
+    - id: wiztree
+      name: WizTree
+      winget: AntibodySoftware.WizTree
+      choco: wiztree
+      mac: disk-inventory-x
+    - id: powertoys
+      name: PowerToys
+      winget: Microsoft.PowerToys
+      choco: powertoys
+      mac: karabiner-elements
+    - id: screentogif
+      name: ScreenToGif
+      winget: NickeManarin.ScreenToGif
+      choco: screentogif
+      mac: licecap
+    - id: winfsp
+      name: WinFsp
+      choco: winfsp
+      provider: choco
+      mac: macfuse
+    - id: novabench
+      name: Novabench
+      winget: NovabenchInc.Novabench
+      mac: novabench
+    - id: resolutionator
+      name: Resolutionator
+      mac: resolutionator
+      note: "Específic de macOS. A Windows, canvi de resolució natiu (Win+P / Configuració de pantalla)."
+    - id: veeam-agent
+      name: Veeam Agent for Windows
+      winget: Veeam.VeeamAgent
+      mac: superduper
+    - id: wins
+      name: Wins
+      mac: wins
+      note: "Específic de macOS (canviador de finestres). A Windows: Alt+Tab natiu / PowerToys."
+    - id: xca
+      name: XCA
+      choco: xca
+      provider: choco
+      mac: xca
+
+  # --- browsers  (casksbrowsers) ---------------------------------------------
+  browsers:
+    - id: brave
+      name: Brave
+      winget: Brave.Brave
+      choco: brave
+      mac: brave-browser
+    - id: chromium
+      name: Chromium
+      winget: Hibbiki.Chromium
+      choco: chromium
+      mac: chromium
+    - id: firefox
+      name: Mozilla Firefox
+      winget: Mozilla.Firefox
+      choco: firefox
+      mac: firefox
+    - id: chrome
+      name: Google Chrome
+      winget: Google.Chrome
+      choco: googlechrome
+      mac: google-chrome
+    - id: edge
+      name: Microsoft Edge
+      winget: Microsoft.Edge
+      mac: microsoft-edge
+
+  # --- terminal  (casksterminal) ---------------------------------------------
+  terminal:
+    - id: windows-terminal
+      name: Windows Terminal
+      winget: Microsoft.WindowsTerminal
+      mac: iterm2
+    - id: tabby
+      name: Tabby
+      winget: Eugeny.Tabby
+      choco: tabby
+      mac: tabby
+    - id: warp
+      name: Warp
+      winget: Warp.Warp
+      mac: warp
+
+  # --- communication  (caskscommunication) -----------------------------------
+  communication:
+    - id: mailspring
+      name: Mailspring
+      choco: mailspring
+      provider: choco
+      mac: mailspring
+    - id: teams
+      name: Microsoft Teams
+      winget: Microsoft.Teams
+      mac: microsoft-teams
+    - id: shortwave
+      name: Shortwave
+      mac: shortwave
+      note: "Només macOS i web. A Windows, fes-lo servir des del navegador (app.shortwave.com)."
+    - id: telegram
+      name: Telegram
+      winget: Telegram.TelegramDesktop
+      choco: telegram
+      mac: telegram
+    - id: whatsapp
+      name: WhatsApp
+      winget: 9NKSQGP7F2NH
+      source: msstore
+      mac: whatsapp
+    - id: zoho-mail
+      name: Zoho Mail
+      mac: zoho-mail
+      note: "Sense client d'escriptori per a Windows. Fes-lo servir des del navegador o afegeix el compte a Outlook."
+
+  # --- productivity  (casksproductivity) -------------------------------------
+  productivity:
+    - id: alt-tab
+      name: AltTab
+      mac: alt-tab
+      note: "Porta a macOS l'Alt+Tab de Windows. A Windows ja hi és de sèrie."
+    - id: caffeine
+      name: Caffeine
+      mac: caffeine
+      note: "Equivalent a Windows: PowerToys Awake, que ja s'instal·la a systemutilities."
+    - id: claude
+      name: Claude Desktop
+      winget: Anthropic.Claude
+      mac: claude
+    - id: dockdoor
+      name: DockDoor
+      mac: dockdoor
+      note: "Porta a macOS la previsualització de finestres de la barra de tasques. A Windows ja hi és."
+    - id: keka
+      name: 7-Zip
+      winget: 7zip.7zip
+      choco: 7zip
+      mac: keka
+    - id: maccy
+      name: Maccy
+      mac: maccy
+      note: "Historial de porta-retalls. A Windows és natiu: Win+V."
+    - id: notion
+      name: Notion
+      winget: Notion.Notion
+      choco: notion
+      mac: notion
+    - id: numi
+      name: Qalculate!
+      choco: qalculate
+      provider: choco
+      mac: numi
+    - id: rectangle
+      name: FancyZones (PowerToys)
+      mac: rectangle
+      note: "Gestió de finestres: PowerToys FancyZones + Win+fletxes, ja cobert a systemutilities."
+    - id: shottr
+      name: ShareX
+      winget: ShareX.ShareX
+      choco: sharex
+      mac: shottr
+    - id: stats
+      name: HWiNFO
+      winget: REALiX.HWiNFO
+      choco: hwinfo
+      mac: stats
+
+  # --- networkingvpn  (casksnetworkingvpn) -----------------------------------
+  networkingvpn:
+    - id: switchhosts
+      name: SwitchHosts
+      winget: oldj.switchhosts
+      choco: switchhosts
+      mac: switchhosts
+    - id: tailscale
+      name: Tailscale
+      winget: Tailscale.Tailscale
+      choco: tailscale
+      mac: tailscale-app
+    - id: openvpn
+      name: OpenVPN Connect
+      winget: OpenVPNTechnologies.OpenVPNConnect
+      choco: openvpn-connect
+      mac: tunnelblick
+
+  # --- remoteaccess  (casksremoteaccess) -------------------------------------
+  remoteaccess:
+    - id: royal-ts
+      name: Royal TS
+      winget: RoyalApps.RoyalTS.7
+      mac: royal-tsx
+    - id: rustdesk
+      name: RustDesk
+      choco: rustdesk
+      provider: choco
+      mac: rustdesk
+    - id: remote-desktop
+      name: Escriptori remot (mstsc)
+      mac: windows-app
+      note: "El cask windows-app és el client RDP de Microsoft per a macOS. A Windows, mstsc.exe ja ve de sèrie."
+
+  # --- filemanagementcloud  (casksfilemanagementcloud) -----------------------
+  filemanagementcloud:
+    - id: box-drive
+      name: Box Drive
+      winget: Box.Box
+      mac: box-drive
+    - id: localsend
+      name: LocalSend
+      winget: LocalSend.LocalSend
+      choco: localsend
+      mac: localsend
+    - id: synology-drive
+      name: Synology Drive Client
+      winget: Synology.DriveClient
+      mac: synology-drive
+
+  # --- microsoftsuite  (casksmicrosoftsuite) ---------------------------------
+  microsoftsuite:
+    - id: microsoft-office
+      name: Microsoft 365
+      winget: Microsoft.Office
+      mac: microsoft-office
+    - id: azure-storage-explorer
+      name: Azure Storage Explorer
+      winget: Microsoft.Azure.StorageExplorer
+      choco: microsoftazurestorageexplorer
+      mac: microsoft-azure-storage-explorer
+    - id: microsoft-auto-update
+      name: Microsoft AutoUpdate
+      mac: microsoft-auto-update
+      note: "Específic de macOS. A Windows actualitza Click-to-Run / Windows Update."
+
+  # --- media  (casksmedia) ---------------------------------------------------
+  media:
+    - id: handbrake
+      name: HandBrake
+      winget: HandBrake.HandBrake
+      choco: handbrake
+      mac: handbrake-app
+    - id: vlc
+      name: VLC
+      winget: VideoLAN.VLC
+      choco: vlc
+      mac: vlc
+
+  # --- documents  (casksdocuments) -------------------------------------------
+  documents:
+    - id: acrobat-reader
+      name: Adobe Acrobat Reader
+      winget: Adobe.Acrobat.Reader.64-bit
+      choco: adobereader
+      mac: adobe-acrobat-reader
+    - id: macdown
+      name: MacDown
+      mac: macdown
+      note: "Específic de macOS. A Windows el cobreix Mark Text, que ja és en aquesta categoria."
+    - id: marktext
+      name: Mark Text
+      choco: marktext
+      provider: choco
+      mac: mark-text
+    - id: modern-csv
+      name: Modern CSV
+      winget: PFOJEnterprisesLLC.ModernCSV
+      mac: modern-csv
+    - id: onlyoffice
+      name: ONLYOFFICE Desktop Editors
+      winget: ONLYOFFICE.DesktopEditors
+      choco: onlyoffice
+      mac: onlyoffice
+    - id: pdf24
+      name: PDF24 Creator
+      winget: geeksoftwareGmbH.PDF24Creator
+      choco: pdf24
+      mac: revpdf-editor
+    - id: xournalpp
+      name: Xournal++
+      winget: Xournal++.Xournal++
+      choco: xournalplusplus
+      mac: xournal++
+
+  # --- hardware  (caskshardware) ---------------------------------------------
+  hardware:
+    - id: logi-options
+      name: Logi Options+
+      winget: Logitech.OptionsPlus
+      mac: logi-options+
+
+  # --- store  (mas_apps) ------------------------------------------------------
+  #  L'equivalent de `mas` a Windows és la font msstore de winget.
+  store:
+    - id: ping-status
+      name: Ping Status
+      mac: "mas 1158928913 Ping Status"
+      note: "Només macOS. Alternativa: PingInfoView (NirSoft) o `Test-Connection` a PowerShell."
+    - id: microsoft-todo
+      name: Microsoft To Do
+      winget: 9NBLGGH5R558
+      source: msstore
+      mac: "mas 1274495053 Microsoft To Do"
+    - id: mutekey
+      name: MuteKey
+      mac: "mas 1509590766 MuteKey"
+      note: "Equivalent a Windows: PowerToys Video Conference Mute (Win+Maj+A), ja cobert a systemutilities."
+    - id: azure-vpn-client
+      name: Azure VPN Client
+      winget: 9NP355QT2SQB
+      source: msstore
+      mac: "mas 1553936137 Azure VPN Client"
+    - id: wireguard
+      name: WireGuard
+      winget: WireGuard.WireGuard
+      choco: wireguard
+      mac: "mas 1451685025 WireGuard"
+
+  # --- fonts  (rol shell d'ansible-mac) --------------------------------------
+  #  Les Nerd Fonts no són a winget: Chocolatey és l'únic proveïdor fiable.
+  fonts:
+    - id: font-meslo
+      name: Meslo LG Nerd Font
+      choco: nerd-fonts-meslo
+      provider: choco
+      mac: font-meslo-lg-nerd-font
+
+# -----------------------------------------------------------------------------
+#  Rol: startup   (equivalent a startup_apps / Login Items d'ansible-mac)
+# -----------------------------------------------------------------------------
+#  A macOS són Login Items; a Windows, valors a
+#  HKCU:\Software\Microsoft\Windows\CurrentVersion\Run.
+#  `path` accepta variables d'entorn amb la sintaxi $env:NOM.
+startup_apps:
+  - name: Twinkle Tray
+    path: $env:LOCALAPPDATA\Programs\twinkle-tray\Twinkle Tray.exe
+    mac: BetterDisplay
+  - name: ShareX
+    path: $env:ProgramFiles\ShareX\ShareX.exe
+    mac: Shottr
+  - name: HWiNFO
+    path: $env:ProgramFiles\HWiNFO64\HWiNFO64.exe
+    mac: Stats
+  - name: PowerToys
+    path: $env:ProgramFiles\PowerToys\PowerToys.exe
+    mac: MuteKey
+  - name: OneDrive
+    path: $env:LOCALAPPDATA\Microsoft\OneDrive\OneDrive.exe
+    mac: OneDrive
+  # Maccy no cal: el porta-retalls de Windows (Win+V) ja és al sistema.
+
+# -----------------------------------------------------------------------------
+#  Rol: shell   (equivalent al rol shell d'ansible-mac)
+# -----------------------------------------------------------------------------
+shell:
+  install_profile: true
+  # starship, per fer servir el MATEIX starship.toml que al Mac.
+  prompt: starship
+  # Copia files/starship.toml a ~/.config/starship.toml, com al Mac.
+  install_starship_config: true
+  configure_terminal: true
+  # A macOS: zsh-autosuggestions + zsh-syntax-highlighting.
+  # A Windows ho cobreix PSReadLine (predicció + ressaltat), que ja ve de sèrie.
+  modules:
+    - PSReadLine
+    - Terminal-Icons
+    - posh-git
+    - powershell-yaml
+
+# -----------------------------------------------------------------------------
+#  Rol: tabby   (equivalent al rol tabby d'ansible-mac)
+# -----------------------------------------------------------------------------
+tabby:
+  install_plugins: true
+
+# -----------------------------------------------------------------------------
+#  Rol: dev
+# -----------------------------------------------------------------------------
+dev:
+  git:
+    user_name: ""
+    user_email: ""
+    default_branch: main
+    config:
+      init.defaultBranch: main
+      pull.rebase: "true"
+      push.autoSetupRemote: "true"
+      core.autocrlf: input
+      core.longpaths: "true"
+      core.editor: "code --wait"
+      diff.colorMoved: default
+      fetch.prune: "true"
+      rebase.autoStash: "true"
+  ssh:
+    generate_key: true
+    key_type: ed25519
+    comment: ""
+  npm_globals: []
+  uv_tools: []
+  vscode_extensions: []
+
+# -----------------------------------------------------------------------------
+#  Rol: system   (equivalent al rol desktop d'ansible-mac)
+# -----------------------------------------------------------------------------
+#  El rol desktop del Mac toca Dock, hot corners i trackpad. A Windows no hi ha
+#  ni Dock ni hot corners: l'equivalent més proper és la barra de tasques.
+system:
+  explorer:
+    show_file_extensions: true
+    show_hidden_files: true
+    launch_to_this_pc: true
+    show_full_path_in_title: true
+    expand_to_open_folder: true
+    disable_recent_files: false
+  taskbar:
+    align_left: true
+    hide_search_box: true
+    hide_task_view: true
+    hide_widgets: true
+    hide_chat: true
+  appearance:
+    dark_mode: true
+    transparency: true
+    accent_on_taskbar: false
+  privacy:
+    disable_advertising_id: true
+    disable_start_web_search: true
+    disable_tailored_experiences: true
+  power:
+    plan: high
+    monitor_timeout_ac: -1
+    standby_timeout_ac: 0
+  developer:
+    enable_developer_mode: true
+    enable_long_paths: true
+    enable_openssh_server: false
+  input:
+    # A ansible-mac: "Disable natural scrolling". A Windows el desplaçament ja
+    # és el clàssic; invertir-lo depèn del driver, així que no s'hi toca.
+    natural_scrolling: false
+    # A ansible-mac: F1..F12 com a tecles de funció. A Windows ho controla la
+    # BIOS/firmware del portàtil (tecla Fn), no el sistema operatiu.
+    function_keys_standard: true
+
+# -----------------------------------------------------------------------------
+#  Rol: dotfiles
+# -----------------------------------------------------------------------------
+dotfiles:
+  links: []
