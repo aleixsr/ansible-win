@@ -633,6 +633,16 @@ packages:
 #  A macOS són Login Items; a Windows, valors a
 #  HKCU:\Software\Microsoft\Windows\CurrentVersion\Run.
 #  `path` accepta variables d'entorn amb la sintaxi $env:NOM.
+# Coses que s'han posat soles a l'inici i no volem que hi siguin.
+# No s'esborra res: s'escriu a StartupApproved, el mateix mecanisme que la
+# pestanya "Inici" de l'Administrador de tasques, aixi que es reversible des
+# d'alla i l'instal-lador no ho desfa a la propera actualitzacio.
+# El nom es el de l'entrada: el valor de la clau Run, o la drecera de la
+# carpeta d'Inici SENSE el .lnk.
+startup_disable:
+  - PDF24          # HKLM Run -> la safata del PDF24
+  - RustDesk Tray  # carpeta d'Inici -> la safata del RustDesk
+
 startup_apps:
   # BetterDisplay (Login Item al Mac) no te contrapartida: Twinkle Tray descartat.
   # Charmy es una app MSIX: no te .exe a una ruta fixa. L'entrada d'inici la
@@ -641,7 +651,8 @@ startup_apps:
     path: $env:ProgramFiles\ShareX\ShareX.exe
     mac: Shottr
   - name: HWiNFO
-    path: $env:ProgramFiles\HWiNFO64\HWiNFO64.exe
+    # choco (hwinfo.install) no el posa a Program Files: el deixa aqui.
+    path: $env:ProgramData\chocolatey\lib\hwinfo.install\tools\hwi64.exe
     mac: Stats
   - name: PowerToys
     path: $env:LOCALAPPDATA\PowerToys\PowerToys.exe

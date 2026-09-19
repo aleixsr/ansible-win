@@ -200,6 +200,26 @@ ShareX, HWiNFO, PowerToys, OneDrive.
 Només s'afegeixen si l'executable existeix: si encara no has instal·lat l'app, la
 tasca surt com a `skipped` en comptes de deixar una entrada morta al registre.
 
+### Aplicacions que NO volem a l'inici
+
+Molts instal·ladors s'hi posen sols. `startup_disable` els treu:
+
+```yaml
+startup_disable:
+  - PDF24          # valor de la clau Run
+  - RustDesk Tray  # drecera de la carpeta d'Inici, sense el .lnk
+```
+
+El rol les busca a les dues claus `Run` (usuari i màquina) i a les dues carpetes
+d'Inici, i **no esborra res**: escriu a `StartupApproved`, que és el mateix
+mecanisme que la pestanya «Inici» de l'Administrador de tasques. Per tant el
+canvi es pot desfer des d'allà, i l'instal·lador no el tomba a la propera
+actualització (cosa que sí que passaria si li esborréssim l'entrada).
+
+Això només toca la part visible: una app amb **servei** propi (RustDesk, PDF24)
+el segueix tenint en marxa. Es fa a posta — el servei de RustDesk és el que
+permet connectar-s'hi des de fora, i el de PDF24 és la impressora virtual.
+
 ### Apps del Mac sense equivalent a Windows
 
 No desapareixen del catàleg: hi queden amb un `note` que diu per què i quin és el

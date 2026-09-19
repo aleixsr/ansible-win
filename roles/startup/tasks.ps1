@@ -18,13 +18,106 @@ param(
 
 Set-ProvisionContext -Role 'startup'
 
+$RUN_KEY = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
+
+# -----------------------------------------------------------------------------
+# Desactivar coses que s'han posat soles a l'inici
+# -----------------------------------------------------------------------------
+# No s'esborra res: s'escriu a StartupApproved, que és el mateix mecanisme que
+# fa servir la pestanya "Inici" de l'Administrador de tasques. Així el canvi és
+# reversible des de la interfície de Windows i l'instal·lador no el desfà a la
+# propera actualització, cosa que sí que passaria si li esborréssim l'entrada.
+#   primer byte 0x02 = activat, 0x03 = desactivat
+$APPROVED_DISABLED = [byte[]](0x03, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+
+<#
+.SYNOPSIS
+    Marca una entrada d'inici com a desactivada. Retorna 'ok', 'changed' o $null
+    si l'entrada no existeix en aquest lloc.
+#>
+function Disable-StartupEntry {
+    param(
+        [Parameter(Mandatory)][string]$ApprovedKey,
+        [Parameter(Mandatory)][string]$ValueName
+    )
+
+    $current = $null
+    if (Test-Path -LiteralPath $ApprovedKey) {
+        $prop = Get-ItemProperty -LiteralPath $ApprovedKey -Name $ValueName -ErrorAction SilentlyContinue
+        if ($prop) { $current = $prop.$ValueName }
+    }
+    if ($current -and $current[0] -eq 0x03) { return 'ok' }
+
+    if (Get-ProvisionCheckMode) { return 'changed' }
+
+    if (-not (Test-Path -LiteralPath $ApprovedKey)) {
+        New-Item -Path $ApprovedKey -Force | Out-Null
+    }
+    New-ItemProperty -LiteralPath $ApprovedKey -Name $ValueName `
+        -Value $APPROVED_DISABLED -PropertyType Binary -Force | Out-Null
+    return 'changed'
+}
+
+$toDisable = @($Config.startup_disable)
+foreach ($entry in $toDisable) {
+    if (-not $entry) { continue }
+    $name = "$entry"
+
+    # On pot estar registrada: les dues claus Run i les dues carpetes d'Inici.
+    $places = @(
+        @{ Kind = 'run';      Key = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
+           Approved = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run'
+           Value = $name; Admin = $false },
+        @{ Kind = 'run';      Key = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run'
+           Approved = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run'
+           Value = $name; Admin = $true },
+        @{ Kind = 'shortcut'; Key = [Environment]::GetFolderPath('Startup')
+           Approved = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\StartupFolder'
+           Value = "$name.lnk"; Admin = $false },
+        @{ Kind = 'shortcut'; Key = [Environment]::GetFolderPath('CommonStartup')
+           Approved = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\StartupFolder'
+           Value = "$name.lnk"; Admin = $true }
+    )
+
+    $found = $false
+    foreach ($place in $places) {
+        # Existeix aquí?
+        if ($place.Kind -eq 'run') {
+            if (-not (Test-Path -LiteralPath $place.Key)) { continue }
+            $p = Get-ItemProperty -LiteralPath $place.Key -Name $name -ErrorAction SilentlyContinue
+            if (-not $p) { continue }
+        } else {
+            if (-not $place.Key) { continue }
+            $lnk = Join-Path $place.Key $place.Value
+            if (-not (Test-Path -LiteralPath $lnk)) { continue }
+        }
+        $found = $true
+
+        if ($place.Admin -and -not (Test-Elevated) -and -not (Get-ProvisionCheckMode)) {
+            Write-TaskResult -Task "no arrencar $name" -Status 'skipped' -Message 'cal admin'
+            continue
+        }
+        try {
+            $status = Disable-StartupEntry -ApprovedKey $place.Approved -ValueName $place.Value
+            Write-TaskResult -Task "no arrencar $name" -Status $status -Message "$($place.Kind): $($place.Value)"
+        } catch {
+            Write-TaskResult -Task "no arrencar $name" -Status 'failed' -Message $_.Exception.Message
+        }
+    }
+
+    if (-not $found) {
+        Write-TaskResult -Task "no arrencar $name" -Status 'ok' -Message 'no és a cap lloc d''inici'
+    }
+}
+
+# -----------------------------------------------------------------------------
+# Aplicacions que SÍ volem a l'inici
+# -----------------------------------------------------------------------------
 $apps = @($Config.startup_apps)
 if ($apps.Count -eq 0) {
     Write-TaskResult -Task 'aplicacions d''inici' -Status 'skipped' -Message 'startup_apps buit'
     return
 }
-
-$RUN_KEY = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
 
 foreach ($app in $apps) {
     if (-not $app -or -not $app.name -or -not $app.path) {
