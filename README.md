@@ -167,7 +167,7 @@ choco search <nom>
 | Browsers | Brave, Chromium, Firefox, Google Chrome, Microsoft Edge |
 | Terminal | Windows Terminal, Tabby, Warp |
 | Communication | Mailspring, Microsoft Teams, Telegram, WhatsApp |
-| Productivity | Claude Desktop, 7-Zip, Notion, Qalculate!, ShareX, HWiNFO |
+| Productivity | Claude Desktop, 7-Zip, Notion, Qalculate!, Charmy (hot corners), ShareX, HWiNFO |
 | Networking & VPN | SwitchHosts, Tailscale, OpenVPN Connect |
 | Remote access | Royal TS, RustDesk |
 | File management & cloud | Box Drive, LocalSend, Synology Drive Client |
@@ -184,6 +184,13 @@ choco search <nom>
 | Microsoft To Do | `9NBLGGH5R558` |
 | Azure VPN Client | `9NP355QT2SQB` |
 | WireGuard | `WireGuard.WireGuard` |
+| Charmy: Hot Corners | `9P5PK6TVQXF7` |
+
+> **Les apps MSIX de la Store no es poden instal·lar des d'un procés elevat.**
+> Com que `run.ps1` s'auto-eleva, les instal·la **abans** d'elevar-se, mentre
+> encara és al context d'usuari. Si n'executes una elevat, la tasca surt com a
+> `skipped` amb la comanda a fer:
+> `.un.ps1 -Roles apps -Groups store -NoElevate`
 
 ### Aplicacions d'inici
 
@@ -418,6 +425,9 @@ docs/APPS.md                     Taula de paritat macOS ↔ Windows
 - El perfil de PowerShell s'instal·la a les rutes de Windows PowerShell 5.1 **i**
   de PowerShell 7, i també a les de OneDrive si té la carpeta Documents
   redirigida
+- Els paquets MSIX (font `msstore`) i els d'àmbit d'usuari només es poden
+  instal·lar sense elevar. És per això que `run.ps1` fa la categoria `store`
+  abans d'auto-elevar-se
 - Treure un paquet del catàleg **no el desinstal·la** de les màquines on ja hi és:
   el repo declara què hi ha d'haver, no què no hi ha d'haver. Cal fer-ho a mà amb
   `winget uninstall` o `choco uninstall`

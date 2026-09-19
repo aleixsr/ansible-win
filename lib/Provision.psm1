@@ -469,6 +469,16 @@ function Install-CatalogPackage {
     $label = $Package.name
     if (-not $label) { $label = $Package.id }
 
+    # Els paquets MSIX de la Microsoft Store s'instal·len per usuari i fallen
+    # sempre des d'un procés elevat. run.ps1 els fa abans d'auto-elevar-se; si
+    # tot i així arribem aquí elevats, val més dir-ho clar que deixar un error
+    # criptic de winget.
+    if ($Package.source -eq 'msstore' -and (Test-Elevated)) {
+        Write-TaskResult -Task $label -Status 'skipped' `
+            -Message 'app de la Store: no es pot instal·lar elevat. Executa: .\run.ps1 -Roles apps -Groups store -NoElevate'
+        return
+    }
+
     $resolved = Resolve-PackageProvider -Package $Package -ProviderOrder $ProviderOrder
     if (-not $resolved) {
         # Paquets del catàleg del Mac que a Windows no existeixen: porten 'note'

@@ -125,6 +125,7 @@ Serveix per comprovar d'un cop d'ull que cap app del Mac s'ha quedat pel camí.
 
 | A ansible-mac | A Windows | winget | Chocolatey | Scoop |
 | --- | --- | --- | --- | --- |
+| `(hot corners natius de macOS)` | Charmy: Hot Corners | `9P5PK6TVQXF7` | — | — |
 | `alt-tab` | **sense equivalent** — Porta a macOS l'Alt+Tab de Windows. A Windows ja hi és de sèrie. | — | — | — |
 | `caffeine` | **sense equivalent** — Equivalent a Windows: PowerToys Awake, que ja s'instal·la a systemutilities. | — | — | — |
 | `claude` | Claude Desktop | `Anthropic.Claude` | — | — |
@@ -181,8 +182,8 @@ Serveix per comprovar d'un cop d'ull que cap app del Mac s'ha quedat pel camí.
 
 ---
 
-**87 entrades** en 17 categories, de les quals
-**70 s'instal·len** i **17 no tenen equivalent** a Windows.
+**88 entrades** en 17 categories, de les quals
+**71 s'instal·len** i **17 no tenen equivalent** a Windows.
 
 Les que no en tenen surten com a `skipped` quan executes `run.ps1`, amb el
 motiu al costat: no són errors, són decisions documentades.

@@ -376,6 +376,13 @@ packages:
       name: FancyZones (PowerToys)
       mac: rectangle
       note: "Gestió de finestres: PowerToys FancyZones + Win+fletxes, ja cobert a systemutilities."
+    # Hot corners a l'estil macOS. Al Mac son natius (rol desktop:
+    # cantonades superiors -> Mission Control); a Windows cal una app.
+    - id: hotcorners
+      name: "Charmy: Hot Corners"
+      winget: 9P5PK6TVQXF7
+      source: msstore
+      mac: "(hot corners natius de macOS)"
     - id: shottr
       name: ShareX
       winget: ShareX.ShareX
@@ -553,6 +560,8 @@ packages:
 #  `path` accepta variables d'entorn amb la sintaxi $env:NOM.
 startup_apps:
   # BetterDisplay (Login Item al Mac) no te contrapartida: Twinkle Tray descartat.
+  # Charmy es una app MSIX: no te .exe a una ruta fixa. L'entrada d'inici la
+  # gestiona la mateixa app des dels seus ajustos (Run at startup).
   - name: ShareX
     path: $env:ProgramFiles\ShareX\ShareX.exe
     mac: Shottr

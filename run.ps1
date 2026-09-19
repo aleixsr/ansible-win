@@ -103,6 +103,25 @@ if ($ListPackages) {
 if (-not (Test-Elevated) -and -not $NoElevate -and -not $Check) {
     $gsudo = Get-Command gsudo -ErrorAction SilentlyContinue
     if ($gsudo) {
+
+        # Les apps de la Microsoft Store són MSIX i s'instal·len PER USUARI: des
+        # d'un procés elevat fallen sempre. Com que tot seguit ens reobrim
+        # elevats, les fem ara, que encara som al context d'usuari. Un cop
+        # elevats, Install-CatalogPackage les salta amb un missatge explicatiu.
+        $storePkgs = @(Select-CatalogPackages -Config $config -Groups $Groups |
+                       Where-Object { $_.source -eq 'msstore' })
+        # $rolesToRun encara no existeix aquí: mirem els paràmetres directament.
+        # Sense -Roles s'executen els default_roles, que inclouen 'apps'.
+        if ($storePkgs.Count -gt 0 -and (-not $Roles -or $Roles -contains 'apps')) {
+            Write-Play "ansible-win - apps de la Microsoft Store (sense elevar)"
+            Write-Info 'Els paquets MSIX no es poden instal·lar elevat: es fan abans.'
+            Set-ProvisionContext -Role 'apps/store'
+            foreach ($pkg in $storePkgs) {
+                Install-CatalogPackage -Package $pkg -ProviderOrder $config.provider_order -Upgrade:$Upgrade
+            }
+            Clear-ProvisionResults
+        }
+
         Write-Host ''
         Write-Host 'Reobrint el run amb privilegis via gsudo...' -ForegroundColor Yellow
 
