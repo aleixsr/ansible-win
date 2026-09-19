@@ -106,8 +106,23 @@ if ($tb) {
         Set-Tweak -Task 'botó de vista de tasques' -Path $ADVANCED -Name 'ShowTaskViewButton' -Value $v -RestartsExplorer | Out-Null
     }
     if ($null -ne $tb.hide_widgets) {
-        $v = 1; if ($tb.hide_widgets) { $v = 0 }
-        Set-Tweak -Task 'widgets' -Path $ADVANCED -Name 'TaskbarDa' -Value $v -RestartsExplorer | Out-Null
+        # Els Widgets són un paquet a part (MicrosoftWindows.Client.WebExperience)
+        # i hi ha builds de Windows 11 que ja no el porten. En aquestes, el
+        # sistema bloqueja expressament l'escriptura de TaskbarDa amb un
+        # UnauthorizedAccessException — i només d'aquest valor: crear qualsevol
+        # altre nom nou a la mateixa clau funciona. Si no hi ha Widgets, no hi
+        # ha res a amagar.
+        $widgets = $null
+        try {
+            $widgets = Get-AppxPackage -Name 'MicrosoftWindows.Client.WebExperience' -ErrorAction SilentlyContinue
+        } catch { }
+
+        if (-not $widgets) {
+            Write-TaskResult -Task 'widgets' -Status 'skipped' -Message 'aquesta build de Windows no porta Widgets'
+        } else {
+            $v = 1; if ($tb.hide_widgets) { $v = 0 }
+            Set-Tweak -Task 'widgets' -Path $ADVANCED -Name 'TaskbarDa' -Value $v -RestartsExplorer | Out-Null
+        }
     }
     if ($null -ne $tb.hide_chat) {
         $v = 1; if ($tb.hide_chat) { $v = 0 }
@@ -196,24 +211,51 @@ if ($pw) {
         }
     }
 
+    <#
+    .SYNOPSIS
+        Llegeix el temps d'espera actual (endollat) en minuts, o $null.
+    .DESCRIPTION
+        `powercfg /change` no diu mai què hi havia abans, així que sense llegir
+        el valor primer la tasca sortiria com a 'changed' a cada execució.
+        La sortida de /query està traduïda, però els valors hexadecimals no: els
+        dos últims són el d'AC i el de CC, per aquest ordre. Els anteriors són el
+        mínim, el màxim i l'increment.
+    #>
+    function Get-PowerTimeoutMinutes {
+        param([string]$SubGroup, [string]$Setting)
+        $out = (& powercfg /query SCHEME_CURRENT $SubGroup $Setting 2>$null | Out-String)
+        $hex = [regex]::Matches($out, '0x[0-9a-fA-F]{8}')
+        if ($hex.Count -lt 2) { return $null }
+        $seconds = [Convert]::ToInt64($hex[$hex.Count - 2].Value, 16)
+        return [int]($seconds / 60)
+    }
+
     foreach ($entry in @(
-        @{ Key = 'monitor_timeout_ac'; Flag = '/change monitor-timeout-ac'; Task = 'apagar pantalla (endollat)' },
-        @{ Key = 'standby_timeout_ac'; Flag = '/change standby-timeout-ac'; Task = 'suspensió (endollat)' }
+        @{ Key = 'monitor_timeout_ac'; Flag = 'monitor-timeout-ac'
+           Sub = 'SUB_VIDEO'; Setting = 'VIDEOIDLE'; Task = 'apagar pantalla (endollat)' },
+        @{ Key = 'standby_timeout_ac'; Flag = 'standby-timeout-ac'
+           Sub = 'SUB_SLEEP'; Setting = 'STANDBYIDLE'; Task = 'suspensió (endollat)' }
     )) {
         $value = $pw[$entry.Key]
         if ($null -eq $value -or [int]$value -lt 0) {
             Write-TaskResult -Task $entry.Task -Status 'skipped' -Message 'valor -1: no es toca'
             continue
         }
+        $value = [int]$value
+
+        $current = Get-PowerTimeoutMinutes -SubGroup $entry.Sub -Setting $entry.Setting
+        if ($null -ne $current -and $current -eq $value) {
+            Write-TaskResult -Task $entry.Task -Status 'ok' -Message "$value min"
+            continue
+        }
         if ($checkMode) {
-            Write-TaskResult -Task $entry.Task -Status 'changed' -Message "posaria $value min"
+            Write-TaskResult -Task $entry.Task -Status 'changed' -Message "posaria $value min (ara: $current)"
             continue
         }
         try {
-            $pcArgs = ($entry.Flag -split ' ') + @("$value")
-            & powercfg @pcArgs 2>&1 | Out-Null
+            & powercfg '/change' $entry.Flag "$value" 2>&1 | Out-Null
             if ($LASTEXITCODE -ne 0) { throw "powercfg ha retornat $LASTEXITCODE (cal admin?)" }
-            Write-TaskResult -Task $entry.Task -Status 'changed' -Message "$value min"
+            Write-TaskResult -Task $entry.Task -Status 'changed' -Message "$current -> $value min"
         } catch {
             Write-TaskResult -Task $entry.Task -Status 'failed' -Message $_.Exception.Message
         }

@@ -5,6 +5,9 @@ config.local.yml
 bin/
 files/profile.d/
 
+# Registres d'execucio
+logs/
+
 # Còpies de seguretat que fa el repo abans de sobreescriure
 *.bak
 *.ansible_windows.bak

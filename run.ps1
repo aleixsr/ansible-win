@@ -79,6 +79,29 @@ function Split-ListArgument {
 $Roles = Split-ListArgument $Roles
 $Groups = Split-ListArgument $Groups
 
+# -----------------------------------------------------------------------------
+# Registre de la sessió
+# -----------------------------------------------------------------------------
+# Sense això, l'única còpia de la sortida d'un run és la consola de qui l'ha
+# executat: si falla, no hi ha res per ensenyar a ningú. Els logs van al repo
+# (ignorats per git) i es conserven els 20 últims.
+$LogFile = $null
+try {
+    $logDir = Join-Path $RepoRoot 'logs'
+    if (-not (Test-Path -LiteralPath $logDir)) {
+        New-Item -ItemType Directory -Path $logDir -Force | Out-Null
+    }
+    Get-ChildItem -LiteralPath $logDir -Filter 'run-*.log' -ErrorAction SilentlyContinue |
+        Sort-Object LastWriteTime -Descending | Select-Object -Skip 20 |
+        Remove-Item -Force -ErrorAction SilentlyContinue
+
+    $LogFile = Join-Path $logDir ("run-{0}.log" -f (Get-Date -Format 'yyyyMMdd-HHmmss'))
+    Start-Transcript -LiteralPath $LogFile -Force | Out-Null
+} catch {
+    # Un log és un extra: que no funcioni no ha d'aturar el provisionament.
+    $LogFile = $null
+}
+
 # UTF-8 a la consola: si no, els accents surten trencats a Windows PowerShell.
 try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch { }
 
@@ -157,7 +180,18 @@ if (-not (Test-Elevated) -and -not $NoElevate -and -not $Check) {
         if ($Upgrade) { $relaunch += '-Upgrade' }
 
         & $gsudo.Source @relaunch
-        exit $LASTEXITCODE
+        $elevatedCode = $LASTEXITCODE
+
+        # 231 i 1223 volen dir que algú ha dit que no al diàleg d'UAC. Sense
+        # això, el run mor amb un "Error: The operation was canceled by the
+        # user" pelat i sense cap pista de què fer.
+        if ($elevatedCode -eq 231 -or $elevatedCode -eq 1223) {
+            Write-Host ''
+            Write-Host 'UAC cancel·lat: no s''ha executat res.' -ForegroundColor Red
+            Write-Host 'Torna-ho a provar acceptant el diàleg, o fes servir -NoElevate' -ForegroundColor Yellow
+            Write-Host '(sense privilegis, els ajustos d''HKLM se salten).' -ForegroundColor Yellow
+        }
+        exit $elevatedCode
     }
     Write-Host ''
     Write-Host 'Avís: sense privilegis d''administrador.' -ForegroundColor Yellow
@@ -221,6 +255,12 @@ Write-Host ("Temps: {0:mm\:ss}" -f $elapsed) -ForegroundColor DarkGray
 if (-not $Check) {
     Write-Host ''
     Write-Host 'Obre una consola nova perquè el PATH i el perfil agafin els canvis.' -ForegroundColor Cyan
+}
+
+if ($LogFile) {
+    Write-Host ''
+    Write-Host "Registre complet: $LogFile" -ForegroundColor DarkGray
+    try { Stop-Transcript | Out-Null } catch { }
 }
 
 if ($failures -gt 0) { exit 1 }
