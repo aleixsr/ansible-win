@@ -54,6 +54,31 @@ param(
 $ErrorActionPreference = 'Stop'
 $RepoRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 
+<#
+.SYNOPSIS
+    Parteix arguments de llista que arriben com un sol element separat per comes.
+.DESCRIPTION
+    Amb `powershell -File`, "-Groups a,b" NO es parteix en dos elements: arriba
+    com la cadena "a,b" i no coincideix amb cap grup. I l'auto-elevació d'aquest
+    mateix script es rellança amb -File, així que sense això qualsevol run amb
+    -Groups que s'elevés seleccionaria zero paquets, en silenci.
+#>
+function Split-ListArgument {
+    param([string[]]$Value)
+    if (-not $Value) { return @() }
+    $out = New-Object System.Collections.ArrayList
+    foreach ($item in $Value) {
+        foreach ($piece in ($item -split ',')) {
+            $trimmed = $piece.Trim()
+            if ($trimmed) { [void]$out.Add($trimmed) }
+        }
+    }
+    return $out.ToArray()
+}
+
+$Roles = Split-ListArgument $Roles
+$Groups = Split-ListArgument $Groups
+
 # UTF-8 a la consola: si no, els accents surten trencats a Windows PowerShell.
 try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch { }
 

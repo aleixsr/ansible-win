@@ -304,6 +304,13 @@ packages:
       name: Warp
       winget: Warp.Warp
       mac: warp
+    # A ansible-mac el Wave no es a casksterminal, pero hi ha una regla de
+    # Karabiner per a ell (files/karabiner/wave_terminal.json): s'instal-la
+    # fora d'Ansible. Aqui si que el gestionem.
+    - id: wave
+      name: Wave Terminal
+      winget: CommandLine.Wave
+      mac: "(no gestionat per ansible-mac)"
 
   # --- communication  (caskscommunication) -----------------------------------
   communication:
@@ -362,6 +369,12 @@ packages:
       name: Maccy
       mac: maccy
       note: "Historial de porta-retalls. A Windows és natiu: Win+V."
+    # Obsidian no es a ansible-mac: aquest repo hi afegeix el que el Mac no te.
+    - id: obsidian
+      name: Obsidian
+      winget: Obsidian.Obsidian
+      choco: obsidian
+      mac: "(no hi es a ansible-mac)"
     - id: notion
       name: Notion
       winget: Notion.Notion
