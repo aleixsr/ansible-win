@@ -167,7 +167,7 @@ choco search <nom>
 | Browsers | Brave, Chromium, Firefox, Google Chrome, Microsoft Edge |
 | Terminal | Windows Terminal, Tabby, Wave Terminal |
 | Communication | Mailspring, Microsoft Teams, Telegram, WhatsApp |
-| Productivity | Claude Desktop, 7-Zip, PeaZip, Obsidian, Calcator, Charmy (hot corners), ShareX, HWiNFO |
+| Productivity | Claude Desktop, 7-Zip, PeaZip, Obsidian, Calcator, Hot Corners, ShareX, HWiNFO |
 | Networking & VPN | SwitchHosts, Tailscale, OpenVPN Connect |
 | Remote access | Royal TS, RustDesk |
 | File management & cloud | Box Drive, LocalSend, Synology Drive Client |
@@ -190,7 +190,6 @@ choco search <nom>
 | Microsoft To Do | `9NBLGGH5R558` |
 | Azure VPN Client | `9NP355QT2SQB` |
 | WireGuard | `WireGuard.WireGuard` |
-| Charmy: Hot Corners | `9P5PK6TVQXF7` |
 
 > **Les apps MSIX de la Store no es poden instal·lar des d'un procés elevat.**
 > Com que `run.ps1` s'auto-eleva, les instal·la **abans** d'elevar-se, mentre
@@ -322,6 +321,10 @@ l'instal·lador i l'executa.
     asset: "*_x64_en-US.msi"
     arp: "Fred TV*"
 ```
+
+Quan un instal·lador acaba amb un codi d'error però `arp:` el troba, es dona per
+bo: hi ha instal·ladors que menteixen. El de Hot Corners retorna `1` amb
+`/VERYSILENT` tot i haver instal·lat perfectament.
 
 El mode `github` existeix perquè els noms dels fitxers es podreixen: Open TV ja
 va passar de `open-tv` a `Fred.TV` enmig de les releases, i una URL fixa hauria

@@ -414,10 +414,18 @@ packages:
       note: "Gestió de finestres: PowerToys FancyZones + Win+fletxes, ja cobert a systemutilities."
     # Hot corners a l'estil macOS. Al Mac son natius (rol desktop:
     # cantonades superiors -> Mission Control); a Windows cal una app.
+    # Hot Corners (bwya77): WinUI 3, MIT, 14 accions assignables per cantonada.
+    # No es a cap gestor, nomes releases de GitHub. L'instal-lador es Inno Setup
+    # i retorna codi 1 encara que instal-li be, per aixo la comprovacio final va
+    # per arp i no pel codi de sortida.
     - id: hotcorners
-      name: "Charmy: Hot Corners"
-      winget: 9P5PK6TVQXF7
-      source: msstore
+      name: Hot Corners
+      provider: url
+      url:
+        github: bwya77/Windows-Hot-Corners
+        asset: "HotCornersSetup-*-win-x64.exe"
+        args: ["/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART"]
+        arp: "Hot Corners"
       mac: "(hot corners natius de macOS)"
     - id: shottr
       name: ShareX

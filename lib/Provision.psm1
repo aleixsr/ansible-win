@@ -471,7 +471,15 @@ function Install-UrlPackage {
 
     # 3010 i 1641 volen dir "cal reiniciar", no són errors.
     if ($proc.ExitCode -notin 0, 3010, 1641) {
-        throw "l'instal·lador ha retornat $($proc.ExitCode)"
+        # Alguns instal·ladors retornen codis d'error tot i haver instal·lat bé
+        # (Hot Corners, per exemple, torna 1 amb /VERYSILENT). Si el paquet ens
+        # diu com comprovar-ho a Programes i característiques, aquesta és la
+        # font de veritat: el codi de sortida no ho és.
+        $confirmed = $false
+        if ($Spec.arp) { $confirmed = [bool](Get-ArpEntry -Pattern $Spec.arp) }
+        if (-not $confirmed) {
+            throw "l'instal·lador ha retornat $($proc.ExitCode)"
+        }
     }
     return $asset.Version
 }
