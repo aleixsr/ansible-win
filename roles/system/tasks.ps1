@@ -56,6 +56,12 @@ function Set-Tweak {
 # -----------------------------------------------------------------------------
 $exp = $sys.explorer
 if ($exp) {
+    # [mac] Equival a com.apple.finder CreateDesktop = false del rol desktop.
+    if ($null -ne $exp.hide_desktop_icons) {
+        $v = 0; if ($exp.hide_desktop_icons) { $v = 1 }
+        Set-Tweak -Task 'amagar icones de l''escriptori' -Path $ADVANCED `
+            -Name 'HideIcons' -Value $v -RestartsExplorer | Out-Null
+    }
     if ($null -ne $exp.show_file_extensions) {
         # HideFileExt està invertit: 0 = mostra les extensions.
         $v = 1; if ($exp.show_file_extensions) { $v = 0 }
@@ -191,13 +197,16 @@ if ($pw) {
         $guid = $planGuids[$pw.plan]
         if (-not $guid) {
             Write-TaskResult -Task 'pla d''energia' -Status 'failed' -Message "pla desconegut: $($pw.plan)"
-        } elseif ($checkMode) {
-            Write-TaskResult -Task 'pla d''energia' -Status 'changed' -Message "activaria $($pw.plan)"
         } else {
             try {
-                $active = (& powercfg /getactivescheme | Out-String)
+                # Llegir-ho també en mode --check: si no, la tasca sortiria com
+                # a 'changed' a cada simulació encara que el pla ja fos el bo.
+                $active = (Invoke-NativeCommand -FilePath 'powercfg' -Arguments @('/getactivescheme')).Output
+
                 if ($active -match $guid) {
                     Write-TaskResult -Task 'pla d''energia' -Status 'ok' -Message $pw.plan
+                } elseif ($checkMode) {
+                    Write-TaskResult -Task 'pla d''energia' -Status 'changed' -Message "activaria $($pw.plan)"
                 } else {
                     # El pla Ultimate no existeix fins que es duplica; és idempotent.
                     if ($pw.plan -eq 'ultimate') { & powercfg -duplicatescheme $guid 2>&1 | Out-Null }
@@ -269,6 +278,32 @@ if ($pw) {
 # macOS és una sola clau (com.apple.swipescrolldirection); aquí en calen dues,
 # i amb conveni invertit l'una respecte l'altra.
 $inp = $sys.input
+
+# -----------------------------------------------------------------------------
+# [mac] Trackpad: el rol desktop d'ansible-mac en configura sis coses. Aquestes
+# quatre tenen equivalent al touchpad de precisió de Windows. Les altres dues
+# (clic silenciós i Force Click) són del trackpad hàptic dels Mac i no existeixen.
+# -----------------------------------------------------------------------------
+$PTP = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\PrecisionTouchPad'
+if ($inp -and (Test-Path -LiteralPath $PTP)) {
+    foreach ($t in @(
+        @{ Key = 'tap_to_click';          Name = 'TapsEnabled'
+           Task = 'tocar per fer clic';   Mac = 'Clicking = 1' },
+        @{ Key = 'two_finger_right_click'; Name = 'TwoFingerTapEnabled'
+           Task = 'clic secundari amb dos dits'; Mac = 'TrackpadRightClick' },
+        @{ Key = 'corner_right_click';    Name = 'RightClickZoneEnabled'
+           Task = 'clic secundari per la cantonada'; Mac = 'TrackpadCornerSecondaryClick = 0' },
+        @{ Key = 'tap_and_drag';          Name = 'TapAndDrag'
+           Task = 'arrossegar sense bloqueig'; Mac = 'Dragging = 1, DragLock = 0' }
+    )) {
+        if ($null -eq $inp[$t.Key]) { continue }
+        $v = 0; if ($inp[$t.Key]) { $v = 1 }
+        Set-Tweak -Task $t.Task -Path $PTP -Name $t.Name -Value $v | Out-Null
+    }
+} elseif ($inp) {
+    Write-TaskResult -Task 'trackpad' -Status 'skipped' -Message 'aquest equip no té touchpad de precisió'
+}
+
 if ($inp -and $null -ne $inp.natural_scrolling) {
     $natural = [bool]$inp.natural_scrolling
     $etiqueta = 'clàssic'

@@ -156,7 +156,7 @@ Serveix per comprovar d'un cop d'ull que cap app del Mac s'ha quedat pel camí.
 
 | A ansible-mac | A Windows | winget | Chocolatey | Scoop |
 | --- | --- | --- | --- | --- |
-| `mas 1158928913 Ping Status` | **sense equivalent** — Només macOS. Alternativa: PingInfoView (NirSoft) o `Test-Connection` a PowerShell. | — | — | — |
+| `mas 1158928913 Ping Status` | PingoMeter | `JustinGrote.PingoMeter` | — | — |
 | `mas 1274495053 Microsoft To Do` | Microsoft To Do | `9NBLGGH5R558` | — | — |
 | `mas 1451685025 WireGuard` | WireGuard | `WireGuard.WireGuard` | `wireguard` | — |
 | `mas 1509590766 MuteKey` | **sense equivalent** — Equivalent a Windows: PowerToys Video Conference Mute (Win+Maj+A), ja cobert a systemutilities. | — | — | — |
@@ -189,7 +189,7 @@ Serveix per comprovar d'un cop d'ull que cap app del Mac s'ha quedat pel camí.
 ---
 
 **94 entrades** en 17 categories, de les quals
-**75 s'instal·len** i **19 no tenen equivalent** a Windows.
+**76 s'instal·len** i **18 no tenen equivalent** a Windows.
 
 Les que no en tenen surten com a `skipped` quan executes `run.ps1`, amb el
 motiu al costat: no són errors, són decisions documentades.

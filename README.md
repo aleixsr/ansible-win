@@ -188,6 +188,7 @@ choco search <nom>
 | App | Id |
 |---|---|
 | Microsoft To Do | `9NBLGGH5R558` |
+| PingoMeter | `JustinGrote.PingoMeter` (winget normal) |
 | Azure VPN Client | `9NP355QT2SQB` |
 | WireGuard | `WireGuard.WireGuard` |
 | Charmy: Hot Corners | `9P5PK6TVQXF7` |
@@ -260,7 +261,6 @@ substitut, i surten com a `skipped` quan executes `run.ps1`.
 | `windows-app` | És el client RDP de Microsoft *per a macOS*. Aquí ja hi ha `mstsc.exe` |
 | `microsoft-auto-update` | Click-to-Run / Windows Update |
 | `macdown` | El cobreix Mark Text |
-| `Ping Status` | Alternativa: PingInfoView o `Test-Connection` |
 | `MuteKey` | PowerToys Video Conference Mute (Win+Maj+A) |
 
 ### Descartats a propòsit
@@ -341,11 +341,43 @@ realment no siguin a cap gestor.
 Tots configurables a la secció `system:` de `config.yml`. Els que toquen `HKLM`
 necessiten administrador; sense privilegis surten com a `skipped`, no fallen.
 
+### D'on surt cada ajust
+
+Això no és tot una traducció d'`ansible-mac`, i val més dir-ho clar. Cada bloc
+de `system:` va marcat al `config.yml`:
+
+| Marca | Què vol dir |
+|---|---|
+| `[mac]` | Ve del rol `desktop` d'`ansible-mac` i hi té equivalència directa |
+| `[win]` | **No existeix a `ansible-mac`**: és criteri afegit només per a Windows |
+
+| Bloc | Origen |
+|---|---|
+| `input` (trackpad i scroll) | `[mac]` |
+| `explorer.hide_desktop_icons` | `[mac]` — `com.apple.finder CreateDesktop = false` |
+| Resta d'`explorer` | `[win]` |
+| `taskbar` | `[win]` |
+| `appearance` | `[win]` |
+| `privacy` | `[win]` |
+| `power` | `[win]` |
+| `developer` | `[win]` |
+
+El rol `desktop` del Mac toca escriptori, Dock, hot corners, trackpad i teclat.
+A Windows no hi ha ni Dock ni hot corners, i la resta de blocs són decisions
+sobre com ha de quedar un Windows, no traduccions de res. **Si algun dia vols
+que els dos repos siguin estrictes, el que s'ha de treure és tot el `[win]`.**
+
+Del rol `desktop` del Mac queden sense portar, per falta d'equivalent a Windows:
+so en canviar el volum, substitució de punt amb doble espai, clic silenciós i
+Force Click (són del trackpad hàptic dels Mac) i F1–F12 com a tecles de funció
+(a Windows ho mana la BIOS, no el sistema operatiu).
+
 ### Explorador de fitxers
 
-| Ajust | Per defecte |
-|---|---|
-| Mostrar les extensions de fitxer | sí |
+| Ajust | Per defecte | |
+|---|---|---|
+| Amagar les icones de l'escriptori | sí | `[mac]` |
+| Mostrar les extensions de fitxer | sí | `[win]` |
 | Mostrar els fitxers ocults | sí |
 | Obrir a "Aquest equip" en comptes d'"Accés ràpid" | sí |
 | Ruta completa a la barra de títol | sí |
@@ -378,14 +410,20 @@ necessiten administrador; sense privilegis surten com a `skipped`, no fallen.
 | Desactivar la cerca web i els suggeriments de Bing al menú Inici | sí |
 | Desactivar les experiències personalitzades i el contingut suggerit | sí |
 
-### Entrada (ratolí i touchpad)
+### Entrada (ratolí i touchpad) — `[mac]`
 
-Equival al "Disable natural scrolling" del rol `desktop` d'`ansible-mac`
-(`com.apple.swipescrolldirection = false`).
+Tot aquest bloc ve del rol `desktop` d'`ansible-mac`.
 
-| Ajust | Per defecte |
-|---|---|
-| `natural_scrolling` | `false` — scroll clàssic: gest o roda avall, la pàgina baixa |
+| Ajust | Per defecte | A `ansible-mac` |
+|---|---|---|
+| `natural_scrolling` | `false` — gest o roda avall, la pàgina baixa | `com.apple.swipescrolldirection = false` |
+| `tap_to_click` | `true` | `Clicking = 1` |
+| `two_finger_right_click` | `true` | `TrackpadRightClick = true` |
+| `corner_right_click` | `false` — amb dos dits, no per la cantonada | `TrackpadCornerSecondaryClick = 0` |
+| `tap_and_drag` | `true` — arrossegar sense bloqueig | `Dragging = 1`, `DragLock = 0` |
+
+Els del trackpad s'apliquen a `HKCU\...\PrecisionTouchPad`. En un equip sense
+touchpad de precisió, la tasca surt com a `skipped`.
 
 A macOS és una sola preferència. A Windows en calen dues, i **el `0` no vol dir
 el mateix a totes dues**:
@@ -401,9 +439,11 @@ revés, canvia el booleà i torna a executar `.\run.ps1 -Roles system`.
 
 ### Energia i desenvolupament
 
+Tot aquest bloc és `[win]`: `ansible-mac` no diu res d'energia.
+
 | Ajust | Per defecte |
 |---|---|
-| Pla d'energia | `high` (alt rendiment) |
+| Pla d'energia | `high` — «Alto rendimiento» (`8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c`). Els altres valors són `balanced`, `ultimate` i `none` |
 | Temps per apagar la pantalla | `-1`, no s'hi toca |
 | Temps per suspendre | `0`, mai |
 | Mode desenvolupador | activat |

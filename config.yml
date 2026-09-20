@@ -607,10 +607,13 @@ packages:
   # --- store  (mas_apps) ------------------------------------------------------
   #  L'equivalent de `mas` a Windows és la font msstore de winget.
   store:
+    # PingoMeter fa el mateix que Ping Status del Mac: el ping a la safata del
+    # sistema. Es winget normal, no msstore, pero es queda en aquesta categoria
+    # perque 'store' es el mapatge de mas_apps d'ansible-mac.
     - id: ping-status
-      name: Ping Status
+      name: PingoMeter
+      winget: JustinGrote.PingoMeter
       mac: "mas 1158928913 Ping Status"
-      note: "Només macOS. Alternativa: PingInfoView (NirSoft) o `Test-Connection` a PowerShell."
     - id: microsoft-todo
       name: Microsoft To Do
       winget: 9NBLGGH5R558
@@ -727,41 +730,72 @@ dev:
   vscode_extensions: []
 
 # -----------------------------------------------------------------------------
-#  Rol: system   (equivalent al rol desktop d'ansible-mac)
+#  Rol: system
 # -----------------------------------------------------------------------------
-#  El rol desktop del Mac toca Dock, hot corners i trackpad. A Windows no hi ha
-#  ni Dock ni hot corners: l'equivalent més proper és la barra de tasques.
+#  ATENCIO amb l'origen de cada bloc, que no es tot el mateix:
+#
+#    [mac]  ve del rol desktop d'ansible-mac i hi te equivalencia directa
+#    [win]  NO existeix a ansible-mac: es criteri afegit nomes per a Windows
+#
+#  El rol desktop del Mac toca escriptori, Dock, hot corners, trackpad i
+#  teclat. A Windows no hi ha ni Dock ni hot corners, i la resta de blocs
+#  d'aqui sota ([win]) son decisions de com ha de quedar un Windows, no
+#  traduccions de res. Si algun dia vols que els dos repos siguin estrictes,
+#  el que s'ha de treure es tot el marcat [win].
+#
+#  Del rol desktop del Mac queden sense portar, per falta d'equivalent:
+#    - so en canviar el volum        (Windows no ho te)
+#    - substitucio de punt amb doble espai (Windows no ho te)
+#    - clic silencios i Force Click  (son del trackpad haptic dels Mac)
+#    - F1..F12 com a tecles de funcio (a Windows ho mana la BIOS, no el SO)
 system:
+  # [win] -- Windows no te res d'aixo a ansible-mac
   explorer:
+    # [mac] com.apple.finder CreateDesktop = false
+    hide_desktop_icons: true
     show_file_extensions: true
     show_hidden_files: true
     launch_to_this_pc: true
     show_full_path_in_title: true
     expand_to_open_folder: true
     disable_recent_files: false
+  # [win]
   taskbar:
     align_left: true
     hide_search_box: true
     hide_task_view: true
     hide_widgets: true
     hide_chat: true
+  # [win]
   appearance:
     dark_mode: true
     transparency: true
     accent_on_taskbar: false
+  # [win]
   privacy:
     disable_advertising_id: true
     disable_start_web_search: true
     disable_tailored_experiences: true
+  # [win] -- ansible-mac no diu res d'energia
   power:
     plan: high
     monitor_timeout_ac: -1
     standby_timeout_ac: 0
+  # [win]
   developer:
     enable_developer_mode: true
     enable_long_paths: true
     enable_openssh_server: false
+  # [mac] -- tot aquest bloc ve del rol desktop d'ansible-mac
   input:
+    # com.apple.AppleMultitouchTrackpad Clicking = 1
+    tap_to_click: true
+    # TrackpadRightClick = true  (clic secundari amb dos dits)
+    two_finger_right_click: true
+    # TrackpadCornerSecondaryClick = 0  (amb dos dits, NO per la cantonada)
+    corner_right_click: false
+    # Dragging = 1 i DragLock = 0  (arrossegar sense bloqueig)
+    tap_and_drag: true
     # Equival a "Disable natural scrolling" d'ansible-mac
     # (com.apple.swipescrolldirection = false).
     #
