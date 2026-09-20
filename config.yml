@@ -308,10 +308,6 @@ packages:
       winget: Eugeny.Tabby
       choco: tabby
       mac: tabby
-    - id: warp
-      name: Warp
-      winget: Warp.Warp
-      mac: warp
     # A ansible-mac el Wave no es a casksterminal, pero hi ha una regla de
     # Karabiner per a ell (files/karabiner/wave_terminal.json): s'instal-la
     # fora d'Ansible. Aqui si que el gestionem.
@@ -393,11 +389,6 @@ packages:
       winget: Obsidian.Obsidian
       choco: obsidian
       mac: "(no hi es a ansible-mac)"
-    - id: notion
-      name: Notion
-      winget: Notion.Notion
-      choco: notion
-      mac: notion
     # Calculadora d'estil bloc de notes, alternativa explicita al Numi. No es a
     # cap gestor: URL fixa amb checksum. Cal pujar version/source/sha256 a ma
     # quan surti una versio nova.

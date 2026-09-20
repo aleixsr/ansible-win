@@ -138,7 +138,6 @@ Serveix per comprovar d'un cop d'ull que cap app del Mac s'ha quedat pel camí.
 | `keka` | PeaZip | `Giorgiotani.Peazip` | `peazip` | — |
 | `keka` | 7-Zip | `7zip.7zip` | `7zip` | — |
 | `maccy` | **sense equivalent** — Historial de porta-retalls. A Windows és natiu: Win+V. | — | — | — |
-| `notion` | Notion | `Notion.Notion` | `notion` | — |
 | `numi` | **sense equivalent** —  | — | — | — |
 | `rectangle` | **sense equivalent** — Gestió de finestres: PowerToys FancyZones + Win+fletxes, ja cobert a systemutilities. | — | — | — |
 | `shottr` | ShareX | `ShareX.ShareX` | `sharex` | — |
@@ -185,12 +184,11 @@ Serveix per comprovar d'un cop d'ull que cap app del Mac s'ha quedat pel camí.
 | `(no gestionat per ansible-mac)` | Wave Terminal | `CommandLine.Wave` | — | — |
 | `iterm2` | Windows Terminal | `Microsoft.WindowsTerminal` | — | — |
 | `tabby` | Tabby | `Eugeny.Tabby` | `tabby` | — |
-| `warp` | Warp | `Warp.Warp` | — | — |
 
 ---
 
-**95 entrades** en 17 categories, de les quals
-**76 s'instal·len** i **19 no tenen equivalent** a Windows.
+**93 entrades** en 17 categories, de les quals
+**74 s'instal·len** i **19 no tenen equivalent** a Windows.
 
 Les que no en tenen surten com a `skipped` quan executes `run.ps1`, amb el
 motiu al costat: no són errors, són decisions documentades.

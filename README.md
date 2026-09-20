@@ -165,13 +165,13 @@ choco search <nom>
 | Categoria | Apps |
 |---|---|
 | Browsers | Brave, Chromium, Firefox, Google Chrome, Microsoft Edge |
-| Terminal | Windows Terminal, Tabby, Warp, Wave Terminal |
+| Terminal | Windows Terminal, Tabby, Wave Terminal |
 | Communication | Mailspring, Microsoft Teams, Telegram, WhatsApp |
-| Productivity | Claude Desktop, 7-Zip, PeaZip, Obsidian, Notion, Calcator, Charmy (hot corners), ShareX, HWiNFO |
+| Productivity | Claude Desktop, 7-Zip, PeaZip, Obsidian, Calcator, Charmy (hot corners), ShareX, HWiNFO |
 | Networking & VPN | SwitchHosts, Tailscale, OpenVPN Connect |
 | Remote access | Royal TS, RustDesk |
 | File management & cloud | Box Drive, LocalSend, Synology Drive Client |
-| Microsoft suite | Microsoft 365, Azure Storage Explorer |
+| Microsoft suite | Azure Storage Explorer |
 | Media | HandBrake, VLC, mpv, FFmpeg, yt-dlp, Open TV |
 | Documents | Adobe Acrobat Reader, Mark Text, Modern CSV, ONLYOFFICE, PDF24 Creator, Xournal++ |
 | Hardware | Logi Options+ |
@@ -255,6 +255,19 @@ s'han tret del catàleg. No s'instal·len i no hi ha cap entrada a `config.yml`:
 | `betterdisplay` | Twinkle Tray | Només fa brillantor i contrast per DDC/CI; no cobreix resolucions ni escalat |
 | `macfuse` | WinFsp | No cal si no muntes sistemes de fitxers en espai d'usuari. Instal·la'l a mà si algun dia et fa falta |
 | `superduper` | Veeam Agent | Backup empresarial, no clonatge d'arrencada simple |
+
+Aquests dos **sí que s'instal·len a `ansible-mac`** i aquí no. És l'única
+divergència volguda entre els dos repos:
+
+| Al Mac | Per què no a Windows |
+|---|---|
+| `notion` | No es vol en aquesta màquina |
+| `warp` | No es vol en aquesta màquina; el terminal aquí és Windows Terminal, Tabby i Wave |
+
+I **Microsoft 365** hi és al Mac però aquí no s'instal·la: el manifest
+`Microsoft.Office` de winget apunta a `officecdn.microsoft.com`, un fitxer que
+Microsoft actualitza sense pujar el hash del manifest, i winget no deixa
+ignorar-ho quan corre com a administrador. Instal·la'l des de `portal.office.com`.
 
 La taula completa, paquet per paquet i amb els identificadors de cada gestor, és
 a [docs/APPS.md](docs/APPS.md). Es regenera des de `config.yml` amb:
