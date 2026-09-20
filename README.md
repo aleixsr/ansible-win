@@ -37,7 +37,10 @@ Executar `.\run.ps1` fa, en aquest ordre:
    - Instal·la el perfil de PowerShell: el que queda a `Documents\` és un
      carregador d'una línia, així que el contingut real viu al repo i un
      `git pull` ja actualitza el perfil
-   - Aplica la configuració de Windows Terminal (fent còpia de la teva)
+   - **Fusiona** la configuració de Windows Terminal: el repo mana sobre el que
+     declara i la resta es respecta. El Terminal escriu claus pròpies cada cop
+     que s'obre (`keybindings`, `newTabMenu`, `themes`); sobreescriure el fitxer
+     sencer no convergiria mai. Fa còpia a `.ansible-win.bak` el primer cop
 4. **Configura l'entorn de desenvolupament** (`roles/dev`)
    - `git config --global` (àlies, `pull.rebase`, `delta` com a pager si hi és)
    - Genera la clau SSH `ed25519` si no existeix
@@ -172,6 +175,10 @@ choco search <nom>
 | Remote access | Royal TS, RustDesk |
 | File management & cloud | Box Drive, LocalSend, Synology Drive Client |
 | Microsoft suite | Azure Storage Explorer |
+
+> **Microsoft 365 no és al catàleg.** El manifest `Microsoft.Office` de winget té
+> el hash trencat de forma crònica i, a més, la suite ofimàtica aquí la cobreix
+> **ONLYOFFICE**, que sí que s'instal·la.
 | Media | HandBrake, VLC, mpv, FFmpeg, yt-dlp, Open TV |
 
 > **yt-dlp arrossega dues dependències.** El seu paquet de winget declara
@@ -375,7 +382,12 @@ Force Click (són del trackpad hàptic dels Mac) i F1–F12 com a tecles de func
 
 | Ajust | Per defecte | |
 |---|---|---|
-| Amagar les icones de l'escriptori | sí | `[mac]` |
+| Icones de l'escriptori | **visibles** — al Mac s'amaguen, aquí no | `[mac]` |
+
+> `HideIcons` no es pot escriure i prou: l'Explorador se'l guarda en memòria i
+> el reescriu, tant mentre corre com en sortir. El rol l'**atura primer**,
+> escriu després i el torna a obrir. A l'inrevés no enganxa.
+
 | Mostrar les extensions de fitxer | sí | `[win]` |
 | Mostrar els fitxers ocults | sí |
 | Obrir a "Aquest equip" en comptes d'"Accés ràpid" | sí |
@@ -477,7 +489,15 @@ sudo:
   provider: gsudo        # 'native' deixa el sudo de Microsoft
   powershell_alias: true
   cmd_shim: true
-  cache_seconds: 0       # >0 = no repeteix UAC durant N segons
+```
+
+El repo **no gestiona la cache de credencials** de gsudo. `CacheDuration` és un
+ajust global del sistema que demana una elevació pròpia, i des d'un run que ja
+corre elevat no es pot aplicar: la tasca sortiria com a pendent per sempre. Es
+configura a mà, un sol cop:
+
+```powershell
+gsudo config CacheDuration 00:00:00
 ```
 
 ```powershell

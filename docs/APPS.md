@@ -103,7 +103,6 @@ Serveix per comprovar d'un cop d'ull que cap app del Mac s'ha quedat pel camí.
 | --- | --- | --- | --- | --- |
 | `microsoft-auto-update` | **sense equivalent** — Específic de macOS. A Windows actualitza Click-to-Run / Windows Update. | — | — | — |
 | `microsoft-azure-storage-explorer` | Azure Storage Explorer | `Microsoft.Azure.StorageExplorer` | `microsoftazurestorageexplorer` | — |
-| `microsoft-office` | **sense equivalent** — El manifest de winget te el hash trencat de forma cronica (officecdn). Instal-la'l des de portal.office.com; Click-to-Run ja s'actualitza sol. | — | — | — |
 
 ## `networking`
 
@@ -188,8 +187,8 @@ Serveix per comprovar d'un cop d'ull que cap app del Mac s'ha quedat pel camí.
 
 ---
 
-**94 entrades** en 17 categories, de les quals
-**76 s'instal·len** i **18 no tenen equivalent** a Windows.
+**93 entrades** en 17 categories, de les quals
+**76 s'instal·len** i **17 no tenen equivalent** a Windows.
 
 Les que no en tenen surten com a `skipped` quan executes `run.ps1`, amb el
 motiu al costat: no són errors, són decisions documentades.

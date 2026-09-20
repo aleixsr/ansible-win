@@ -21,6 +21,8 @@ if (-not $sys) {
 
 $checkMode = Get-ProvisionCheckMode
 $explorerNeedsRestart = $false
+# Cert nomes si algun canvi NO enganxa sense reiniciar l'Explorador.
+$restartExplorerRequired = $false
 
 $ADVANCED = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced'
 $SEARCH   = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Search'
@@ -57,10 +59,35 @@ function Set-Tweak {
 $exp = $sys.explorer
 if ($exp) {
     # [mac] Equival a com.apple.finder CreateDesktop = false del rol desktop.
+    # HideIcons no es pot escriure i prou: l'Explorador se'l guarda en memoria i
+    # el torna a escriure, tant mentre corre com en sortir. Cal ATURAR-LO PRIMER,
+    # escriure despres i tornar-lo a obrir. Provat: a l'inreves no enganxa.
     if ($null -ne $exp.hide_desktop_icons) {
-        $v = 0; if ($exp.hide_desktop_icons) { $v = 1 }
-        Set-Tweak -Task 'amagar icones de l''escriptori' -Path $ADVANCED `
-            -Name 'HideIcons' -Value $v -RestartsExplorer | Out-Null
+        $wanted = 0; if ($exp.hide_desktop_icons) { $wanted = 1 }
+        $currentIcons = $null
+        $prop = Get-ItemProperty -LiteralPath $ADVANCED -Name 'HideIcons' -ErrorAction SilentlyContinue
+        if ($prop) { $currentIcons = [int]$prop.HideIcons }
+
+        if ($currentIcons -eq $wanted) {
+            Write-TaskResult -Task 'icones de l''escriptori' -Status 'ok' -Message "HideIcons = $wanted"
+        } elseif ($checkMode) {
+            Write-TaskResult -Task 'icones de l''escriptori' -Status 'changed' -Message "posaria HideIcons = $wanted"
+        } else {
+            try {
+                Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue
+                Start-Sleep -Seconds 2
+                New-ItemProperty -LiteralPath $ADVANCED -Name 'HideIcons' -Value $wanted `
+                    -PropertyType DWord -Force | Out-Null
+                Start-Sleep -Seconds 1
+                if (-not (Get-Process explorer -ErrorAction SilentlyContinue)) {
+                    Start-Process explorer.exe
+                }
+                Write-TaskResult -Task 'icones de l''escriptori' -Status 'changed' `
+                    -Message "HideIcons = $wanted (Explorador reiniciat)"
+            } catch {
+                Write-TaskResult -Task 'icones de l''escriptori' -Status 'failed' -Message $_.Exception.Message
+            }
+        }
     }
     if ($null -ne $exp.show_file_extensions) {
         # HideFileExt està invertit: 0 = mostra les extensions.
@@ -321,6 +348,24 @@ if ($dv) {
 # Reinici de l'explorador perquè els canvis siguin visibles
 # -----------------------------------------------------------------------------
 if ($explorerNeedsRestart -and -not $checkMode) {
-    Write-Info 'Alguns canvis necessiten reiniciar l''Explorador de Windows.'
-    Write-Info 'Executa: Stop-Process -Name explorer -Force   (es torna a obrir sol)'
+    # HideIcons és un cas a part: l'Explorador se'l guarda en memòria i el
+    # reescriu al registre, així que escriure'l i prou no serveix de res --
+    # el valor torna enrere sol. Per a aquest cal reiniciar l'Explorador sí o sí.
+    if ($restartExplorerRequired) {
+        try {
+            Write-Info 'Reiniciant l''Explorador de Windows (les icones de l''escriptori ho necessiten)...'
+            Stop-Process -Name explorer -Force -ErrorAction Stop
+            Start-Sleep -Seconds 2
+            if (-not (Get-Process explorer -ErrorAction SilentlyContinue)) {
+                Start-Process explorer.exe
+            }
+            Write-Info 'Explorador reiniciat.'
+        } catch {
+            Write-Info "No s'ha pogut reiniciar l'Explorador: $($_.Exception.Message)"
+            Write-Info 'Fes-ho a mà: Stop-Process -Name explorer -Force'
+        }
+    } else {
+        Write-Info 'Alguns canvis necessiten reiniciar l''Explorador de Windows.'
+        Write-Info 'Executa: Stop-Process -Name explorer -Force   (es torna a obrir sol)'
+    }
 }

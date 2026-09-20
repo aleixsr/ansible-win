@@ -197,15 +197,59 @@ if (-not $shellCfg.configure_terminal) {
     } else {
         $target = Join-Path $settingsDir 'settings.json'
         try {
-            $content = Get-Content -LiteralPath $source -Raw -Encoding UTF8
             $needsBackup = (Test-Path -LiteralPath $target) -and
                            -not (Test-Path -LiteralPath "$target.ansible-win.bak")
             if ($needsBackup -and -not $checkMode) {
                 Copy-Item -LiteralPath $target -Destination "$target.ansible-win.bak" -Force
             }
-            $changed = Set-FileContent -Path $target -Content $content
-            $status = 'ok'; if ($changed) { $status = 'changed' }
-            Write-TaskResult -Task 'Windows Terminal' -Status $status -Message $target
+
+            $desired = Get-Content -LiteralPath $source -Raw -Encoding UTF8 | ConvertFrom-Json
+
+            if (-not (Test-Path -LiteralPath $target)) {
+                $changed = Set-FileContent -Path $target -Content ($desired | ConvertTo-Json -Depth 32)
+                $status = 'ok'; if ($changed) { $status = 'changed' }
+                Write-TaskResult -Task 'Windows Terminal' -Status $status -Message $target
+            } else {
+                # Fusionem en comptes de sobreescriure. Windows Terminal escriu
+                # claus pròpies al seu settings.json cada cop que s'obre
+                # (keybindings, newTabMenu, themes...). Si el sobreescrivíssim
+                # sencer, la tasca sortiria com a 'changed' a CADA execució: el
+                # repo les treu, l'app les torna a posar, i això no convergeix
+                # mai. El repo mana sobre el que declara, i la resta es respecta.
+                $current = Get-Content -LiteralPath $target -Raw -Encoding UTF8 | ConvertFrom-Json
+
+                function Merge-JsonObject {
+                    param($Base, $Override)
+                    if ($null -eq $Override) { return $Base }
+                    if ($Override -isnot [System.Management.Automation.PSCustomObject]) { return $Override }
+                    if ($Base -isnot [System.Management.Automation.PSCustomObject]) { return $Override }
+
+                    $result = $Base
+                    foreach ($prop in $Override.PSObject.Properties) {
+                        $existing = $result.PSObject.Properties[$prop.Name]
+                        if ($existing) {
+                            $result.PSObject.Properties[$prop.Name].Value =
+                                Merge-JsonObject -Base $existing.Value -Override $prop.Value
+                        } else {
+                            $result | Add-Member -NotePropertyName $prop.Name -NotePropertyValue $prop.Value
+                        }
+                    }
+                    return $result
+                }
+
+                $before = $current | ConvertTo-Json -Depth 32
+                $merged = Merge-JsonObject -Base $current -Override $desired
+                $after = $merged | ConvertTo-Json -Depth 32
+
+                if ($before -eq $after) {
+                    Write-TaskResult -Task 'Windows Terminal' -Status 'ok' -Message $target
+                } elseif ($checkMode) {
+                    Write-TaskResult -Task 'Windows Terminal' -Status 'changed' -Message "fusionaria $target"
+                } else {
+                    Set-Content -LiteralPath $target -Value $after -Encoding UTF8 -NoNewline
+                    Write-TaskResult -Task 'Windows Terminal' -Status 'changed' -Message $target
+                }
+            }
         } catch {
             Write-TaskResult -Task 'Windows Terminal' -Status 'failed' -Message $_.Exception.Message
         }
