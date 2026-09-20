@@ -776,11 +776,11 @@ system:
     disable_advertising_id: true
     disable_start_web_search: true
     disable_tailored_experiences: true
-  # [win] -- ansible-mac no diu res d'energia
-  power:
-    plan: high
-    monitor_timeout_ac: -1
-    standby_timeout_ac: 0
+  # El bloc power: s'ha tret a proposit. A Windows els temps d'apagar pantalla i
+  # de suspensio son propietats del pla d'energia, no ajustos independents, o
+  # sigui que "treure el pla d'energia" vol dir treure'ls tots tres. A mes era
+  # [win] sencer: ansible-mac no diu res d'energia. Si algun dia el vols,
+  # l'historial de git el te.
   # [win]
   developer:
     enable_developer_mode: true

@@ -359,7 +359,6 @@ de `system:` va marcat al `config.yml`:
 | `taskbar` | `[win]` |
 | `appearance` | `[win]` |
 | `privacy` | `[win]` |
-| `power` | `[win]` |
 | `developer` | `[win]` |
 
 El rol `desktop` del Mac toca escriptori, Dock, hot corners, trackpad i teclat.
@@ -437,15 +436,18 @@ El canvi al touchpad és immediat. **El del ratolí no s'aplica fins que
 desconnectis i tornis a connectar el dispositiu, o reiniciïs.** Si et queda al
 revés, canvia el booleà i torna a executar `.\run.ps1 -Roles system`.
 
-### Energia i desenvolupament
+### Desenvolupament
 
-Tot aquest bloc és `[win]`: `ansible-mac` no diu res d'energia.
+**Aquest repo no toca l'energia.** Hi havia un bloc `power` que posava el pla
+«Alt rendiment» i desactivava la suspensió, i s'ha tret: era `[win]` sencer
+(`ansible-mac` no diu res d'energia) i en un portàtil té conseqüències reals
+sobre el ventilador i la bateria. A Windows, a més, els temps d'apagar pantalla
+i de suspensió són **propietats del pla**, no ajustos independents, així que
+treure'n un vol dir treure'ls tots. Es gestiona des de Configuració > Sistema >
+Energia.
 
 | Ajust | Per defecte |
 |---|---|
-| Pla d'energia | `high` — «Alto rendimiento» (`8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c`). Els altres valors són `balanced`, `ultimate` i `none` |
-| Temps per apagar la pantalla | `-1`, no s'hi toca |
-| Temps per suspendre | `0`, mai |
 | Mode desenvolupador | activat |
 | Rutes llargues (>260 caràcters) | activades |
 | Servidor OpenSSH | desactivat |
