@@ -135,6 +135,12 @@ packages:
       choco: soapui
       provider: choco
       mac: soapui
+    # Notepad++ no es a ansible-mac (alla el seu lloc el fa el Sublime Text).
+    - id: notepadplusplus
+      name: Notepad++
+      winget: Notepad++.Notepad++
+      choco: notepadplusplus
+      mac: "(no hi es a ansible-mac)"
     - id: sublime-text
       name: Sublime Text
       winget: SublimeHQ.SublimeText.4
@@ -528,6 +534,12 @@ packages:
       choco: ffmpeg
       mac: "(no hi es a ansible-mac)"
       test: ffmpeg
+    # ATENCIO: el paquet de winget declara dues dependencies i winget les
+    # instal-la soles, sense preguntar: DenoLand.Deno i yt-dlp.FFmpeg. El Deno
+    # no es sobrer: yt-dlp el fa servir per resoldre els reptes de JavaScript
+    # de YouTube. Si no vols Deno a la maquina, el que has de treure es yt-dlp.
+    # El paquet de Chocolatey no arrossega Deno, pero tampoc el porta i llavors
+    # YouTube pot fallar.
     - id: yt-dlp
       name: yt-dlp
       winget: yt-dlp.yt-dlp

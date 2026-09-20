@@ -154,7 +154,7 @@ choco search <nom>
 
 | Categoria | Paquets |
 |---|---|
-| Development | GitHub CLI, Git, Node.js LTS, Python 3.14, Apache Directory Studio, GitHub Copilot CLI, DBeaver Community, draw.io, GitHub Desktop, SoapUI, Sublime Text, Visual Studio Code, Visual Studio Code Insiders |
+| Development | GitHub CLI, Git, Node.js LTS, Python 3.14, Apache Directory Studio, GitHub Copilot CLI, DBeaver Community, draw.io, GitHub Desktop, SoapUI, Notepad++, Sublime Text, Visual Studio Code, Visual Studio Code Insiders |
 | Cloud / DevOps | Azure CLI, OCI CLI |
 | Networking | iperf3, RustScan, WinMTR, Nmap, Speedtest CLI, mailsend-go, tcping, wget |
 | System utilities | PowerShell 7, balenaEtcher, WizTree, PowerToys, ScreenToGif, Novabench, XCA |
@@ -173,6 +173,12 @@ choco search <nom>
 | File management & cloud | Box Drive, LocalSend, Synology Drive Client |
 | Microsoft suite | Azure Storage Explorer |
 | Media | HandBrake, VLC, mpv, FFmpeg, yt-dlp, Open TV |
+
+> **yt-dlp arrossega dues dependències.** El seu paquet de winget declara
+> `DenoLand.Deno` i `yt-dlp.FFmpeg`, i winget les instal·la soles sense
+> preguntar. Deno no és sobrer: yt-dlp el fa servir per resoldre els reptes de
+> JavaScript de YouTube. Si no en vols cap, el que has de treure del catàleg és
+> **yt-dlp**, no Deno.
 | Documents | Adobe Acrobat Reader, Mark Text, Modern CSV, ONLYOFFICE, PDF24 Creator, Xournal++ |
 | Hardware | Logi Options+ |
 | Fonts (via `roles/shell`) | Meslo LG Nerd Font |

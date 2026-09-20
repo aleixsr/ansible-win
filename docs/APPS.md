@@ -39,6 +39,7 @@ Serveix per comprovar d'un cop d'ull que cap app del Mac s'ha quedat pel camí.
 
 | A ansible-mac | A Windows | winget | Chocolatey | Scoop |
 | --- | --- | --- | --- | --- |
+| `(no hi es a ansible-mac)` | Notepad++ | `Notepad++.Notepad++` | `notepadplusplus` | — |
 | `apache-directory-studio` | Apache Directory Studio | `Apache.DirectoryStudio` | — | — |
 | `copilot-cli` | GitHub Copilot CLI | `GitHub.Copilot` | — | — |
 | `dbeaver-community` | DBeaver Community | `DBeaver.DBeaver.Community` | `dbeaver` | — |
@@ -187,8 +188,8 @@ Serveix per comprovar d'un cop d'ull que cap app del Mac s'ha quedat pel camí.
 
 ---
 
-**93 entrades** en 17 categories, de les quals
-**74 s'instal·len** i **19 no tenen equivalent** a Windows.
+**94 entrades** en 17 categories, de les quals
+**75 s'instal·len** i **19 no tenen equivalent** a Windows.
 
 Les que no en tenen surten com a `skipped` quan executes `run.ps1`, amb el
 motiu al costat: no són errors, són decisions documentades.
