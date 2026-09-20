@@ -141,11 +141,34 @@ foreach ($app in $apps) {
 
     # El valor del registre ha d'anar entre cometes: hi ha rutes amb espais.
     $value = '"{0}"' -f $path
+    if ($app.args) { $value = '"{0}" {1}' -f $path, (@($app.args) -join ' ') }
+
+    # Si ja hi ha una entrada que apunta al MATEIX executable, no la toquem.
+    # Moltes apps s'hi posen soles amb arguments propis -- OneDrive hi posa
+    # /background -- i reescriure-la els els prendria. El que volem és que
+    # l'app arrenqui, no imposar-hi la nostra línia d'ordres.
+    $existing = $null
+    $prop = Get-ItemProperty -LiteralPath $RUN_KEY -Name $app.name -ErrorAction SilentlyContinue
+    if ($prop) { $existing = "$($prop.($app.name))" }
+
+    if ($existing -and -not $app.args) {
+        $existingExe = $existing.Trim()
+        if ($existingExe.StartsWith('"')) {
+            $end = $existingExe.IndexOf('"', 1)
+            if ($end -gt 0) { $existingExe = $existingExe.Substring(1, $end - 1) }
+        } elseif ($existingExe.Contains(' ')) {
+            $existingExe = $existingExe.Substring(0, $existingExe.IndexOf(' '))
+        }
+        if ($existingExe -ieq $path) {
+            Write-TaskResult -Task $app.name -Status 'ok' -Message "ja hi és: $existing"
+            continue
+        }
+    }
 
     try {
         $changed = Set-RegistryValue -Path $RUN_KEY -Name $app.name -Value $value -Type 'String'
         $status = 'ok'; if ($changed) { $status = 'changed' }
-        Write-TaskResult -Task $app.name -Status $status -Message $path
+        Write-TaskResult -Task $app.name -Status $status -Message $value
     } catch {
         Write-TaskResult -Task $app.name -Status 'failed' -Message $_.Exception.Message
     }

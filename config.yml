@@ -641,6 +641,7 @@ packages:
 startup_disable:
   - PDF24          # HKLM Run -> la safata del PDF24
   - RustDesk Tray  # carpeta d'Inici -> la safata del RustDesk
+  - Warp           # HKCU Run -> entrada morta: Warp ja no hi es instal-lat
 
 startup_apps:
   # BetterDisplay (Login Item al Mac) no te contrapartida: Twinkle Tray descartat.

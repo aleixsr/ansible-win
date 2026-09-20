@@ -200,6 +200,18 @@ ShareX, HWiNFO, PowerToys, OneDrive.
 Només s'afegeixen si l'executable existeix: si encara no has instal·lat l'app, la
 tasca surt com a `skipped` en comptes de deixar una entrada morta al registre.
 
+Si ja hi ha una entrada que apunta al **mateix executable**, no s'hi toca. Moltes
+apps s'hi posen soles amb arguments propis — OneDrive hi posa `/background` —
+i reescriure-la els els prendria. El que es vol és que l'app arrenqui, no
+imposar-hi una línia d'ordres. Per forçar-ne una, hi ha `args`:
+
+```yaml
+startup_apps:
+  - name: OneDrive
+    path: $env:LOCALAPPDATA\Microsoft\OneDrive\OneDrive.exe
+    args: ["/background"]
+```
+
 ### Aplicacions que NO volem a l'inici
 
 Molts instal·ladors s'hi posen sols. `startup_disable` els treu:
@@ -208,6 +220,7 @@ Molts instal·ladors s'hi posen sols. `startup_disable` els treu:
 startup_disable:
   - PDF24          # valor de la clau Run
   - RustDesk Tray  # drecera de la carpeta d'Inici, sense el .lnk
+  - Warp           # entrada morta d'una app ja desinstal·lada
 ```
 
 El rol les busca a les dues claus `Run` (usuari i màquina) i a les dues carpetes
