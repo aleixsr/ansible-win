@@ -15,7 +15,7 @@ Set-ProvisionContext -Role 'system'
 
 $sys = $Config.system
 if (-not $sys) {
-    Write-TaskResult -Task 'configuració' -Status 'skipped' -Message 'cap secció system: a la configuració'
+    Write-TaskResult -Task 'configuració' -Status 'skipped' -Message 'cap secció system: a la configuració' -NotApplicable
     return
 }
 
@@ -151,7 +151,7 @@ if ($tb) {
         } catch { }
 
         if (-not $widgets) {
-            Write-TaskResult -Task 'widgets' -Status 'skipped' -Message 'aquesta build de Windows no porta Widgets'
+            Write-TaskResult -Task 'widgets' -Status 'skipped' -Message 'aquesta build de Windows no porta Widgets' -NotApplicable
         } else {
             $v = 1; if ($tb.hide_widgets) { $v = 0 }
             Set-Tweak -Task 'widgets' -Path $ADVANCED -Name 'TaskbarDa' -Value $v -RestartsExplorer | Out-Null
@@ -239,7 +239,7 @@ if ($inp -and (Test-Path -LiteralPath $PTP)) {
         Set-Tweak -Task $t.Task -Path $PTP -Name $t.Name -Value $v | Out-Null
     }
 } elseif ($inp) {
-    Write-TaskResult -Task 'trackpad' -Status 'skipped' -Message 'aquest equip no té touchpad de precisió'
+    Write-TaskResult -Task 'trackpad' -Status 'skipped' -Message 'aquest equip no té touchpad de precisió' -NotApplicable
 }
 
 if ($inp -and $null -ne $inp.natural_scrolling) {
@@ -251,7 +251,7 @@ if ($inp -and $null -ne $inp.natural_scrolling) {
     # 0 = natural (el contingut segueix els dits), 1 = clàssic.
     $ptpKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\PrecisionTouchPad'
     if (-not (Test-Path -LiteralPath $ptpKey)) {
-        Write-TaskResult -Task 'scroll del touchpad' -Status 'skipped' -Message 'aquest equip no té touchpad de precisió'
+        Write-TaskResult -Task 'scroll del touchpad' -Status 'skipped' -Message 'aquest equip no té touchpad de precisió' -NotApplicable
     } else {
         $ptpValue = 1
         if ($natural) { $ptpValue = 0 }
@@ -262,35 +262,113 @@ if ($inp -and $null -ne $inp.natural_scrolling) {
     # --- ratolins HID (HKLM, cal admin) --------------------------------------
     # 0 = clàssic, 1 = natural. La clau és per dispositiu: cal recórrer-los tots,
     # i n'hi ha un per cada ratolí que s'hagi connectat mai a l'equip.
-    if (-not (Test-Elevated) -and -not $checkMode) {
-        Write-TaskResult -Task "scroll del ratolí ($etiqueta)" -Status 'skipped' -Message 'cal admin'
-    } else {
-        $wheelValue = 0
-        if ($natural) { $wheelValue = 1 }
-        try {
-            $devices = @(Get-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Enum\HID\*\*\Device Parameters' `
-                            -Name FlipFlopWheel -ErrorAction SilentlyContinue)
-            if ($devices.Count -eq 0) {
-                Write-TaskResult -Task "scroll del ratolí ($etiqueta)" -Status 'skipped' -Message 'cap dispositiu HID amb FlipFlopWheel'
-            } else {
-                $touched = 0
-                foreach ($dev in $devices) {
-                    $devPath = $dev.PSPath -replace '^Microsoft\.PowerShell\.Core\\Registry::HKEY_LOCAL_MACHINE', 'HKLM:'
-                    if (Set-RegistryValue -Path $devPath -Name 'FlipFlopWheel' -Value $wheelValue -Type 'DWord') {
-                        $touched++
-                    }
-                }
-                if ($touched -gt 0) {
-                    Write-TaskResult -Task "scroll del ratolí ($etiqueta)" -Status 'changed' `
-                        -Message "$touched de $($devices.Count) dispositius"
-                    Write-Info 'El canvi al ratolí no s''aplica fins que el desconnectis i el tornis a connectar (o reiniciïs).'
-                } else {
-                    Write-TaskResult -Task "scroll del ratolí ($etiqueta)" -Status 'ok' `
-                        -Message "$($devices.Count) dispositius ja correctes"
-                }
+    $tascaRatoli = "scroll del ratolí ($etiqueta)"
+    $wheelValue = 0
+    if ($natural) { $wheelValue = 1 }
+    try {
+        $devices = @(Get-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Enum\HID\*\*\Device Parameters' `
+                        -Name FlipFlopWheel -ErrorAction SilentlyContinue)
+
+        # Llegir HKLM va sense privilegis: primer mirem quins dispositius estan
+        # malament i nomes demanem l'UAC si n'hi ha cap. Si no, aquesta tasca
+        # faria demanar elevacio a cada run per no tocar res.
+        $pendents = @()
+        foreach ($dev in $devices) {
+            $devPath = $dev.PSPath -replace '^Microsoft\.PowerShell\.Core\\Registry::HKEY_LOCAL_MACHINE', 'HKLM:'
+            if (-not (Test-RegistryValue -Path $devPath -Name 'FlipFlopWheel' -Value $wheelValue)) {
+                $pendents += $devPath
             }
-        } catch {
-            Write-TaskResult -Task "scroll del ratolí ($etiqueta)" -Status 'failed' -Message $_.Exception.Message
+        }
+
+        if ($devices.Count -eq 0) {
+            Write-TaskResult -Task $tascaRatoli -Status 'skipped' -Message 'cap dispositiu HID amb FlipFlopWheel' -NotApplicable
+        } elseif ($pendents.Count -eq 0) {
+            Write-TaskResult -Task $tascaRatoli -Status 'ok' -Message "$($devices.Count) dispositius ja correctes"
+        } elseif (-not (Test-Elevated) -and -not $checkMode) {
+            Register-AdminWork -Task $tascaRatoli
+            Write-TaskResult -Task $tascaRatoli -Status 'skipped' -Message 'cal admin: es fara al bloc elevat del final'
+        } elseif ($checkMode) {
+            Write-TaskResult -Task $tascaRatoli -Status 'changed' `
+                -Message "$($pendents.Count) de $($devices.Count) dispositius"
+        } else {
+            foreach ($devPath in $pendents) {
+                Set-RegistryValue -Path $devPath -Name 'FlipFlopWheel' -Value $wheelValue -Type 'DWord' | Out-Null
+            }
+            Write-TaskResult -Task $tascaRatoli -Status 'changed' `
+                -Message "$($pendents.Count) de $($devices.Count) dispositius"
+            Write-Info 'El canvi al ratolí no s''aplica fins que el desconnectis i el tornis a connectar (o reiniciïs).'
+        }
+    } catch {
+        Write-TaskResult -Task $tascaRatoli -Status 'failed' -Message $_.Exception.Message
+    }
+}
+
+# -----------------------------------------------------------------------------
+# Energia: acció en tancar la tapa  (cal admin)
+# -----------------------------------------------------------------------------
+# Cas d'ús: portàtil connectat a una dock USB-C amb monitors externs. Amb la
+# tapa tancada volem que segueixi treballant, no que se suspengui. Amb bateria
+# mantenim el comportament normal (suspendre), que si no es cou a la motxilla.
+#
+# powercfg només toca l'ESQUEMA ACTIU. Si canvies de pla d'energia, el nou pla
+# porta els seus propis valors i cal tornar a passar el rol.
+#
+# El valor no es pot llegir amb 'powercfg /query': LIDACTION ve amagat de
+# fàbrica i la consulta no l'ensenya. Per saber si cal canviar res mirem
+# directament el registre, que és d'on powercfg ho llegeix.
+$pw = $sys.power
+if ($pw) {
+    $LID_SUBGROUP = '4f971e89-eebd-4455-a8de-9e59040e7347'   # SUB_BUTTONS
+    $LID_SETTING  = '5ca83367-6e45-459f-a27b-476b1d01c936'   # LIDACTION
+    $LID_NAMES = @{ 0 = 'no fer res'; 1 = 'suspendre'; 2 = 'hibernar'; 3 = 'apagar' }
+
+    $wantAc = [int]$pw.lid_action_ac
+    $wantDc = [int]$pw.lid_action_dc
+    $etiqueta = "tapa tancada (endollat: $($LID_NAMES[$wantAc]) / bateria: $($LID_NAMES[$wantDc]))"
+
+    $active = $null
+    $out = (powercfg /getactivescheme) -join ' '
+    if ($out -match '([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})') {
+        $active = $Matches[1]
+    }
+
+    $lidKey = $null
+    if ($active) {
+        $lidKey = "HKLM:\SYSTEM\CurrentControlSet\Control\Power\User\PowerSchemes\$active\$LID_SUBGROUP\$LID_SETTING"
+    }
+
+    if (-not $active) {
+        Write-TaskResult -Task 'tapa tancada' -Status 'failed' -Message 'no s''ha pogut llegir l''esquema d''energia actiu'
+    } elseif (-not (Test-Path -LiteralPath $lidKey)) {
+        # Els sobretaula no tenen aquesta clau: no hi ha tapa que tancar.
+        Write-TaskResult -Task $etiqueta -Status 'skipped' -Message 'aquest equip no té acció de tapa (no és un portàtil)' -NotApplicable
+    } else {
+        $now = Get-ItemProperty -LiteralPath $lidKey -ErrorAction SilentlyContinue
+        if ($now.ACSettingIndex -eq $wantAc -and $now.DCSettingIndex -eq $wantDc) {
+            Write-TaskResult -Task $etiqueta -Status 'ok' -Message "AC=$wantAc DC=$wantDc"
+        } elseif (-not (Test-Elevated) -and -not $checkMode) {
+            Register-AdminWork -Task $etiqueta
+            Write-TaskResult -Task $etiqueta -Status 'skipped' -Message 'cal admin: es fara al bloc elevat del final'
+        } elseif ($checkMode) {
+            Write-TaskResult -Task $etiqueta -Status 'changed' `
+                -Message "AC=$($now.ACSettingIndex)->$wantAc DC=$($now.DCSettingIndex)->$wantDc"
+        } else {
+            try {
+                foreach ($cmd in @(
+                    @('/setacvalueindex', 'SCHEME_CURRENT', 'SUB_BUTTONS', 'LIDACTION', "$wantAc"),
+                    @('/setdcvalueindex', 'SCHEME_CURRENT', 'SUB_BUTTONS', 'LIDACTION', "$wantDc")
+                )) {
+                    $r = Invoke-NativeCommand -FilePath 'powercfg' -Arguments $cmd
+                    if ($r.ExitCode -ne 0) { throw "powercfg $($cmd -join ' ') ha fallat: $($r.Output.Trim())" }
+                }
+                # Sense /setactive els índex escrits no s'apliquen a la sessió.
+                $r = Invoke-NativeCommand -FilePath 'powercfg' -Arguments @('/setactive', 'SCHEME_CURRENT')
+                if ($r.ExitCode -ne 0) { throw "powercfg /setactive ha fallat: $($r.Output.Trim())" }
+
+                Write-TaskResult -Task $etiqueta -Status 'changed' -Message "AC=$wantAc DC=$wantDc"
+            } catch {
+                Write-TaskResult -Task $etiqueta -Status 'failed' -Message $_.Exception.Message
+            }
         }
     }
 }
@@ -301,9 +379,10 @@ if ($inp -and $null -ne $inp.natural_scrolling) {
 $dv = $sys.developer
 if ($dv) {
     if ($dv.enable_developer_mode) {
-        if (-not (Test-Elevated) -and -not $checkMode) {
-            Write-TaskResult -Task 'mode desenvolupador' -Status 'skipped' -Message 'cal admin'
-        } else {
+        Invoke-AdminWork -Task 'mode desenvolupador' -AlreadyDone {
+            Test-RegistryValue -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock' `
+                -Name 'AllowDevelopmentWithoutDevLicense' -Value 1
+        } -Action {
             Set-Tweak -Task 'mode desenvolupador' `
                 -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock' `
                 -Name 'AllowDevelopmentWithoutDevLicense' -Value 1 | Out-Null
@@ -311,9 +390,10 @@ if ($dv) {
     }
 
     if ($dv.enable_long_paths) {
-        if (-not (Test-Elevated) -and -not $checkMode) {
-            Write-TaskResult -Task 'rutes llargues (>260 car.)' -Status 'skipped' -Message 'cal admin'
-        } else {
+        Invoke-AdminWork -Task 'rutes llargues (>260 car.)' -AlreadyDone {
+            Test-RegistryValue -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' `
+                -Name 'LongPathsEnabled' -Value 1
+        } -Action {
             Set-Tweak -Task 'rutes llargues (>260 car.)' `
                 -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' `
                 -Name 'LongPathsEnabled' -Value 1 | Out-Null
@@ -322,7 +402,8 @@ if ($dv) {
 
     if ($dv.enable_openssh_server) {
         if (-not (Test-Elevated) -and -not $checkMode) {
-            Write-TaskResult -Task 'OpenSSH Server' -Status 'skipped' -Message 'cal admin'
+            Register-AdminWork -Task 'OpenSSH Server'
+            Write-TaskResult -Task 'OpenSSH Server' -Status 'skipped' -Message 'cal admin: es fara al bloc elevat del final'
         } elseif ($checkMode) {
             Write-TaskResult -Task 'OpenSSH Server' -Status 'changed' -Message 'instal·laria la capacitat'
         } else {

@@ -12,7 +12,7 @@ Set-ProvisionContext -Role 'dev'
 
 $dev = $Config.dev
 if (-not $dev) {
-    Write-TaskResult -Task 'configuració' -Status 'skipped' -Message 'cap secció dev: a la configuració'
+    Write-TaskResult -Task 'configuració' -Status 'skipped' -Message 'cap secció dev: a la configuració' -NotApplicable
     return
 }
 
@@ -42,7 +42,7 @@ if (-not (Test-CommandExists 'git')) {
             $status = 'ok'; if ($changed) { $status = 'changed' }
             Write-TaskResult -Task 'git user.name' -Status $status -Message $gitCfg.user_name
         } else {
-            Write-TaskResult -Task 'git user.name' -Status 'skipped' -Message 'dev.git.user_name buit'
+            Write-TaskResult -Task 'git user.name' -Status 'skipped' -Message 'dev.git.user_name buit' -NotApplicable
         }
 
         if ($gitCfg.user_email) {
@@ -50,7 +50,7 @@ if (-not (Test-CommandExists 'git')) {
             $status = 'ok'; if ($changed) { $status = 'changed' }
             Write-TaskResult -Task 'git user.email' -Status $status -Message $gitCfg.user_email
         } else {
-            Write-TaskResult -Task 'git user.email' -Status 'skipped' -Message 'dev.git.user_email buit'
+            Write-TaskResult -Task 'git user.email' -Status 'skipped' -Message 'dev.git.user_email buit' -NotApplicable
         }
 
         if ($gitCfg.config) {
@@ -89,7 +89,7 @@ if (-not (Test-CommandExists 'git')) {
 # -----------------------------------------------------------------------------
 $sshCfg = $dev.ssh
 if (-not $sshCfg -or -not $sshCfg.generate_key) {
-    Write-TaskResult -Task 'clau SSH' -Status 'skipped' -Message 'dev.ssh.generate_key = false'
+    Write-TaskResult -Task 'clau SSH' -Status 'skipped' -Message 'dev.ssh.generate_key = false' -NotApplicable
 } else {
     $keyType = $sshCfg.key_type
     if (-not $keyType) { $keyType = 'ed25519' }
@@ -123,7 +123,7 @@ if (-not $sshCfg -or -not $sshCfg.generate_key) {
 # -----------------------------------------------------------------------------
 $npmGlobals = @($dev.npm_globals)
 if ($npmGlobals.Count -eq 0) {
-    Write-TaskResult -Task 'paquets globals npm' -Status 'skipped' -Message 'llista buida'
+    Write-TaskResult -Task 'paquets globals npm' -Status 'skipped' -Message 'llista buida' -NotApplicable
 } elseif (-not (Test-CommandExists 'npm')) {
     Write-TaskResult -Task 'paquets globals npm' -Status 'skipped' -Message 'npm no està instal·lat'
 } else {
@@ -157,7 +157,7 @@ if ($npmGlobals.Count -eq 0) {
 # -----------------------------------------------------------------------------
 $uvTools = @($dev.uv_tools)
 if ($uvTools.Count -eq 0) {
-    Write-TaskResult -Task 'eines uv' -Status 'skipped' -Message 'llista buida'
+    Write-TaskResult -Task 'eines uv' -Status 'skipped' -Message 'llista buida' -NotApplicable
 } elseif (-not (Test-CommandExists 'uv')) {
     Write-TaskResult -Task 'eines uv' -Status 'skipped' -Message 'uv no està instal·lat'
 } else {
@@ -184,7 +184,7 @@ if ($uvTools.Count -eq 0) {
 # -----------------------------------------------------------------------------
 $extensions = @($dev.vscode_extensions)
 if ($extensions.Count -eq 0) {
-    Write-TaskResult -Task 'extensions de VS Code' -Status 'skipped' -Message 'llista buida'
+    Write-TaskResult -Task 'extensions de VS Code' -Status 'skipped' -Message 'llista buida' -NotApplicable
 } elseif (-not (Test-CommandExists 'code')) {
     Write-TaskResult -Task 'extensions de VS Code' -Status 'skipped' -Message 'la comanda code no és al PATH'
 } else {

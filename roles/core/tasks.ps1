@@ -34,7 +34,10 @@ if (Test-ChocoAvailable) {
     Write-TaskResult -Task 'Chocolatey' -Status 'changed' -Message 'instal·laria Chocolatey'
 } else {
     try {
-        if (-not (Test-Elevated)) { throw 'cal executar el run com a administrador per instal·lar Chocolatey' }
+        if (-not (Test-Elevated)) {
+            Register-AdminWork -Task 'Chocolatey'
+            throw 'cal admin: s''instal·lara al bloc elevat del final'
+        }
         Set-ExecutionPolicy Bypass -Scope Process -Force
         [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
         Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1')) | Out-Null
@@ -59,7 +62,7 @@ foreach ($group in @($Config.packages.Keys)) {
 if (Test-ScoopAvailable) {
     Write-TaskResult -Task 'Scoop' -Status 'ok' -Message 'ja instal·lat'
 } elseif (-not $needsScoop) {
-    Write-TaskResult -Task 'Scoop' -Status 'skipped' -Message 'cap paquet el requereix explícitament'
+    Write-TaskResult -Task 'Scoop' -Status 'skipped' -Message 'cap paquet el requereix explícitament' -NotApplicable
 } elseif (Get-ProvisionCheckMode) {
     Write-TaskResult -Task 'Scoop' -Status 'changed' -Message 'instal·laria Scoop'
 } else {
@@ -91,11 +94,14 @@ Update-SessionPath
 # `sudo` -> gsudo
 # -----------------------------------------------------------------------------
 # Windows 11 porta el seu propi sudo.exe a System32 i, com que el PATH de màquina
-# va abans que el d'usuari, sempre guanyaria. Per això no n'hi ha prou amb posar
-# gsudo al PATH: cal un àlies de PowerShell (que té precedència sobre qualsevol
-# executable) i un shim .cmd per als contextos on no hi ha PowerShell.
+# va abans que el d'usuari, guanya per defecte. Hi ha dues palanques:
+#   - PowerShell: una funció al perfil, que té precedència sobre qualsevol PATH.
+#   - cmd.exe, .bat, Executar, tasques programades: només miren el PATH, o sigui
+#     que cal posar el directori de gsudo DAVANT de System32 al PATH de màquina.
+# El shim bin\sudo.cmd queda com a històric: viu al PATH d'usuari, que s'avalua
+# després del de màquina, i per tant mai pot guanyar System32.
 $sudoCfg = $Config.sudo
-if (-not $sudoCfg) { $sudoCfg = @{ provider = 'gsudo'; powershell_alias = $true; cmd_shim = $true } }
+if (-not $sudoCfg) { $sudoCfg = @{ provider = 'gsudo'; powershell_alias = $true; path_priority = $true; cmd_shim = $false } }
 
 $gsudoCmd = Get-Command gsudo -ErrorAction SilentlyContinue
 $nativeSudo = $null
@@ -103,10 +109,60 @@ $sysSudo = Join-Path $env:SystemRoot 'System32\sudo.exe'
 if (Test-Path -LiteralPath $sysSudo) { $nativeSudo = $sysSudo }
 
 if ($sudoCfg.provider -ne 'gsudo') {
-    Write-TaskResult -Task 'sudo -> gsudo' -Status 'skipped' -Message "sudo.provider = $($sudoCfg.provider)"
+    Write-TaskResult -Task 'sudo -> gsudo' -Status 'skipped' -Message "sudo.provider = $($sudoCfg.provider)" -NotApplicable
 } elseif (-not $gsudoCmd) {
     Write-TaskResult -Task 'sudo -> gsudo' -Status 'failed' -Message 'gsudo no és al PATH; reobre la consola i torna-ho a executar'
 } else {
+
+    # --- prioritat al PATH de maquina -----------------------------------------
+    # gsudo ja instal·la el seu propi àlies sudo.exe al costat de gsudo.exe. L'únic
+    # que li falta per guanyar el de Windows 11 és anar davant de System32 al PATH
+    # de màquina.
+    if ($sudoCfg.path_priority) {
+        $gsudoDir = Split-Path -Parent $gsudoCmd.Source
+        $gsudoSudo = Join-Path $gsudoDir 'sudo.exe'
+        $system32 = Join-Path $env:SystemRoot 'System32'
+
+        # Llegir el PATH de maquina no demana privilegis: mirem primer si cal
+        # moure res, i nomes despres decidim si val la pena demanar l'UAC.
+        $calMoure = $false
+        if (Test-Path -LiteralPath $gsudoSudo) {
+            $calMoure = Set-PathEntryPriority -Directory $gsudoDir -Before $system32 `
+                -Scope 'Machine' -TestOnly
+        }
+
+        if (-not (Test-Path -LiteralPath $gsudoSudo)) {
+            Write-TaskResult -Task 'prioritat PATH (sudo -> gsudo)' -Status 'failed' `
+                -Message "no hi ha $gsudoSudo; reinstal·la gsudo o posa path_priority a false"
+        } elseif (-not $calMoure) {
+            Write-TaskResult -Task 'prioritat PATH (sudo -> gsudo)' -Status 'ok' `
+                -Message "$gsudoDir ja va davant de $system32"
+        } elseif (-not (Test-Elevated) -and -not (Get-ProvisionCheckMode)) {
+            Register-AdminWork -Task 'prioritat PATH (sudo -> gsudo)'
+            Write-TaskResult -Task 'prioritat PATH (sudo -> gsudo)' -Status 'skipped' `
+                -Message 'cal admin: es fara al bloc elevat del final'
+        } else {
+            try {
+                $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+                $backup = Join-Path $RepoRoot "logs\path-machine-$stamp.bak"
+                $moved = Set-PathEntryPriority -Directory $gsudoDir -Before $system32 `
+                    -Scope 'Machine' -BackupPath $backup
+
+                if ($moved) {
+                    Write-TaskResult -Task 'prioritat PATH (sudo -> gsudo)' -Status 'changed' `
+                        -Message "$gsudoDir davant de $system32 (còpia prèvia: $backup)"
+                    Write-Info 'Reobre les consoles perquè agafin el PATH nou.'
+                } else {
+                    Write-TaskResult -Task 'prioritat PATH (sudo -> gsudo)' -Status 'ok' `
+                        -Message "$gsudoDir ja va davant de $system32"
+                }
+            } catch {
+                Write-TaskResult -Task 'prioritat PATH (sudo -> gsudo)' -Status 'failed' -Message $_.Exception.Message
+            }
+        }
+    } else {
+        Write-TaskResult -Task 'prioritat PATH (sudo -> gsudo)' -Status 'skipped' -Message 'sudo.path_priority = false' -NotApplicable
+    }
 
     # --- shim per a cmd.exe / Executar / tasques programades -------------------
     if ($sudoCfg.cmd_shim) {
@@ -135,15 +191,28 @@ rem Redirigeix "sudo" a gsudo, evitant el sudo.exe natiu de Windows 11.
                 Write-TaskResult -Task 'shim sudo.cmd' -Status 'ok' -Message $shimPath
             }
 
-            if ($nativeSudo) {
+            if ($nativeSudo -and -not $sudoCfg.path_priority) {
                 Write-Info "Nota: Windows porta $nativeSudo i el PATH de màquina va primer."
-                Write-Info "A PowerShell mana l'àlies del perfil; a cmd.exe crida 'gsudo' directament si dubtes."
+                Write-Info "Sense sudo.path_priority aquest shim no guanya: a cmd.exe crida 'gsudo' directament."
             }
         } catch {
             Write-TaskResult -Task 'shim sudo.cmd' -Status 'failed' -Message $_.Exception.Message
         }
     } else {
-        Write-TaskResult -Task 'shim sudo.cmd' -Status 'skipped' -Message 'sudo.cmd_shim = false'
+        # Amb cmd_shim a false retirem el fitxer que hauríem generat abans, perquè
+        # l'estat del disc coincideixi amb la config. El directori bin i la seva
+        # entrada al PATH d'usuari es deixen: no fan mal i poden tenir més coses.
+        $shimPath = Join-Path $RepoRoot 'bin\sudo.cmd'
+        if (Test-Path -LiteralPath $shimPath) {
+            if (Get-ProvisionCheckMode) {
+                Write-TaskResult -Task 'shim sudo.cmd' -Status 'changed' -Message "esborraria $shimPath"
+            } else {
+                Remove-Item -LiteralPath $shimPath -Force
+                Write-TaskResult -Task 'shim sudo.cmd' -Status 'changed' -Message "esborrat $shimPath (sudo.cmd_shim = false)"
+            }
+        } else {
+            Write-TaskResult -Task 'shim sudo.cmd' -Status 'skipped' -Message 'sudo.cmd_shim = false' -NotApplicable
+        }
     }
 
     # --- àlies de PowerShell ---------------------------------------------------
@@ -180,7 +249,7 @@ Set-Alias -Name s -Value sudo -Scope Global -Force -ErrorAction SilentlyContinue
             Write-TaskResult -Task 'àlies sudo (PowerShell)' -Status 'failed' -Message $_.Exception.Message
         }
     } else {
-        Write-TaskResult -Task 'àlies sudo (PowerShell)' -Status 'skipped' -Message 'sudo.powershell_alias = false'
+        Write-TaskResult -Task 'àlies sudo (PowerShell)' -Status 'skipped' -Message 'sudo.powershell_alias = false' -NotApplicable
     }
 
     # --- cache de credencials --------------------------------------------------

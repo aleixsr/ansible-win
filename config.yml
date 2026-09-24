@@ -1,749 +1,779 @@
----
-# =============================================================================
-#  ansible-win  ·  configuració centralitzada
-# =============================================================================
-#  Rèplica per a Windows d'aleixsr/ansible-mac. Les categories són les mateixes
-#  que a config.yml del repo de macOS; s'han fusionat els parells
-#  packages<x> + casks<x> perquè a Windows la distinció fórmula/cask no existeix.
-#
-#  Camps d'un paquet:
-#    id        identificador intern (obligatori)
-#    name      nom llegible que surt a la sortida
-#    winget    id de winget       \
-#    choco     id de Chocolatey    >  almenys un, si l'app existeix a Windows
-#    scoop     id de Scoop        /
-#    source    origen de winget ('msstore' per a apps de la Store)
-#    provider  força un proveïdor concret (salta provider_order)
-#    scope     'user' o 'machine' (només winget)
-#    args      arguments extra per al gestor
-#    test      comanda que ha d'existir al PATH; si hi és, es dona per instal·lat
-#    mac       el que hi ha a ansible-mac (fórmula o cask). Documental.
-#    note      per què no hi ha equivalent a Windows. Si hi és i no hi ha cap
-#              proveïdor, la tasca surt com a 'skipped' amb aquest text.
-#
-#  Per personalitzar sense tocar el repo: copia config.local.example.yml a
-#  config.local.yml (ignorat per git); es fusiona recursivament a sobre.
-# =============================================================================
-
-meta:
+﻿meta:
   name: ansible-win
   mirror_of: aleixsr/ansible-mac
-
 provider_order:
-  - winget
-  - choco
-  - scoop
-
-# Rols que executa `run.ps1` sense arguments, en ordre.
+- winget
+- choco
+- scoop
 default_roles:
-  - core
-  - apps
-  - shell
-  - dev
-  - tabby
-  - system
-  - startup
-  - dotfiles
-
-# Categories que instal·la el rol `apps` per defecte.
+- core
+- apps
+- shell
+- dev
+- tabby
+- system
+- debloat
+- startup
+- dotfiles
 default_groups:
-  - development
-  - clouddevops
-  - networking
-  - systemutilities
-  - browsers
-  - terminal
-  - communication
-  - productivity
-  - networkingvpn
-  - remoteaccess
-  - filemanagementcloud
-  - microsoftsuite
-  - media
-  - documents
-  - hardware
-  - store
-  - fonts
-
-# -----------------------------------------------------------------------------
-#  Comportament de sudo   (no té equivalent a ansible-mac: allà ja hi ha sudo)
-# -----------------------------------------------------------------------------
-#  Windows 11 porta el seu propi C:\Windows\System32\sudo.exe, que guanya al PATH.
-#  provider: gsudo  -> `sudo` apunta a gsudo (funció al perfil + shim per a cmd)
-#  provider: native -> es deixa el sudo de Microsoft i només s'instal·la gsudo
+- development
+- clouddevops
+- networking
+- systemutilities
+- browsers
+- terminal
+- communication
+- productivity
+- networkingvpn
+- remoteaccess
+- filemanagementcloud
+- microsoftsuite
+- media
+- documents
+- hardware
+- store
+- fonts
 sudo:
   provider: gsudo
   powershell_alias: true
-  cmd_shim: true
-  # El repo no gestiona la cache de credencials de gsudo: CacheDuration es un
-  # ajust global del sistema que demana una elevacio propia, i des d'un run que
-  # ja corre elevat no es pot aplicar. Es configura a ma amb:
-  #   gsudo config CacheDuration 00:00:00
+  # Posa el directori de gsudo davant de System32 al PATH de maquina, perque
+  # el seu sudo.exe guanyi el natiu de Windows 11 a cmd, scripts .bat i tasques
+  # programades. Cal executar el run elevat.
+  path_priority: true
+  # Shim bin\sudo.cmd. Redundant si path_priority funciona: el PATH d'usuari
+  # sempre s'avalua despres del de maquina, o sigui que mai guanya System32.
+  cmd_shim: false
+debloat:
+  # Paquets AppX preinstal·lats que volem fora. Es treuen de l'usuari actual i
+  # també de la imatge (aprovisionats), que és el que evita que tornin amb cada
+  # perfil nou. Posa a false `remove_provisioned` si només vols netejar el teu.
+  remove_provisioned: true
+  appx:
+  # --- publicitat i jocs ------------------------------------------------------
+  - id: Microsoft.MicrosoftSolitaireCollection
+    desc: "Solitari amb anuncis i compres dins de l'app."
+  - id: Microsoft.BingNews
+    desc: "Notícies de Bing."
+  - id: Microsoft.BingWeather
+    desc: "El temps de Bing."
+  - id: Microsoft.MicrosoftOfficeHub
+    desc: "El llaçador \"Office\": en realitat és publicitat de Microsoft 365."
+  - id: Microsoft.Getstarted
+    desc: "Suggeriments de Windows."
+  # --- coses mortes o retirades per Microsoft ---------------------------------
+  - id: Microsoft.MixedReality.Portal
+    desc: "Windows Mixed Reality, descontinuat."
+  - id: Microsoft.SkypeApp
+    desc: "Skype, retirat el maig del 2025."
+  - id: Microsoft.549981C3F5F10
+    desc: "Cortana."
+  - id: Microsoft.People
+    desc: "Contactes: app abandonada."
+  - id: Microsoft.WindowsMaps
+    desc: "Mapes, retirat el 2025."
+  - id: Microsoft.Windows.DevHome
+    desc: "Dev Home, abandonat per Microsoft el 2025."
+  - id: microsoft.windowscommunicationsapps
+    desc: "Correu i Calendari, ja retirats en favor del nou Outlook."
+  # --- assistents i telemetria ------------------------------------------------
+  - id: Microsoft.Copilot
+    desc: "Copilot."
+  - id: Microsoft.Edge.GameAssist
+    desc: "Barra lateral de jocs d'Edge."
+  - id: Microsoft.WindowsFeedbackHub
+    desc: "Centre de comentaris."
+  - id: Microsoft.GetHelp
+    desc: "Obtenir ajuda."
+  # --- redundants amb el catàleg ----------------------------------------------
+  - id: Microsoft.ZuneMusic
+    desc: "Reproductor multimèdia. Ja tenim VLC i mpv."
+  - id: Microsoft.ZuneVideo
+    desc: "Pel·lícules i TV. Ja tenim VLC i mpv."
+  # --- Xbox -------------------------------------------------------------------
+  # Compte: treure XboxGamingOverlay desactiva Win+G, i amb ell la gravació de
+  # pantalla nativa. Al catàleg hi ha ScreenToGif, que fa la mateixa feina.
+  - id: Microsoft.XboxGamingOverlay
+    desc: "Game Bar (Win+G)."
+  - id: Microsoft.XboxGameOverlay
+    desc: "Capa de l'Xbox dins dels jocs."
+  - id: Microsoft.Xbox.TCUI
+    desc: "Interfície compartida de l'Xbox."
+  - id: Microsoft.XboxIdentityProvider
+    desc: "Inici de sessió amb compte d'Xbox."
+  - id: Microsoft.XboxSpeechToTextOverlay
+    desc: "Subtítols de veu de l'Xbox."
+  # --- Phone Link -------------------------------------------------------------
+  - id: Microsoft.YourPhone
+    desc: "Phone Link: notificacions i SMS del mòbil al PC."
+  - id: MicrosoftWindows.CrossDevice
+    desc: "Continuïtat entre dispositius, la meitat de Phone Link."
 
-# -----------------------------------------------------------------------------
-#  Paquets
-# -----------------------------------------------------------------------------
+  # Programes de sempre (no AppX). Es busquen pel nom exacte a Programes i
+  # característiques i es desinstal·len en silenci.
+  # Programes de sempre (no AppX). Es busquen pel nom EXACTE de Programes i
+  # característiques i es desinstal·len en silenci.
+  #
+  # Aquí hi ha de quedar buit: el bloatware del fabricant canvia amb cada model, i
+  # aquest catàleg ha de valer per a qualsevol màquina. El que vulguis treure del
+  # teu equip va a config.local.yml, que no es comparteix:
+  #
+  #   debloat:
+  #     win32:
+  #     - id: Nom exacte a Programes i característiques
+  #       desc: "Què és i per què el treiem."
+  #       silent_flag: /S     # només si no porta QuietUninstallString
+  win32: []
+
+  # Sense això, Windows torna a instal·lar sol el que acabes d'esborrar.
+  settings:
+    disable_consumer_features: true   # el que reinstal·la jocs i apps promocionades
+    disable_recall: true              # captures contínues de pantalla de Windows AI
+    disable_copilot: true
+    disable_widgets: true
+    hide_start_recommendations: true  # el bloc "Recomanat" del menú Inici
+    hide_explorer_ads: true           # "notificacions de proveïdors de sincronització"
 packages:
-
-  # --- development  (packagesdevelopment + casksdevelopment) -----------------
   development:
-    - id: gh
-      name: GitHub CLI
-      winget: GitHub.cli
-      choco: gh
-      mac: gh
-      test: gh
-    - id: git
-      name: Git
-      winget: Git.Git
-      choco: git
-      mac: git
-      test: git
-    - id: node
-      name: Node.js LTS
-      winget: OpenJS.NodeJS.LTS
-      choco: nodejs-lts
-      mac: node
-      test: node
-    - id: python
-      name: Python 3.14
-      winget: Python.Python.3.14
-      choco: python314
-      mac: python@3.14
-    - id: apache-directory-studio
-      name: Apache Directory Studio
-      winget: Apache.DirectoryStudio
-      mac: apache-directory-studio
-    - id: copilot-cli
-      name: GitHub Copilot CLI
-      winget: GitHub.Copilot
-      mac: copilot-cli
-    - id: dbeaver
-      name: DBeaver Community
-      winget: DBeaver.DBeaver.Community
-      choco: dbeaver
-      mac: dbeaver-community
-    - id: drawio
-      name: draw.io
-      winget: JGraph.Draw
-      choco: drawio
-      mac: drawio
-    - id: github-desktop
-      name: GitHub Desktop
-      winget: GitHub.GitHubDesktop
-      choco: github-desktop
-      mac: github
-    - id: soapui
-      name: SoapUI
-      choco: soapui
-      provider: choco
-      mac: soapui
-    # Notepad++ no es a ansible-mac (alla el seu lloc el fa el Sublime Text).
-    - id: notepadplusplus
-      name: Notepad++
-      winget: Notepad++.Notepad++
-      choco: notepadplusplus
-      mac: "(no hi es a ansible-mac)"
-    - id: sublime-text
-      name: Sublime Text
-      winget: SublimeHQ.SublimeText.4
-      choco: sublimetext4
-      mac: sublime-text
-    - id: vscode
-      name: Visual Studio Code
-      winget: Microsoft.VisualStudioCode
-      choco: vscode
-      mac: visual-studio-code
-      scope: user
-    - id: vscode-insiders
-      name: Visual Studio Code Insiders
-      winget: Microsoft.VisualStudioCode.Insiders
-      choco: vscode-insiders
-      mac: visual-studio-code@insiders
-      scope: user
-
-  # --- clouddevops  (packagesclouddevops) ------------------------------------
+  - id: gh
+    desc: "Client de GitHub per a la terminal: PRs, issues i releases sense obrir el navegador."
+    name: GitHub CLI
+    winget: GitHub.cli
+    choco: gh
+    mac: gh
+    test: gh
+  - id: git
+    desc: "El control de versions. Porta Git Bash i Git Credential Manager."
+    name: Git
+    winget: Git.Git
+    choco: git
+    mac: git
+    test: git
+  - id: node
+    desc: "Runtime de JavaScript, versió LTS. Arrossega npm, que fa falta per a Tabby i per a les eines globals."
+    name: Node.js LTS
+    winget: OpenJS.NodeJS.LTS
+    choco: nodejs-lts
+    mac: node
+    test: node
+  - id: python
+    desc: "Intèrpret de Python 3.14, amb pip i el llançador py."
+    name: Python 3.14
+    winget: Python.Python.3.14
+    choco: python314
+    mac: python@3.14
+  - id: apache-directory-studio
+    desc: "Navegador i editor de directoris LDAP. Per mirar l'Active Directory sense endevinar filtres."
+    name: Apache Directory Studio
+    winget: Apache.DirectoryStudio
+    mac: apache-directory-studio
+  - id: copilot-cli
+    desc: "GitHub Copilot a la terminal: explica i suggereix ordres."
+    name: GitHub Copilot CLI
+    winget: GitHub.Copilot
+    mac: copilot-cli
+  - id: dbeaver
+    desc: "Client SQL universal: PostgreSQL, MySQL, SQL Server, Oracle i companyia amb un sol client."
+    name: DBeaver Community
+    winget: DBeaver.DBeaver.Community
+    choco: dbeaver
+    mac: dbeaver-community
+  - id: drawio
+    desc: "Diagrames d'arquitectura i xarxa en local, sense compte ni núvol."
+    name: draw.io
+    winget: JGraph.Draw
+    choco: drawio
+    mac: drawio
+  - id: github-desktop
+    desc: "GitHub amb finestres, per als repos on no vols pensar en ordres."
+    name: GitHub Desktop
+    winget: GitHub.GitHubDesktop
+    choco: github-desktop
+    mac: github
+  - id: soapui
+    desc: "Proves de serveis web SOAP i REST. Encara fa falta per als SOAP de sempre."
+    name: SoapUI
+    choco: soapui
+    provider: choco
+    mac: soapui
+  - id: notepadplusplus
+    desc: "Editor de text ràpid, per a un cop d'ull o una edició de quatre línies."
+    name: Notepad++
+    winget: Notepad++.Notepad++
+    choco: notepadplusplus
+    mac: (no hi es a ansible-mac)
+  - id: sublime-text
+    desc: "Editor lleuger que obre fitxers de centenars de MB sense ofegar-se."
+    name: Sublime Text
+    winget: SublimeHQ.SublimeText.4
+    choco: sublimetext4
+    mac: sublime-text
+  - id: vscode
+    desc: "L'editor principal: extensions, depurador i terminal integrada."
+    name: Visual Studio Code
+    winget: Microsoft.VisualStudioCode
+    choco: vscode
+    mac: visual-studio-code
+    scope: user
+  - id: vscode-insiders
+    desc: "La branca diària de VS Code, en paral·lel a l'estable. Per provar coses sense trencar l'entorn de feina."
+    name: Visual Studio Code Insiders
+    winget: Microsoft.VisualStudioCode.Insiders
+    choco: vscode-insiders
+    mac: visual-studio-code@insiders
+    scope: user
   clouddevops:
-    - id: azure-cli
-      name: Azure CLI
-      winget: Microsoft.AzureCLI
-      choco: azure-cli
-      mac: azure-cli
-    - id: oci-cli
-      name: OCI CLI (Oracle Cloud)
-      choco: oci-cli
-      provider: choco
-      mac: oci-cli
-
-  # --- networking  (packagesnetworking) --------------------------------------
+  - id: azure-cli
+    desc: "CLI d'Azure: subscripcions, recursos i tot el tenant des de la terminal."
+    name: Azure CLI
+    winget: Microsoft.AzureCLI
+    choco: azure-cli
+    mac: azure-cli
+  - id: oci-cli
+    desc: "CLI d'Oracle Cloud Infrastructure."
+    name: OCI CLI (Oracle Cloud)
+    choco: oci-cli
+    provider: choco
+    mac: oci-cli
   networking:
-    # winget i no choco: el paquet iperf3 de Chocolatey baixa de
-    # files.budman.pw, i aquell servidor retorna HTML en comptes del ZIP, aixi
-    # que el checksum falla sempre. ar51an es qui manté les builds oficials de
-    # Windows (github.com/ar51an/iperf3-win-builds).
-    - id: iperf3
-      name: iperf3
-      winget: ar51an.iPerf3
-      mac: iperf3
-      test: iperf3
-    - id: rustscan
-      name: RustScan
-      winget: bee-san.RustScan
-      mac: rustscan
-    - id: mtr
-      name: WinMTR
-      choco: winmtr-redux
-      provider: choco
-      mac: mtr
-    - id: nmap
-      name: Nmap
-      winget: Insecure.Nmap
-      choco: nmap
-      mac: nmap
-    - id: speedtest
-      name: Speedtest CLI
-      winget: Ookla.Speedtest.CLI
-      choco: speedtest
-      mac: speedtest
-    # swaks es un script Perl i no te paquet a Windows. mailsend-go fa la
-    # mateixa feina (provar SMTP des de la linia d'ordres: auth, STARTTLS,
-    # adjunts) i es un binari Go sense dependencies.
-    # Si vols el swaks de debo: winget install StrawberryPerl.StrawberryPerl i
-    # despres baixa l'script de jetmore.org/john/code/swaks/.
-    - id: swaks
-      name: mailsend-go
-      winget: muquit.mailsend-go
-      mac: swaks
-    - id: tcping
-      name: tcping
-      choco: tcping
-      provider: choco
-      mac: tcping
-    - id: wget
-      name: wget
-      winget: JernejSimoncic.Wget
-      choco: wget
-      mac: wget
-
-  # --- systemutilities  (packagessystemutilities + caskssystemutilities) -----
+  - id: iperf3
+    desc: "Mesura l'ample de banda real entre dos punts. L'eina per demostrar si la lentitud és de la xarxa."
+    name: iperf3
+    winget: ar51an.iPerf3
+    mac: iperf3
+    test: iperf3
+  - id: rustscan
+    desc: "Escàner de ports molt ràpid; encadena amb Nmap per al detall."
+    name: RustScan
+    winget: bee-san.RustScan
+    mac: rustscan
+  - id: mtr
+    desc: "traceroute i ping alhora, en continu: ensenya en quin salt es perden els paquets."
+    name: WinMTR
+    choco: winmtr-redux
+    provider: choco
+    mac: mtr
+  - id: nmap
+    desc: "Descoberta de xarxa i escaneig de ports i serveis."
+    name: Nmap
+    winget: Insecure.Nmap
+    choco: nmap
+    mac: nmap
+  - id: speedtest
+    desc: "Speedtest d'Ookla per a la terminal, per deixar-ne constància en un log."
+    name: Speedtest CLI
+    winget: Ookla.Speedtest.CLI
+    choco: speedtest
+    mac: speedtest
+  - id: swaks
+    desc: "Envia correu des de la línia d'ordres per provar SMTP, relays i autenticació."
+    name: mailsend-go
+    winget: muquit.mailsend-go
+    mac: swaks
+  - id: tcping
+    desc: "Ping contra un port TCP. Per quan l'ICMP està bloquejat, que és gairebé sempre."
+    name: tcping
+    choco: tcping
+    provider: choco
+    mac: tcping
+  - id: wget
+    desc: "Descàrregues no interactives, amb reintents i recursivitat."
+    name: wget
+    winget: JernejSimoncic.Wget
+    choco: wget
+    mac: wget
   systemutilities:
-    - id: powershell
-      name: PowerShell 7
-      winget: Microsoft.PowerShell
-      choco: powershell-core
-      mac: powershell
-      test: pwsh
-    - id: mas
-      name: Mac App Store CLI
-      mac: mas
-      note: "A Windows no cal: winget ja parla amb la Microsoft Store (--source msstore)."
-    - id: balenaetcher
-      name: balenaEtcher
-      winget: Balena.Etcher
-      choco: etcher
-      mac: balenaetcher
-    - id: bluesnooze
-      name: Bluesnooze
-      mac: bluesnooze
-      note: "Específic de macOS (evita que el Bluetooth desperti el Mac). A Windows es gestiona des de l'Administrador de dispositius."
-    - id: wiztree
-      name: WizTree
-      winget: AntibodySoftware.WizTree
-      choco: wiztree
-      mac: disk-inventory-x
-    - id: powertoys
-      name: PowerToys
-      winget: Microsoft.PowerToys
-      choco: powertoys
-      mac: karabiner-elements
-    - id: screentogif
-      name: ScreenToGif
-      winget: NickeManarin.ScreenToGif
-      choco: screentogif
-      mac: licecap
-    - id: novabench
-      name: Novabench
-      winget: NovabenchInc.Novabench
-      mac: novabench
-    - id: resolutionator
-      name: Resolutionator
-      mac: resolutionator
-      note: "Específic de macOS. A Windows, canvi de resolució natiu (Win+P / Configuració de pantalla)."
-    - id: wins
-      name: Wins
-      mac: wins
-      note: "Específic de macOS (canviador de finestres). A Windows: Alt+Tab natiu / PowerToys."
-    - id: xca
-      name: XCA
-      choco: xca
-      provider: choco
-      mac: xca
-
-  # --- browsers  (casksbrowsers) ---------------------------------------------
+  - id: powershell
+    desc: "PowerShell 7, al costat del 5.1 que ve amb Windows. Multiplataforma i molt més ràpid."
+    name: PowerShell 7
+    winget: Microsoft.PowerShell
+    choco: powershell-core
+    mac: powershell
+    test: pwsh
+  - id: mas
+    desc: "CLI de la Mac App Store. A Windows, winget --source msstore."
+    win_equivalent: winget --source msstore
+    name: Mac App Store CLI
+    mac: mas
+    note: 'A Windows no cal: winget ja parla amb la Microsoft Store (--source msstore).'
+  - id: balenaetcher
+    desc: "Grava imatges ISO i IMG a USB, verificant el resultat."
+    name: balenaEtcher
+    winget: Balena.Etcher
+    choco: etcher
+    mac: balenaetcher
+  - id: bluesnooze
+    desc: "Evita que el Bluetooth desperti el Mac. A Windows es mira des de l'Administrador de dispositius."
+    win_equivalent: Administrador de dispositius
+    name: Bluesnooze
+    mac: bluesnooze
+    note: "Espec\xEDfic de macOS (evita que el Bluetooth desperti el Mac). A Windows\
+      \ es gestiona des de l'Administrador de dispositius."
+  - id: wiztree
+    desc: "Què t'ocupa el disc, llegint la MFT: analitza un disc sencer en segons."
+    name: WizTree
+    winget: AntibodySoftware.WizTree
+    choco: wiztree
+    mac: disk-inventory-x
+  - id: powertoys
+    desc: "La caixa d'eines de Microsoft: FancyZones, PowerToys Run, Awake, Video Conference Mute i selector de colors."
+    name: PowerToys
+    winget: Microsoft.PowerToys
+    choco: powertoys
+    mac: karabiner-elements
+  - id: screentogif
+    desc: "Grava un tros de pantalla i el desa com a GIF o MP4. Per ensenyar un error sense escriure tres paràgrafs."
+    name: ScreenToGif
+    winget: NickeManarin.ScreenToGif
+    choco: screentogif
+    mac: licecap
+  - id: novabench
+    desc: "Benchmark ràpid de CPU, GPU, RAM i disc."
+    name: Novabench
+    winget: NovabenchInc.Novabench
+    mac: novabench
+  - id: resolutionator
+    desc: "Canvi ràpid de resolució. A Windows, Win+P i la configuració de pantalla."
+    win_equivalent: Win+P (natiu)
+    name: Resolutionator
+    mac: resolutionator
+    note: "Espec\xEDfic de macOS. A Windows, canvi de resoluci\xF3 natiu (Win+P /\
+      \ Configuraci\xF3 de pantalla)."
+  - id: wins
+    desc: "Canviador de finestres de macOS. A Windows, Alt+Tab i PowerToys."
+    win_equivalent: Alt+Tab (natiu)
+    name: Wins
+    mac: wins
+    note: "Espec\xEDfic de macOS (canviador de finestres). A Windows: Alt+Tab natiu\
+      \ / PowerToys."
+  - id: xca
+    desc: "Gestor d'autoritats de certificació i certificats X.509, amb interfície."
+    name: XCA
+    choco: xca
+    provider: choco
+    mac: xca
   browsers:
-    - id: brave
-      name: Brave
-      winget: Brave.Brave
-      choco: brave
-      mac: brave-browser
-    - id: chromium
-      name: Chromium
-      winget: Hibbiki.Chromium
-      choco: chromium
-      mac: chromium
-    - id: firefox
-      name: Mozilla Firefox
-      winget: Mozilla.Firefox
-      choco: firefox
-      mac: firefox
-    - id: chrome
-      name: Google Chrome
-      winget: Google.Chrome
-      choco: googlechrome
-      mac: google-chrome
-    - id: edge
-      name: Microsoft Edge
-      winget: Microsoft.Edge
-      mac: microsoft-edge
-
-  # --- terminal  (casksterminal) ---------------------------------------------
+  - id: brave
+    desc: "Navegador Chromium amb bloqueig d'anuncis i de seguiment de sèrie."
+    name: Brave
+    winget: Brave.Brave
+    choco: brave
+    mac: brave-browser
+  - id: chromium
+    desc: "Chromium net, sense els serveis de Google. Útil per provar comportaments del motor."
+    name: Chromium
+    winget: Hibbiki.Chromium
+    choco: chromium
+    mac: chromium
+  - id: firefox
+    desc: "Motor Gecko: el segon motor que cal tenir per comprovar que una web funciona de debò."
+    name: Mozilla Firefox
+    winget: Mozilla.Firefox
+    choco: firefox
+    mac: firefox
+  - id: chrome
+    desc: "Google Chrome, per al que només va bé a Chrome i per a les seves DevTools."
+    name: Google Chrome
+    winget: Google.Chrome
+    choco: googlechrome
+    mac: google-chrome
+  - id: edge
+    desc: "Ve amb Windows; el catàleg només se n'assegura la versió. És el que millor s'entén amb els portals de Microsoft 365."
+    name: Microsoft Edge
+    winget: Microsoft.Edge
+    mac: microsoft-edge
   terminal:
-    - id: windows-terminal
-      name: Windows Terminal
-      winget: Microsoft.WindowsTerminal
-      mac: iterm2
-    - id: tabby
-      name: Tabby
-      winget: Eugeny.Tabby
-      choco: tabby
-      mac: tabby
-    # A ansible-mac el Wave no es a casksterminal, pero hi ha una regla de
-    # Karabiner per a ell (files/karabiner/wave_terminal.json): s'instal-la
-    # fora d'Ansible. Aqui si que el gestionem.
-    - id: wave
-      name: Wave Terminal
-      winget: CommandLine.Wave
-      mac: "(no gestionat per ansible-mac)"
-
-  # --- communication  (caskscommunication) -----------------------------------
+  - id: windows-terminal
+    desc: "El terminal de Windows: pestanyes, panells i perfils per a PowerShell, cmd i WSL."
+    name: Windows Terminal
+    winget: Microsoft.WindowsTerminal
+    mac: iterm2
+  - id: tabby
+    desc: "Terminal amb gestor de connexions SSH i sincronització de la configuració."
+    name: Tabby
+    winget: Eugeny.Tabby
+    choco: tabby
+    mac: tabby
+  - id: wave
+    desc: "Terminal per blocs: desa la sortida de cada ordre perquè la puguis rellegir i compartir."
+    name: Wave Terminal
+    winget: CommandLine.Wave
+    mac: (no gestionat per ansible-mac)
   communication:
-    - id: mailspring
-      name: Mailspring
-      choco: mailspring
-      provider: choco
-      mac: mailspring
-    - id: teams
-      name: Microsoft Teams
-      winget: Microsoft.Teams
-      mac: microsoft-teams
-    - id: shortwave
-      name: Shortwave
-      mac: shortwave
-      note: "Només macOS i web. A Windows, fes-lo servir des del navegador (app.shortwave.com)."
-    - id: telegram
-      name: Telegram
-      winget: Telegram.TelegramDesktop
-      choco: telegram
-      mac: telegram
-    - id: whatsapp
-      name: WhatsApp
-      winget: 9NKSQGP7F2NH
-      source: msstore
-      mac: whatsapp
-    - id: zoho-mail
-      name: Zoho Mail
-      mac: zoho-mail
-      note: "Sense client d'escriptori per a Windows. Fes-lo servir des del navegador o afegeix el compte a Outlook."
-
-  # --- productivity  (casksproductivity) -------------------------------------
+  - id: mailspring
+    desc: "Client de correu d'escriptori per a diversos comptes IMAP."
+    name: Mailspring
+    choco: mailspring
+    provider: choco
+    mac: mailspring
+  - id: teams
+    desc: "Microsoft Teams: xat, reunions i trucades del tenant."
+    name: Microsoft Teams
+    winget: Microsoft.Teams
+    mac: microsoft-teams
+  - id: shortwave
+    desc: "Client de Gmail només per a macOS i web. Aquí fem servir Mailspring."
+    win_equivalent: mailspring
+    name: Shortwave
+    mac: shortwave
+    note: "Nom\xE9s macOS i web. A Windows fem servir Mailspring, que ja \xE9s\
+      \ en aquesta categoria."
+  - id: telegram
+    desc: "Telegram d'escriptori."
+    name: Telegram
+    winget: Telegram.TelegramDesktop
+    choco: telegram
+    mac: telegram
+  - id: whatsapp
+    desc: "WhatsApp d'escriptori (paquet MSIX de la Store)."
+    name: WhatsApp
+    winget: 9NKSQGP7F2NH
+    source: msstore
+    mac: whatsapp
+  - id: zoho-mail
+    desc: "Client d'escriptori de Zoho Mail."
+    name: Zoho Mail
+    winget: Zoho.Mail
+    mac: zoho-mail
   productivity:
-    - id: alt-tab
-      name: AltTab
-      mac: alt-tab
-      note: "Porta a macOS l'Alt+Tab de Windows. A Windows ja hi és de sèrie."
-    - id: caffeine
-      name: Caffeine
-      mac: caffeine
-      note: "Equivalent a Windows: PowerToys Awake, que ja s'instal·la a systemutilities."
-    - id: claude
-      name: Claude Desktop
-      winget: Anthropic.Claude
-      mac: claude
-    - id: dockdoor
-      name: DockDoor
-      mac: dockdoor
-      note: "Porta a macOS la previsualització de finestres de la barra de tasques. A Windows ja hi és."
-    # Keka al Mac es una GUI d'arxius multiformat sense CLI: PeaZip n'es la
-    # traduccio mes fidel. El 7-Zip hi es igualment perque el que aporta no es
-    # la GUI, es 7z.exe: la CLI que fan servir scripts, CI i mitja Internet.
-    # A mes, PeaZip no comprimeix: fa de front-end i per al format 7z el backend
-    # es justament el 7-Zip.
-    - id: keka
-      name: 7-Zip
-      winget: 7zip.7zip
-      choco: 7zip
-      mac: keka
-    - id: peazip
-      name: PeaZip
-      winget: Giorgiotani.Peazip
-      choco: peazip
-      mac: keka
-    - id: maccy
-      name: Maccy
-      mac: maccy
-      note: "Historial de porta-retalls. A Windows és natiu: Win+V."
-    # Obsidian no es a ansible-mac: aquest repo hi afegeix el que el Mac no te.
-    - id: obsidian
-      name: Obsidian
-      winget: Obsidian.Obsidian
-      choco: obsidian
-      mac: "(no hi es a ansible-mac)"
-    # Calculadora d'estil bloc de notes, alternativa explicita al Numi. No es a
-    # cap gestor: URL fixa amb checksum. Cal pujar version/source/sha256 a ma
-    # quan surti una versio nova.
-    - id: numi
-      name: Calcator
-      provider: url
-      url:
-        source: https://calcator.app/downloads/Calcator_0.2.4_x64-setup.exe
-        version: "0.2.4"
-        sha256: "F3556BF23683B1CB0640011DAF7577887A54AA6CBB4D0E1A08ABB9FE34E6147F"
-        args: ["/S"]
-        arp: "Calcator*"
-      mac: numi
-    - id: rectangle
-      name: FancyZones (PowerToys)
-      mac: rectangle
-      note: "Gestió de finestres: PowerToys FancyZones + Win+fletxes, ja cobert a systemutilities."
-    # Hot corners a l'estil macOS. Al Mac son natius (rol desktop:
-    # cantonades superiors -> Mission Control); a Windows cal una app.
-    # Hot corners a l'estil macOS. Al Mac son natius (rol desktop:
-    # cantonades superiors -> Mission Control); a Windows cal una app.
-    - id: hotcorners
-      name: "Charmy: Hot Corners"
-      winget: 9P5PK6TVQXF7
-      source: msstore
-      mac: "(hot corners natius de macOS)"
-    - id: shottr
-      name: ShareX
-      winget: ShareX.ShareX
-      choco: sharex
-      mac: shottr
-    # provider: choco a proposit. El manifest de winget (REALiX.HWiNFO) apunta a
-    # una URL de descarrega morta i falla amb 404 (codi -2145844844).
-    - id: stats
-      name: HWiNFO
-      choco: hwinfo.install
-      provider: choco
-      mac: stats
-
-  # --- networkingvpn  (casksnetworkingvpn) -----------------------------------
+  - id: alt-tab
+    desc: "Canviador de finestres de macOS. A Windows, Alt+Tab de sèrie."
+    win_equivalent: Alt+Tab (natiu)
+    name: AltTab
+    mac: alt-tab
+    note: "Porta a macOS l'Alt+Tab de Windows. A Windows ja hi \xE9s de s\xE8rie."
+  - id: caffeine
+    desc: "Impedeix que l'equip s'adormi. A Windows, PowerToys Awake."
+    win_equivalent: powertoys (Awake)
+    name: Caffeine
+    mac: caffeine
+    note: "Equivalent a Windows: PowerToys Awake, que ja s'instal\xB7la a systemutilities."
+  - id: claude
+    desc: "Claude d'escriptori."
+    name: Claude Desktop
+    winget: Anthropic.Claude
+    mac: claude
+  - id: dockdoor
+    desc: "Previsualització de finestres del dock. A Windows ja hi és, a la barra de tasques."
+    win_equivalent: natiu (barra de tasques)
+    name: DockDoor
+    mac: dockdoor
+    note: "Porta a macOS la previsualitzaci\xF3 de finestres de la barra de tasques.\
+      \ A Windows ja hi \xE9s."
+  - id: keka
+    desc: "7-Zip: compressió i descompressió de gairebé qualsevol format."
+    name: 7-Zip
+    winget: 7zip.7zip
+    choco: 7zip
+    mac: keka
+  - id: peazip
+    desc: "Gestor d'arxius amb interfície, xifratge i comparació de continguts."
+    name: PeaZip
+    winget: Giorgiotani.Peazip
+    choco: peazip
+    mac: keka
+  - id: maccy
+    desc: "Historial del porta-retalls. A Windows, Win+V."
+    win_equivalent: Win+V (natiu)
+    name: Maccy
+    mac: maccy
+    note: "Historial de porta-retalls. A Windows \xE9s natiu: Win+V."
+  - id: obsidian
+    desc: "Notes en Markdown desades com a fitxers locals, amb enllaços entre elles."
+    name: Obsidian
+    winget: Obsidian.Obsidian
+    choco: obsidian
+    mac: (no hi es a ansible-mac)
+  - id: numi
+    desc: "Calculadora de text: escrius «3 GB / 40 min» i respon."
+    name: Calcator
+    provider: url
+    url:
+      source: https://calcator.app/downloads/Calcator_0.2.4_x64-setup.exe
+      version: 0.2.4
+      sha256: F3556BF23683B1CB0640011DAF7577887A54AA6CBB4D0E1A08ABB9FE34E6147F
+      args:
+      - /S
+      arp: Calcator*
+    mac: numi
+  - id: rectangle
+    desc: "Col·loca finestres per zones. A Windows, FancyZones i Win+fletxes."
+    win_equivalent: powertoys (FancyZones)
+    name: FancyZones (PowerToys)
+    mac: rectangle
+    note: "Gesti\xF3 de finestres: PowerToys FancyZones + Win+fletxes, ja cobert a\
+      \ systemutilities."
+  - id: hotcorners
+    desc: "Accions en portar el cursor a una cantonada de la pantalla."
+    name: 'Charmy: Hot Corners'
+    winget: 9P5PK6TVQXF7
+    source: msstore
+    mac: (hot corners natius de macOS)
+  - id: shottr
+    desc: "ShareX: captures, gravació, anotacions i pujada automàtica."
+    name: ShareX
+    winget: ShareX.ShareX
+    choco: sharex
+    mac: shottr
+  - id: stats
+    desc: "HWiNFO: sensors de temperatura, rellotges i consum de tot el maquinari."
+    name: HWiNFO
+    choco: hwinfo.install
+    provider: choco
+    mac: stats
   networkingvpn:
-    - id: switchhosts
-      name: SwitchHosts
-      winget: oldj.switchhosts
-      choco: switchhosts
-      mac: switchhosts
-    - id: tailscale
-      name: Tailscale
-      winget: Tailscale.Tailscale
-      choco: tailscale
-      mac: tailscale-app
-    - id: openvpn
-      name: OpenVPN Connect
-      winget: OpenVPNTechnologies.OpenVPNConnect
-      choco: openvpn-connect
-      mac: tunnelblick
-
-  # --- remoteaccess  (casksremoteaccess) -------------------------------------
+  - id: switchhosts
+    desc: "Canvia de fitxer hosts amb un clic. Per apuntar un domini a preproducció i tornar enrere."
+    name: SwitchHosts
+    winget: oldj.switchhosts
+    choco: switchhosts
+    mac: switchhosts
+  - id: tailscale
+    desc: "VPN de malla sobre WireGuard: connecta els teus equips sense obrir ports."
+    name: Tailscale
+    winget: Tailscale.Tailscale
+    choco: tailscale
+    mac: tailscale-app
+  - id: openvpn
+    desc: "Client d'OpenVPN, per als túnels dels clients que el fan servir."
+    name: OpenVPN Connect
+    winget: OpenVPNTechnologies.OpenVPNConnect
+    choco: openvpn-connect
+    mac: tunnelblick
   remoteaccess:
-    - id: royal-ts
-      name: Royal TS
-      winget: RoyalApps.RoyalTS.7
-      mac: royal-tsx
-    - id: rustdesk
-      name: RustDesk
-      choco: rustdesk
-      provider: choco
-      mac: rustdesk
-    - id: remote-desktop
-      name: Escriptori remot (mstsc)
-      mac: windows-app
-      note: "El cask windows-app és el client RDP de Microsoft per a macOS. A Windows, mstsc.exe ja ve de sèrie."
-
-  # --- filemanagementcloud  (casksfilemanagementcloud) -----------------------
+  - id: royal-ts
+    desc: "Gestor de connexions remotes: RDP, SSH, VNC i webs, en un arbre amb credencials."
+    name: Royal TS
+    winget: RoyalApps.RoyalTS.7
+    mac: royal-tsx
+  - id: rustdesk
+    desc: "Escriptori remot obert, amb servidor propi si el vols. Alternativa a TeamViewer."
+    name: RustDesk
+    choco: rustdesk
+    provider: choco
+    mac: rustdesk
+  - id: remote-desktop
+    desc: "Client RDP. A Windows ja hi és: mstsc.exe."
+    win_equivalent: mstsc.exe (natiu)
+    name: Escriptori remot (mstsc)
+    mac: windows-app
+    note: "El cask windows-app \xE9s el client RDP de Microsoft per a macOS. A Windows,\
+      \ mstsc.exe ja ve de s\xE8rie."
   filemanagementcloud:
-    - id: box-drive
-      name: Box Drive
-      winget: Box.Box
-      mac: box-drive
-    - id: localsend
-      name: LocalSend
-      winget: LocalSend.LocalSend
-      choco: localsend
-      mac: localsend
-    - id: synology-drive
-      name: Synology Drive Client
-      winget: Synology.DriveClient
-      mac: synology-drive
-
-  # --- microsoftsuite  (casksmicrosoftsuite) ---------------------------------
+  - id: box-drive
+    desc: "Munta Box com una unitat de xarxa, amb els fitxers sota demanda."
+    name: Box Drive
+    winget: Box.Box
+    mac: box-drive
+  - id: localsend
+    desc: "Envia fitxers entre dispositius de la mateixa xarxa, sense núvol ni comptes."
+    name: LocalSend
+    winget: LocalSend.LocalSend
+    choco: localsend
+    mac: localsend
+  - id: synology-drive
+    desc: "Sincronitza carpetes amb un NAS de Synology."
+    name: Synology Drive Client
+    winget: Synology.DriveClient
+    mac: synology-drive
   microsoftsuite:
-    - id: azure-storage-explorer
-      name: Azure Storage Explorer
-      winget: Microsoft.Azure.StorageExplorer
-      choco: microsoftazurestorageexplorer
-      mac: microsoft-azure-storage-explorer
-    - id: microsoft-auto-update
-      name: Microsoft AutoUpdate
-      mac: microsoft-auto-update
-      note: "Específic de macOS. A Windows actualitza Click-to-Run / Windows Update."
-
-  # --- media  (casksmedia) ---------------------------------------------------
+  - id: azure-storage-explorer
+    desc: "Explora blobs, cues, taules i fitxers d'Azure Storage amb interfície."
+    name: Azure Storage Explorer
+    winget: Microsoft.Azure.StorageExplorer
+    choco: microsoftazurestorageexplorer
+    mac: microsoft-azure-storage-explorer
+  - id: microsoft-auto-update
+    desc: "Actualitzador de l'Office per a macOS. A Windows ho fa Click-to-Run."
+    win_equivalent: Windows Update
+    name: Microsoft AutoUpdate
+    mac: microsoft-auto-update
+    note: "Espec\xEDfic de macOS. A Windows actualitza Click-to-Run / Windows Update."
   media:
-    - id: handbrake
-      name: HandBrake
-      winget: HandBrake.HandBrake
-      choco: handbrake
-      mac: handbrake-app
-    - id: vlc
-      name: VLC
-      winget: VideoLAN.VLC
-      choco: vlc
-      mac: vlc
-    # --- afegits nomes a Windows (no son a ansible-mac) ---
-    # mpv: reproductor lleuger i scriptable. Complementa el VLC, no el
-    # substitueix: el VLC obre qualsevol cosa, l'mpv va fi i es configurable.
-    - id: mpv
-      name: mpv
-      winget: shinchiro.mpv
-      choco: mpv
-      mac: "(no hi es a ansible-mac)"
-    # ffmpeg: el motor que hi ha sota mig catalog multimedia, i el que necessita
-    # yt-dlp per ajuntar video i audio separats.
-    - id: ffmpeg
-      name: FFmpeg
-      winget: Gyan.FFmpeg
-      choco: ffmpeg
-      mac: "(no hi es a ansible-mac)"
-      test: ffmpeg
-    # ATENCIO: el paquet de winget declara dues dependencies i winget les
-    # instal-la soles, sense preguntar: DenoLand.Deno i yt-dlp.FFmpeg. El Deno
-    # no es sobrer: yt-dlp el fa servir per resoldre els reptes de JavaScript
-    # de YouTube. Si no vols Deno a la maquina, el que has de treure es yt-dlp.
-    # El paquet de Chocolatey no arrossega Deno, pero tampoc el porta i llavors
-    # YouTube pot fallar.
-    - id: yt-dlp
-      name: yt-dlp
-      winget: yt-dlp.yt-dlp
-      choco: yt-dlp
-      mac: "(no hi es a ansible-mac)"
-      test: yt-dlp
-    # Open TV (Fredolx): client IPTV. No es a cap gestor, nomes releases de
-    # GitHub. El nom del fitxer ja ha canviat un cop (open-tv -> Fred.TV), per
-    # aixo es fa servir el mode github+asset i no una URL fixa.
-    - id: opentv
-      name: Open TV
-      provider: url
-      url:
-        github: Fredolx/open-tv
-        asset: "*_x64_en-US.msi"
-        # Es diu "Fred TV" a Programes i caracteristiques, no "Open TV".
-        arp: "Fred TV*"
-      mac: "(no hi es a ansible-mac)"
-
-  # --- documents  (casksdocuments) -------------------------------------------
+  - id: handbrake
+    desc: "Recodifica vídeo amb perfils ja fets: per abaixar el pes d'un MP4 sense pensar-hi."
+    name: HandBrake
+    winget: HandBrake.HandBrake
+    choco: handbrake
+    mac: handbrake-app
+  - id: vlc
+    desc: "Reprodueix qualsevol cosa sense haver d'instal·lar còdecs."
+    name: VLC
+    winget: VideoLAN.VLC
+    choco: vlc
+    mac: vlc
+  - id: mpv
+    desc: "Reproductor mínim i molt ràpid, controlat per teclat i scripts."
+    name: mpv
+    winget: shinchiro.mpv
+    choco: mpv
+    mac: (no hi es a ansible-mac)
+  - id: ffmpeg
+    desc: "La navalla suïssa de l'àudio i el vídeo: converteix, retalla i transmet."
+    name: FFmpeg
+    winget: Gyan.FFmpeg
+    choco: ffmpeg
+    mac: (no hi es a ansible-mac)
+    test: ffmpeg
+  - id: yt-dlp
+    desc: "Descarrega vídeo i àudio de centenars de webs. Arrossega Deno i FFmpeg com a dependències."
+    name: yt-dlp
+    winget: yt-dlp.yt-dlp
+    choco: yt-dlp
+    mac: (no hi es a ansible-mac)
+    test: yt-dlp
+  - id: opentv
+    desc: "Reproductor de llistes IPTV M3U."
+    name: Open TV
+    provider: url
+    url:
+      github: Fredolx/open-tv
+      asset: '*_x64_en-US.msi'
+      arp: Fred TV*
+    mac: (no hi es a ansible-mac)
   documents:
-    - id: acrobat-reader
-      name: Adobe Acrobat Reader
-      winget: Adobe.Acrobat.Reader.64-bit
-      choco: adobereader
-      mac: adobe-acrobat-reader
-    - id: macdown
-      name: MacDown
-      mac: macdown
-      note: "Específic de macOS. A Windows el cobreix Mark Text, que ja és en aquesta categoria."
-    - id: marktext
-      name: Mark Text
-      choco: marktext
-      provider: choco
-      mac: mark-text
-    - id: modern-csv
-      name: Modern CSV
-      winget: PFOJEnterprisesLLC.ModernCSV
-      mac: modern-csv
-    - id: onlyoffice
-      name: ONLYOFFICE Desktop Editors
-      winget: ONLYOFFICE.DesktopEditors
-      choco: onlyoffice
-      mac: onlyoffice
-    - id: pdf24
-      name: PDF24 Creator
-      winget: geeksoftwareGmbH.PDF24Creator
-      choco: pdf24
-      mac: revpdf-editor
-    - id: xournalpp
-      name: Xournal++
-      winget: Xournal++.Xournal++
-      choco: xournalplusplus
-      mac: xournal++
-
-  # --- hardware  (caskshardware) ---------------------------------------------
+  - id: acrobat-reader
+    desc: "Lector de PDF de referència, per als formularis i les signatures que només hi funcionen."
+    name: Adobe Acrobat Reader
+    winget: Adobe.Acrobat.Reader.64-bit
+    choco: adobereader
+    mac: adobe-acrobat-reader
+  - id: macdown
+    desc: "Editor de Markdown de macOS. Aquí el cobreix Mark Text."
+    win_equivalent: marktext
+    name: MacDown
+    mac: macdown
+    note: "Espec\xEDfic de macOS. A Windows el cobreix Mark Text, que ja \xE9s en\
+      \ aquesta categoria."
+  - id: marktext
+    desc: "Editor de Markdown amb la previsualització al mateix lloc on escrius."
+    name: Mark Text
+    choco: marktext
+    provider: choco
+    mac: mark-text
+  - id: modern-csv
+    desc: "Obre i edita CSV de milions de línies sense que l'Excel se'ls inventi."
+    name: Modern CSV
+    winget: PFOJEnterprisesLLC.ModernCSV
+    mac: modern-csv
+  - id: onlyoffice
+    desc: "Suite ofimàtica compatible amb els formats de Microsoft. El substitut de l'Office al catàleg."
+    name: ONLYOFFICE Desktop Editors
+    winget: ONLYOFFICE.DesktopEditors
+    choco: onlyoffice
+    mac: onlyoffice
+  - id: pdf24
+    desc: "Eines de PDF en local: unir, partir, comprimir, convertir i signar."
+    name: PDF24 Creator
+    winget: geeksoftwareGmbH.PDF24Creator
+    choco: pdf24
+    mac: revpdf-editor
+  - id: xournalpp
+    desc: "Anota i omple PDFs a mà, amb tauleta o amb el ratolí."
+    name: Xournal++
+    winget: Xournal++.Xournal++
+    choco: xournalplusplus
+    mac: xournal++
   hardware:
-    - id: logi-options
-      name: Logi Options+
-      winget: Logitech.OptionsPlus
-      mac: logi-options+
-
-  # --- store  (mas_apps) ------------------------------------------------------
-  #  L'equivalent de `mas` a Windows és la font msstore de winget.
+  - id: logi-options
+    desc: "Configura teclats i ratolins Logitech: botons, gestos i canvi entre equips."
+    name: Logi Options+
+    winget: Logitech.OptionsPlus
+    mac: logi-options+
   store:
-    # PingoMeter fa el mateix que Ping Status del Mac: el ping a la safata del
-    # sistema. Es winget normal, no msstore, pero es queda en aquesta categoria
-    # perque 'store' es el mapatge de mas_apps d'ansible-mac.
-    - id: ping-status
-      name: PingoMeter
-      winget: JustinGrote.PingoMeter
-      mac: "mas 1158928913 Ping Status"
-    - id: microsoft-todo
-      name: Microsoft To Do
-      winget: 9NBLGGH5R558
-      source: msstore
-      mac: "mas 1274495053 Microsoft To Do"
-    - id: mutekey
-      name: MuteKey
-      mac: "mas 1509590766 MuteKey"
-      note: "Equivalent a Windows: PowerToys Video Conference Mute (Win+Maj+A), ja cobert a systemutilities."
-    - id: azure-vpn-client
-      name: Azure VPN Client
-      winget: 9NP355QT2SQB
-      source: msstore
-      mac: "mas 1553936137 Azure VPN Client"
-    - id: wireguard
-      name: WireGuard
-      winget: WireGuard.WireGuard
-      choco: wireguard
-      mac: "mas 1451685025 WireGuard"
-
-  # --- fonts  (rol shell d'ansible-mac) --------------------------------------
-  #  Les Nerd Fonts no són a winget: Chocolatey és l'únic proveïdor fiable.
+  - id: ping-status
+    desc: "Latència a la barra de tasques, per veure d'un cop d'ull si la connexió va bé."
+    name: PingoMeter
+    winget: JustinGrote.PingoMeter
+    mac: mas 1158928913 Ping Status
+  - id: microsoft-todo
+    desc: "Tasques de Microsoft To Do, sincronitzades amb el compte de feina."
+    name: Microsoft To Do
+    winget: 9NBLGGH5R558
+    source: msstore
+    mac: mas 1274495053 Microsoft To Do
+  - id: mutekey
+    desc: "Silencia el micròfon amb una tecla. A Windows, Win+Maj+A de PowerToys."
+    win_equivalent: powertoys (Video Conference Mute)
+    name: MuteKey
+    mac: mas 1509590766 MuteKey
+    note: 'Equivalent a Windows: PowerToys Video Conference Mute (Win+Maj+A), ja cobert
+      a systemutilities.'
+  - id: azure-vpn-client
+    desc: "Client oficial per a les VPN Point-to-Site d'Azure."
+    name: Azure VPN Client
+    winget: 9NP355QT2SQB
+    source: msstore
+    mac: mas 1553936137 Azure VPN Client
+  - id: wireguard
+    desc: "Client de WireGuard, per als túnels que no passen per Tailscale."
+    name: WireGuard
+    winget: WireGuard.WireGuard
+    choco: wireguard
+    mac: mas 1451685025 WireGuard
   fonts:
-    - id: font-meslo
-      name: Meslo LG Nerd Font
-      choco: nerd-fonts-meslo
-      provider: choco
-      mac: font-meslo-lg-nerd-font
-
-# -----------------------------------------------------------------------------
-#  Rol: startup   (equivalent a startup_apps / Login Items d'ansible-mac)
-# -----------------------------------------------------------------------------
-#  A macOS són Login Items; a Windows, valors a
-#  HKCU:\Software\Microsoft\Windows\CurrentVersion\Run.
-#  `path` accepta variables d'entorn amb la sintaxi $env:NOM.
-# Coses que s'han posat soles a l'inici i no volem que hi siguin.
-# No s'esborra res: s'escriu a StartupApproved, el mateix mecanisme que la
-# pestanya "Inici" de l'Administrador de tasques, aixi que es reversible des
-# d'alla i l'instal-lador no ho desfa a la propera actualitzacio.
-# El nom es el de l'entrada: el valor de la clau Run, o la drecera de la
-# carpeta d'Inici SENSE el .lnk.
+  - id: font-meslo
+    desc: "Meslo amb les icones de Nerd Fonts. Fa falta perquè el prompt d'Starship es vegi bé."
+    name: Meslo LG Nerd Font
+    choco: nerd-fonts-meslo
+    provider: choco
+    mac: font-meslo-lg-nerd-font
 startup_disable:
-  - PDF24          # HKLM Run -> la safata del PDF24
-  - RustDesk Tray  # carpeta d'Inici -> la safata del RustDesk
-  - Warp           # HKCU Run -> entrada morta: Warp ja no hi es instal-lat
-
+- PDF24
+- RustDesk Tray
+- Warp
 startup_apps:
-  # BetterDisplay (Login Item al Mac) no te contrapartida: Twinkle Tray descartat.
-  # Charmy es una app MSIX: no te .exe a una ruta fixa. L'entrada d'inici la
-  # gestiona la mateixa app des dels seus ajustos (Run at startup).
-  - name: ShareX
-    path: $env:ProgramFiles\ShareX\ShareX.exe
-    mac: Shottr
-  - name: HWiNFO
-    # choco (hwinfo.install) no el posa a Program Files: el deixa aqui.
-    path: $env:ProgramData\chocolatey\lib\hwinfo.install\tools\hwi64.exe
-    mac: Stats
-  - name: PowerToys
-    path: $env:LOCALAPPDATA\PowerToys\PowerToys.exe
-    mac: MuteKey
-  - name: OneDrive
-    path: $env:LOCALAPPDATA\Microsoft\OneDrive\OneDrive.exe
-    mac: OneDrive
-  # Maccy no cal: el porta-retalls de Windows (Win+V) ja és al sistema.
-
-# -----------------------------------------------------------------------------
-#  Rol: shell   (equivalent al rol shell d'ansible-mac)
-# -----------------------------------------------------------------------------
+- name: ShareX
+  path: $env:ProgramFiles\ShareX\ShareX.exe
+  mac: Shottr
+  args:
+  - -silent
+- name: HWiNFO
+  path: $env:ProgramData\chocolatey\lib\hwinfo.install\tools\hwi64.exe
+  mac: Stats
+- name: PowerToys
+  path: $env:LOCALAPPDATA\PowerToys\PowerToys.exe
+  mac: MuteKey
+  args:
+  - --minimized
+- name: OneDrive
+  path: $env:LOCALAPPDATA\Microsoft\OneDrive\OneDrive.exe
+  mac: OneDrive
 shell:
   install_profile: true
-  # starship, per fer servir el MATEIX starship.toml que al Mac.
   prompt: starship
-  # Copia files/starship.toml a ~/.config/starship.toml, com al Mac.
   install_starship_config: true
   configure_terminal: true
-  # A macOS: zsh-autosuggestions + zsh-syntax-highlighting.
-  # A Windows ho cobreix PSReadLine (predicció + ressaltat), que ja ve de sèrie.
   modules:
-    - PSReadLine
-    - Terminal-Icons
-    - posh-git
-    - powershell-yaml
-
-# -----------------------------------------------------------------------------
-#  Rol: tabby   (equivalent al rol tabby d'ansible-mac)
-# -----------------------------------------------------------------------------
+  - PSReadLine
+  - Terminal-Icons
+  - posh-git
+  - powershell-yaml
 tabby:
   install_plugins: true
-
-# -----------------------------------------------------------------------------
-#  Rol: dev
-# -----------------------------------------------------------------------------
 dev:
   git:
-    user_name: ""
-    user_email: ""
+    user_name: ''
+    user_email: ''
     default_branch: main
     config:
       init.defaultBranch: main
-      pull.rebase: "true"
-      push.autoSetupRemote: "true"
+      pull.rebase: 'true'
+      push.autoSetupRemote: 'true'
       core.autocrlf: input
-      core.longpaths: "true"
-      core.editor: "code --wait"
+      core.longpaths: 'true'
+      core.editor: code --wait
       diff.colorMoved: default
-      fetch.prune: "true"
-      rebase.autoStash: "true"
+      fetch.prune: 'true'
+      rebase.autoStash: 'true'
   ssh:
     generate_key: true
     key_type: ed25519
-    comment: ""
+    comment: ''
   npm_globals: []
   uv_tools: []
   vscode_extensions: []
-
-# -----------------------------------------------------------------------------
-#  Rol: system
-# -----------------------------------------------------------------------------
-#  ATENCIO amb l'origen de cada bloc, que no es tot el mateix:
-#
-#    [mac]  ve del rol desktop d'ansible-mac i hi te equivalencia directa
-#    [win]  NO existeix a ansible-mac: es criteri afegit nomes per a Windows
-#
-#  El rol desktop del Mac toca escriptori, Dock, hot corners, trackpad i
-#  teclat. A Windows no hi ha ni Dock ni hot corners, i la resta de blocs
-#  d'aqui sota ([win]) son decisions de com ha de quedar un Windows, no
-#  traduccions de res. Si algun dia vols que els dos repos siguin estrictes,
-#  el que s'ha de treure es tot el marcat [win].
-#
-#  Del rol desktop del Mac queden sense portar, per falta d'equivalent:
-#    - so en canviar el volum        (Windows no ho te)
-#    - substitucio de punt amb doble espai (Windows no ho te)
-#    - clic silencios i Force Click  (son del trackpad haptic dels Mac)
-#    - F1..F12 com a tecles de funcio (a Windows ho mana la BIOS, no el SO)
 system:
-  # [win] -- Windows no te res d'aixo a ansible-mac
   explorer:
-    # [mac] com.apple.finder CreateDesktop = false
-    # Al Mac les amaga; aqui es vol veure-les, aixi que va a false a proposit.
     hide_desktop_icons: false
     show_file_extensions: true
     show_hidden_files: true
@@ -751,60 +781,37 @@ system:
     show_full_path_in_title: true
     expand_to_open_folder: true
     disable_recent_files: false
-  # [win]
   taskbar:
     align_left: true
     hide_search_box: true
     hide_task_view: true
     hide_widgets: true
     hide_chat: true
-  # [win]
   appearance:
     dark_mode: true
     transparency: true
     accent_on_taskbar: false
-  # [win]
   privacy:
     disable_advertising_id: true
     disable_start_web_search: true
     disable_tailored_experiences: true
-  # El bloc power: s'ha tret a proposit. A Windows els temps d'apagar pantalla i
-  # de suspensio son propietats del pla d'energia, no ajustos independents, o
-  # sigui que "treure el pla d'energia" vol dir treure'ls tots tres. A mes era
-  # [win] sencer: ansible-mac no diu res d'energia. Si algun dia el vols,
-  # l'historial de git el te.
-  # [win]
   developer:
     enable_developer_mode: true
     enable_long_paths: true
     enable_openssh_server: false
-  # [mac] -- tot aquest bloc ve del rol desktop d'ansible-mac
+  power:
+    # Que fa el portatil en tancar la tapa. Valors de powercfg LIDACTION:
+    #   0 = no facis res   1 = suspen   2 = hiberna   3 = apaga
+    # Endollat el deixem a 0 per poder treballar amb la tapa tancada sobre una
+    # dock USB-C; amb bateria es queda a 1 perque no es cremi a la motxilla.
+    lid_action_ac: 0
+    lid_action_dc: 1
   input:
-    # com.apple.AppleMultitouchTrackpad Clicking = 1
     tap_to_click: true
-    # TrackpadRightClick = true  (clic secundari amb dos dits)
     two_finger_right_click: true
-    # TrackpadCornerSecondaryClick = 0  (amb dos dits, NO per la cantonada)
     corner_right_click: false
-    # Dragging = 1 i DragLock = 0  (arrossegar sense bloqueig)
     tap_and_drag: true
-    # Equival a "Disable natural scrolling" d'ansible-mac
-    # (com.apple.swipescrolldirection = false).
-    #
-    #   false = scroll clàssic de Windows: gest/roda avall -> la pàgina baixa
-    #   true  = scroll natural (estil Mac): el contingut segueix els dits
-    #
-    # Windows fa servir dues claus independents, i el 0 NO vol dir el mateix a
-    # totes dues (no és un error de transcripció, és així):
-    #   touchpad de precisió  ScrollDirection = 0 natural / 1 clàssic
-    #   ratolí (per cada HID) FlipFlopWheel   = 0 clàssic / 1 natural
     natural_scrolling: false
-    # A ansible-mac: F1..F12 com a tecles de funció. A Windows ho controla la
-    # BIOS/firmware del portàtil (tecla Fn), no el sistema operatiu.
     function_keys_standard: true
-
-# -----------------------------------------------------------------------------
-#  Rol: dotfiles
-# -----------------------------------------------------------------------------
 dotfiles:
   links: []

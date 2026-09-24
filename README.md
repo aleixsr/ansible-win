@@ -13,6 +13,60 @@ sempre que existeixin per a Windows.
 > (`config.yml`, rols, sortida `ok`/`changed`/`skipped`, `PLAY RECAP`) però el
 > motor és PowerShell. Vegeu [Equivalències](#equivalències-amb-ansible-mac).
 
+<!-- INDEX:INICI -->
+## Índex
+
+- [Què fa](#què-fa)
+- [Requisits](#requisits)
+- [Instal·lació](#instal·lació)
+- [Ús](#ús)
+- [Configuració](#configuració)
+- [Software que instal·la](#software-que-instal·la)
+  - [Desenvolupament](#desenvolupament)
+  - [Núvol i DevOps](#núvol-i-devops)
+  - [Xarxa (línia d'ordres)](#xarxa-línia-dordres)
+  - [Utilitats de sistema](#utilitats-de-sistema)
+  - [Navegadors](#navegadors)
+  - [Terminals](#terminals)
+  - [Comunicació](#comunicació)
+  - [Productivitat](#productivitat)
+  - [Xarxa i VPN](#xarxa-i-vpn)
+  - [Accés remot](#accés-remot)
+  - [Fitxers i núvol](#fitxers-i-núvol)
+  - [Entorn Microsoft](#entorn-microsoft)
+  - [Àudio i vídeo](#àudio-i-vídeo)
+  - [Documents](#documents)
+  - [Maquinari](#maquinari)
+  - [Microsoft Store](#microsoft-store)
+  - [Tipografies](#tipografies)
+  - [Del catàleg del Mac, no s'instal·len](#del-catàleg-del-mac-no-sinstal·len)
+  - [Aplicacions d'inici](#aplicacions-dinici)
+  - [Aplicacions que NO volem a l'inici](#aplicacions-que-no-volem-a-linici)
+  - [Com es tracten les apps que només són del Mac](#com-es-tracten-les-apps-que-només-són-del-mac)
+  - [Descartats a propòsit](#descartats-a-propòsit)
+- [Paquets que no són a cap gestor](#paquets-que-no-són-a-cap-gestor)
+- [Treure el bloatware de Windows 11](#treure-el-bloatware-de-windows-11)
+  - [Què treu](#què-treu)
+  - [Què NO treu, a posta](#què-no-treu-a-posta)
+  - [Per què no n'hi ha prou d'esborrar-les](#per-què-no-nhi-ha-prou-desborrar-les)
+  - [Afegir-hi o treure'n](#afegir-hi-o-treuren)
+- [Ajustos que aplica](#ajustos-que-aplica)
+  - [D'on surt cada ajust](#don-surt-cada-ajust)
+  - [Explorador de fitxers](#explorador-de-fitxers)
+  - [Barra de tasques](#barra-de-tasques)
+  - [Aparença](#aparença)
+  - [Privadesa](#privadesa)
+  - [Entrada (ratolí i touchpad) — [mac]](#entrada-ratolí-i-touchpad-—-mac)
+  - [Ajustos de desenvolupament](#ajustos-de-desenvolupament)
+  - [Energia: treballar amb la tapa tancada](#energia-treballar-amb-la-tapa-tancada)
+- [Les dues fases del run](#les-dues-fases-del-run)
+- [sudo sense la g](#sudo-sense-la-g)
+- [Equivalències amb ansible-mac](#equivalències-amb-ansible-mac)
+- [Estructura del projecte](#estructura-del-projecte)
+- [Notes](#notes)
+- [Llicència](#llicència)
+<!-- INDEX:FI -->
+
 ## Què fa
 
 Executar `.\run.ps1` fa, en aquest ordre:
@@ -86,7 +140,9 @@ O, si ja tens el repo clonat:
 .\run.ps1              # provisiona de debò
 ```
 
-`run.ps1` es reobre sol amb privilegis via `gsudo` quan li calen.
+**Llança'l sense administrador.** El run fa primer tot el que pot com a usuari
+i, si li queda feina que necessita privilegis, t'ensenya quina és i demana l'UAC
+un sol cop al final. Vegés [Les dues fases del run](#les-dues-fases-del-run).
 
 ## Ús
 
@@ -95,7 +151,7 @@ O, si ja tens el repo clonat:
 .\run.ps1 -Check                                # simulació (com --check)
 .\run.ps1 -Upgrade                              # actualitza el que ja hi ha
 .\run.ps1 -ListPackages                         # ensenya el catàleg sencer
-.\run.ps1 -NoElevate                            # sense demanar privilegis
+.\run.ps1 -NoElevate                            # no demanis l'UAC: el que calgui admin se salta
 ```
 
 Executar només una part (l'equivalent dels `--tags` d'`ansible-mac`):
@@ -153,59 +209,245 @@ choco search <nom>
 
 ## Software que instal·la
 
-### Línia d'ordres i desenvolupament
-
-| Categoria | Paquets |
-|---|---|
-| Development | GitHub CLI, Git, Node.js LTS, Python 3.14, Apache Directory Studio, GitHub Copilot CLI, DBeaver Community, draw.io, GitHub Desktop, SoapUI, Notepad++, Sublime Text, Visual Studio Code, Visual Studio Code Insiders |
-| Cloud / DevOps | Azure CLI, OCI CLI |
-| Networking | iperf3, RustScan, WinMTR, Nmap, Speedtest CLI, mailsend-go, tcping, wget |
-| System utilities | PowerShell 7, balenaEtcher, WizTree, PowerToys, ScreenToGif, Novabench, XCA |
-| Shell (via `roles/shell`) | Starship, PSReadLine, Terminal-Icons, posh-git, powershell-yaml |
-
-### Aplicacions gràfiques
-
-| Categoria | Apps |
-|---|---|
-| Browsers | Brave, Chromium, Firefox, Google Chrome, Microsoft Edge |
-| Terminal | Windows Terminal, Tabby, Wave Terminal |
-| Communication | Mailspring, Microsoft Teams, Telegram, WhatsApp |
-| Productivity | Claude Desktop, 7-Zip, PeaZip, Obsidian, Calcator, Charmy (hot corners), ShareX, HWiNFO |
-| Networking & VPN | SwitchHosts, Tailscale, OpenVPN Connect |
-| Remote access | Royal TS, RustDesk |
-| File management & cloud | Box Drive, LocalSend, Synology Drive Client |
-| Microsoft suite | Azure Storage Explorer |
+Aquesta secció **es genera** a partir de `config.yml` amb
+`scripts/Export-AppsTable.ps1`. No l'editis a mà: canvia el `desc:` del paquet al
+catàleg i torna a executar l'script.
 
 > **Microsoft 365 no és al catàleg.** El manifest `Microsoft.Office` de winget té
 > el hash trencat de forma crònica i, a més, la suite ofimàtica aquí la cobreix
 > **ONLYOFFICE**, que sí que s'instal·la.
-| Media | HandBrake, VLC, mpv, FFmpeg, yt-dlp, Open TV |
 
 > **yt-dlp arrossega dues dependències.** El seu paquet de winget declara
 > `DenoLand.Deno` i `yt-dlp.FFmpeg`, i winget les instal·la soles sense
 > preguntar. Deno no és sobrer: yt-dlp el fa servir per resoldre els reptes de
 > JavaScript de YouTube. Si no en vols cap, el que has de treure del catàleg és
 > **yt-dlp**, no Deno.
-| Documents | Adobe Acrobat Reader, Mark Text, Modern CSV, ONLYOFFICE, PDF24 Creator, Xournal++ |
-| Hardware | Logi Options+ |
-| Fonts (via `roles/shell`) | Meslo LG Nerd Font |
 
-### Microsoft Store (via `winget --source msstore`)
+<!-- APPS:INICI -->
 
-| App | Id |
-|---|---|
-| Microsoft To Do | `9NBLGGH5R558` |
-| PingoMeter | `JustinGrote.PingoMeter` (winget normal) |
-| Azure VPN Client | `9NP355QT2SQB` |
-| WireGuard | `WireGuard.WireGuard` |
-| Charmy: Hot Corners | `9P5PK6TVQXF7` |
+### Desenvolupament
 
-> **Les apps MSIX de la Store no es poden instal·lar des d'un procés elevat.**
-> Com que `run.ps1` s'auto-eleva, les instal·la **abans** d'elevar-se, mentre
-> encara és al context d'usuari. Si n'executes una elevat, la tasca surt com a
-> `skipped` amb la comanda a fer:
-> `.
-un.ps1 -Roles apps -Groups store -NoElevate`
+Grup `development`. 14 aplicacions.
+
+| App | Per a què serveix | D'on surt |
+| --- | --- | --- |
+| **GitHub CLI** | Client de GitHub per a la terminal: PRs, issues i releases sense obrir el navegador. | winget |
+| **Git** | El control de versions. Porta Git Bash i Git Credential Manager. | winget |
+| **Node.js LTS** | Runtime de JavaScript, versió LTS. Arrossega npm, que fa falta per a Tabby i per a les eines globals. | winget |
+| **Python 3.14** | Intèrpret de Python 3.14, amb pip i el llançador py. | winget |
+| **Apache Directory Studio** | Navegador i editor de directoris LDAP. Per mirar l'Active Directory sense endevinar filtres. | winget |
+| **GitHub Copilot CLI** | GitHub Copilot a la terminal: explica i suggereix ordres. | winget |
+| **DBeaver Community** | Client SQL universal: PostgreSQL, MySQL, SQL Server, Oracle i companyia amb un sol client. | winget |
+| **draw.io** | Diagrames d'arquitectura i xarxa en local, sense compte ni núvol. | winget |
+| **GitHub Desktop** | GitHub amb finestres, per als repos on no vols pensar en ordres. | winget |
+| **SoapUI** | Proves de serveis web SOAP i REST. Encara fa falta per als SOAP de sempre. | choco |
+| **Notepad++** | Editor de text ràpid, per a un cop d'ull o una edició de quatre línies. | winget |
+| **Sublime Text** | Editor lleuger que obre fitxers de centenars de MB sense ofegar-se. | winget |
+| **Visual Studio Code** | L'editor principal: extensions, depurador i terminal integrada. | winget |
+| **Visual Studio Code Insiders** | La branca diària de VS Code, en paral·lel a l'estable. Per provar coses sense trencar l'entorn de feina. | winget |
+
+### Núvol i DevOps
+
+Grup `clouddevops`. 2 aplicacions.
+
+| App | Per a què serveix | D'on surt |
+| --- | --- | --- |
+| **Azure CLI** | CLI d'Azure: subscripcions, recursos i tot el tenant des de la terminal. | winget |
+| **OCI CLI (Oracle Cloud)** | CLI d'Oracle Cloud Infrastructure. | choco |
+
+### Xarxa (línia d'ordres)
+
+Grup `networking`. 8 aplicacions.
+
+| App | Per a què serveix | D'on surt |
+| --- | --- | --- |
+| **iperf3** | Mesura l'ample de banda real entre dos punts. L'eina per demostrar si la lentitud és de la xarxa. | winget |
+| **RustScan** | Escàner de ports molt ràpid; encadena amb Nmap per al detall. | winget |
+| **WinMTR** | traceroute i ping alhora, en continu: ensenya en quin salt es perden els paquets. | choco |
+| **Nmap** | Descoberta de xarxa i escaneig de ports i serveis. | winget |
+| **Speedtest CLI** | Speedtest d'Ookla per a la terminal, per deixar-ne constància en un log. | winget |
+| **mailsend-go** | Envia correu des de la línia d'ordres per provar SMTP, relays i autenticació. | winget |
+| **tcping** | Ping contra un port TCP. Per quan l'ICMP està bloquejat, que és gairebé sempre. | choco |
+| **wget** | Descàrregues no interactives, amb reintents i recursivitat. | winget |
+
+### Utilitats de sistema
+
+Grup `systemutilities`. 7 aplicacions.
+
+| App | Per a què serveix | D'on surt |
+| --- | --- | --- |
+| **PowerShell 7** | PowerShell 7, al costat del 5.1 que ve amb Windows. Multiplataforma i molt més ràpid. | winget |
+| **balenaEtcher** | Grava imatges ISO i IMG a USB, verificant el resultat. | winget |
+| **WizTree** | Què t'ocupa el disc, llegint la MFT: analitza un disc sencer en segons. | winget |
+| **PowerToys** | La caixa d'eines de Microsoft: FancyZones, PowerToys Run, Awake, Video Conference Mute i selector de colors. | winget |
+| **ScreenToGif** | Grava un tros de pantalla i el desa com a GIF o MP4. Per ensenyar un error sense escriure tres paràgrafs. | winget |
+| **Novabench** | Benchmark ràpid de CPU, GPU, RAM i disc. | winget |
+| **XCA** | Gestor d'autoritats de certificació i certificats X.509, amb interfície. | choco |
+
+### Navegadors
+
+Grup `browsers`. 5 aplicacions.
+
+| App | Per a què serveix | D'on surt |
+| --- | --- | --- |
+| **Brave** | Navegador Chromium amb bloqueig d'anuncis i de seguiment de sèrie. | winget |
+| **Chromium** | Chromium net, sense els serveis de Google. Útil per provar comportaments del motor. | winget |
+| **Mozilla Firefox** | Motor Gecko: el segon motor que cal tenir per comprovar que una web funciona de debò. | winget |
+| **Google Chrome** | Google Chrome, per al que només va bé a Chrome i per a les seves DevTools. | winget |
+| **Microsoft Edge** | Ve amb Windows; el catàleg només se n'assegura la versió. És el que millor s'entén amb els portals de Microsoft 365. | winget |
+
+### Terminals
+
+Grup `terminal`. 3 aplicacions.
+
+| App | Per a què serveix | D'on surt |
+| --- | --- | --- |
+| **Windows Terminal** | El terminal de Windows: pestanyes, panells i perfils per a PowerShell, cmd i WSL. | winget |
+| **Tabby** | Terminal amb gestor de connexions SSH i sincronització de la configuració. | winget |
+| **Wave Terminal** | Terminal per blocs: desa la sortida de cada ordre perquè la puguis rellegir i compartir. | winget |
+
+### Comunicació
+
+Grup `communication`. 5 aplicacions.
+
+| App | Per a què serveix | D'on surt |
+| --- | --- | --- |
+| **Mailspring** | Client de correu d'escriptori per a diversos comptes IMAP. | choco |
+| **Microsoft Teams** | Microsoft Teams: xat, reunions i trucades del tenant. | winget |
+| **Telegram** | Telegram d'escriptori. | winget |
+| **WhatsApp** | WhatsApp d'escriptori (paquet MSIX de la Store). | Store |
+| **Zoho Mail** | Client d'escriptori de Zoho Mail. | winget |
+
+### Productivitat
+
+Grup `productivity`. 8 aplicacions.
+
+| App | Per a què serveix | D'on surt |
+| --- | --- | --- |
+| **Claude Desktop** | Claude d'escriptori. | winget |
+| **7-Zip** | 7-Zip: compressió i descompressió de gairebé qualsevol format. | winget |
+| **PeaZip** | Gestor d'arxius amb interfície, xifratge i comparació de continguts. | winget |
+| **Obsidian** | Notes en Markdown desades com a fitxers locals, amb enllaços entre elles. | winget |
+| **Calcator** | Calculadora de text: escrius «3 GB / 40 min» i respon. | descàrrega directa |
+| **Charmy: Hot Corners** | Accions en portar el cursor a una cantonada de la pantalla. | Store |
+| **ShareX** | ShareX: captures, gravació, anotacions i pujada automàtica. | winget |
+| **HWiNFO** | HWiNFO: sensors de temperatura, rellotges i consum de tot el maquinari. | choco |
+
+### Xarxa i VPN
+
+Grup `networkingvpn`. 3 aplicacions.
+
+| App | Per a què serveix | D'on surt |
+| --- | --- | --- |
+| **SwitchHosts** | Canvia de fitxer hosts amb un clic. Per apuntar un domini a preproducció i tornar enrere. | winget |
+| **Tailscale** | VPN de malla sobre WireGuard: connecta els teus equips sense obrir ports. | winget |
+| **OpenVPN Connect** | Client d'OpenVPN, per als túnels dels clients que el fan servir. | winget |
+
+### Accés remot
+
+Grup `remoteaccess`. 2 aplicacions.
+
+| App | Per a què serveix | D'on surt |
+| --- | --- | --- |
+| **Royal TS** | Gestor de connexions remotes: RDP, SSH, VNC i webs, en un arbre amb credencials. | winget |
+| **RustDesk** | Escriptori remot obert, amb servidor propi si el vols. Alternativa a TeamViewer. | choco |
+
+### Fitxers i núvol
+
+Grup `filemanagementcloud`. 3 aplicacions.
+
+| App | Per a què serveix | D'on surt |
+| --- | --- | --- |
+| **Box Drive** | Munta Box com una unitat de xarxa, amb els fitxers sota demanda. | winget |
+| **LocalSend** | Envia fitxers entre dispositius de la mateixa xarxa, sense núvol ni comptes. | winget |
+| **Synology Drive Client** | Sincronitza carpetes amb un NAS de Synology. | winget |
+
+### Entorn Microsoft
+
+Grup `microsoftsuite`. 1 aplicacions.
+
+| App | Per a què serveix | D'on surt |
+| --- | --- | --- |
+| **Azure Storage Explorer** | Explora blobs, cues, taules i fitxers d'Azure Storage amb interfície. | winget |
+
+### Àudio i vídeo
+
+Grup `media`. 6 aplicacions.
+
+| App | Per a què serveix | D'on surt |
+| --- | --- | --- |
+| **HandBrake** | Recodifica vídeo amb perfils ja fets: per abaixar el pes d'un MP4 sense pensar-hi. | winget |
+| **VLC** | Reprodueix qualsevol cosa sense haver d'instal·lar còdecs. | winget |
+| **mpv** | Reproductor mínim i molt ràpid, controlat per teclat i scripts. | winget |
+| **FFmpeg** | La navalla suïssa de l'àudio i el vídeo: converteix, retalla i transmet. | winget |
+| **yt-dlp** | Descarrega vídeo i àudio de centenars de webs. Arrossega Deno i FFmpeg com a dependències. | winget |
+| **Open TV** | Reproductor de llistes IPTV M3U. | descàrrega directa |
+
+### Documents
+
+Grup `documents`. 6 aplicacions.
+
+| App | Per a què serveix | D'on surt |
+| --- | --- | --- |
+| **Adobe Acrobat Reader** | Lector de PDF de referència, per als formularis i les signatures que només hi funcionen. | winget |
+| **Mark Text** | Editor de Markdown amb la previsualització al mateix lloc on escrius. | choco |
+| **Modern CSV** | Obre i edita CSV de milions de línies sense que l'Excel se'ls inventi. | winget |
+| **ONLYOFFICE Desktop Editors** | Suite ofimàtica compatible amb els formats de Microsoft. El substitut de l'Office al catàleg. | winget |
+| **PDF24 Creator** | Eines de PDF en local: unir, partir, comprimir, convertir i signar. | winget |
+| **Xournal++** | Anota i omple PDFs a mà, amb tauleta o amb el ratolí. | winget |
+
+### Maquinari
+
+Grup `hardware`. 1 aplicacions.
+
+| App | Per a què serveix | D'on surt |
+| --- | --- | --- |
+| **Logi Options+** | Configura teclats i ratolins Logitech: botons, gestos i canvi entre equips. | winget |
+
+### Microsoft Store
+
+Grup `store`. 4 aplicacions.
+
+| App | Per a què serveix | D'on surt |
+| --- | --- | --- |
+| **PingoMeter** | Latència a la barra de tasques, per veure d'un cop d'ull si la connexió va bé. | winget |
+| **Microsoft To Do** | Tasques de Microsoft To Do, sincronitzades amb el compte de feina. | Store |
+| **Azure VPN Client** | Client oficial per a les VPN Point-to-Site d'Azure. | Store |
+| **WireGuard** | Client de WireGuard, per als túnels que no passen per Tailscale. | winget |
+
+### Tipografies
+
+Grup `fonts`. 1 aplicacions.
+
+| App | Per a què serveix | D'on surt |
+| --- | --- | --- |
+| **Meslo LG Nerd Font** | Meslo amb les icones de Nerd Fonts. Fa falta perquè el prompt d'Starship es vegi bé. | choco |
+
+### Del catàleg del Mac, no s'instal·len
+
+Aquestes entrades vénen d'`ansible-mac` i a Windows no tenen res a fer. No
+surten quan executes `run.ps1`; són aquí per no perdre la traça de què les
+substitueix.
+
+| Al Mac | Què ho cobreix a Windows |
+| --- | --- |
+| AltTab | Canviador de finestres de macOS. A Windows, Alt+Tab de sèrie. — Alt+Tab (natiu) |
+| Bluesnooze | Evita que el Bluetooth desperti el Mac. A Windows es mira des de l'Administrador de dispositius. — Administrador de dispositius |
+| Caffeine | Impedeix que l'equip s'adormi. A Windows, PowerToys Awake. — powertoys (Awake) |
+| DockDoor | Previsualització de finestres del dock. A Windows ja hi és, a la barra de tasques. — natiu (barra de tasques) |
+| Escriptori remot (mstsc) | Client RDP. A Windows ja hi és: mstsc.exe. — mstsc.exe (natiu) |
+| FancyZones (PowerToys) | Col·loca finestres per zones. A Windows, FancyZones i Win+fletxes. — powertoys (FancyZones) |
+| Mac App Store CLI | CLI de la Mac App Store. A Windows, winget --source msstore. — winget --source msstore |
+| Maccy | Historial del porta-retalls. A Windows, Win+V. — Win+V (natiu) |
+| MacDown | Editor de Markdown de macOS. Aquí el cobreix Mark Text. — marktext |
+| Microsoft AutoUpdate | Actualitzador de l'Office per a macOS. A Windows ho fa Click-to-Run. — Windows Update |
+| MuteKey | Silencia el micròfon amb una tecla. A Windows, Win+Maj+A de PowerToys. — powertoys (Video Conference Mute) |
+| Resolutionator | Canvi ràpid de resolució. A Windows, Win+P i la configuració de pantalla. — Win+P (natiu) |
+| Shortwave | Client de Gmail només per a macOS i web. Aquí fem servir Mailspring. — mailspring |
+| Wins | Canviador de finestres de macOS. A Windows, Alt+Tab i PowerToys. — Alt+Tab (natiu) |
+
+**79 aplicacions** en 17 categories. 14 entrades més són del catàleg del Mac i no apliquen aquí.
+<!-- APPS:FI -->
 
 ### Aplicacions d'inici
 
@@ -247,28 +489,30 @@ Això només toca la part visible: una app amb **servei** propi (RustDesk, PDF24
 el segueix tenint en marxa. Es fa a posta — el servei de RustDesk és el que
 permet connectar-s'hi des de fora, i el de PDF24 és la impressora virtual.
 
-### Apps del Mac sense equivalent a Windows
+### Com es tracten les apps que només són del Mac
 
-No desapareixen del catàleg: hi queden amb un `note` que diu per què i quin és el
-substitut, i surten com a `skipped` quan executes `run.ps1`.
+No desapareixen del catàleg: hi queden amb `desc:` i `win_equivalent:`, que diuen
+què eren i qui els fa la feina aquí. La taula és a
+[Del catàleg del Mac, no s'instal·len](#del-catàleg-del-mac-no-sinstal·len), més
+amunt, i a [`docs/APPS.md`](docs/APPS.md).
 
-| Al Mac | Per què no hi és |
-|---|---|
-| `mas` | No cal: winget ja parla amb la Microsoft Store |
-| `bluesnooze` | Específic de macOS. A Windows es gestiona des de l'Administrador de dispositius |
-| `resolutionator` | Canvi de resolució natiu (Win+P) |
-| `wins` | Alt+Tab natiu / PowerToys |
-| `shortwave` | Només macOS i web |
-| `zoho-mail` | Sense client d'escriptori; navegador o Outlook |
-| `alt-tab` | Porta a macOS l'Alt+Tab de Windows. Aquí ja hi és |
-| `caffeine` | PowerToys Awake |
-| `dockdoor` | Previsualització de finestres, nativa a Windows |
-| `maccy` | Historial de porta-retalls natiu: Win+V |
-| `rectangle` | PowerToys FancyZones + Win+fletxes |
-| `windows-app` | És el client RDP de Microsoft *per a macOS*. Aquí ja hi ha `mstsc.exe` |
-| `microsoft-auto-update` | Click-to-Run / Windows Update |
-| `macdown` | El cobreix Mark Text |
-| `MuteKey` | PowerToys Video Conference Mute (Win+Maj+A) |
+El `run.ps1` **no les llista**: `Select-CatalogPackages` deixa fora tota entrada
+sense cap clau `winget`/`choco`/`scoop`/`url`, que és el que passa amb les que
+només porten `mac:`. Així el run no s'omple de línies que no aporten res.
+
+El filtre mira només si la clau hi és, no si el gestor està disponible: un paquet
+amb `winget:` en un equip sense winget sí que surt com a `skipped`, que és
+informació que vols veure.
+
+Si una entrada es queda **sense `win_equivalent`**, el rol `apps` la reclama al
+final del run perquè decideixis què hi poses:
+
+```
+PENDENT DE DECIDIR ------------------------------------------------------------
+Aquestes 1 apps del catàleg del Mac no tenen res assignat a Windows:
+
+  Zoho Mail  (communication)
+```
 
 ### Descartats a propòsit
 
@@ -342,6 +586,94 @@ paquets no hi ha a qui preguntar si una cosa està instal·lada, així que la
 detecció va per `arp:`, el nom a «Programes i característiques» — que el
 fabricant pot canviar quan vulgui. `provider: url` només per a coses que
 realment no siguin a cap gestor.
+
+## Treure el bloatware de Windows 11
+
+El rol `debloat` esborra les apps preinstal·lades que no volem i, sobretot, deixa
+Windows configurat perquè **no se les torni a instal·lar sol**. La llista és a
+`config.yml`; aquí no hi ha cap nom de paquet escrit dins del codi.
+
+### Què treu
+
+| Grup | Paquets |
+|---|---|
+| Publicitat i jocs | Solitaire Collection, Bing News, Bing Weather, Office Hub, Suggeriments |
+| Retirats per Microsoft | Mixed Reality Portal, Skype, Cortana, Contactes, Mapes, Dev Home, Correu i Calendari |
+| Assistents i telemetria | Copilot, Edge Game Assist, Centre de comentaris, Obtenir ajuda |
+| Redundants amb el catàleg | Reproductor multimèdia i Pel·lícules i TV (tenim VLC i mpv) |
+| Xbox | Game Bar i els 4 paquets que l'acompanyen |
+| Phone Link | Your Phone i Cross Device |
+
+### Què NO treu, a posta
+
+`Microsoft.DesktopAppInstaller` **és winget**, i tot el repo se'n depèn. Tampoc es
+toquen la Store, el Terminal, PowerShell, la Seguretat de Windows, el paquet
+d'idioma ni **cap còdec** (`HEIF`, `AV1`, `VP9`, `WebP`, `MPEG2`): treure'ls trenca
+la reproducció i la previsualització d'imatges.
+
+Tres decisions més que val la pena saber:
+
+- **Fotos es queda.** Si el treus, en fer doble clic a un PNG no s'obre res, i al
+  catàleg no hi ha cap altre visor d'imatges.
+- **Thunderbolt Control Center es queda.** És qui gestiona la dock USB-C.
+- **El programari del fabricant es queda.** El rol només treu apps de Microsoft:
+  la frontera entre bloat i controlador és massa fina per decidir-la des d'un
+  catàleg que ha de valer per a màquines diferents.
+- **Microsoft To Do es queda**, perquè el catàleg l'instal·la. Instal·lar-lo i
+  esborrar-lo al mateix run no té cap sentit.
+
+### Per què no n'hi ha prou d'esborrar-les
+
+Dues raons, i el rol cobreix totes dues:
+
+1. **Els paquets aprovisionats.** Esborrar una app la treu del teu perfil, però es
+   queda a la imatge i torna amb cada usuari nou. El rol els treu també de la
+   imatge, cosa que necessita administrador.
+2. **Els «consumer features».** Windows reinstal·la sol un grapat d'apps
+   promocionades a la primera ocasió. `DisableWindowsConsumerFeatures` és el que
+   ho atura; sense això, la neteja dura fins al pròxim reinici.
+
+```yaml
+debloat:
+  settings:
+    disable_consumer_features: true   # el que reinstal·la jocs i apps promocionades
+    disable_recall: true              # captures contínues de Windows AI
+    disable_copilot: true
+    disable_widgets: true
+    hide_start_recommendations: true  # el bloc "Recomanat" del menú Inici
+    hide_explorer_ads: true           # "notificacions de proveïdors de sincronització"
+```
+
+### Afegir-hi o treure'n
+
+```yaml
+debloat:
+  appx:
+  - id: Microsoft.BingNews
+    desc: "Notícies de Bing."
+  win32:
+  - id: Nom exacte a Programes i característiques
+    desc: "Què és i per què el treiem."
+    silent_flag: /S          # només si el desinstal·lador no porta QuietUninstallString
+    enabled: false           # `false` el deixa documentat però no el toca
+```
+
+Per saber com es diu un paquet:
+
+```powershell
+Get-AppxPackage | Where-Object { -not $_.IsFramework } | Select-Object Name | Sort-Object Name
+```
+
+Els programes de sempre es busquen pel **nom exacte** de Programes i
+característiques. El rol només els desinstal·la si troba una ordre silenciosa: si
+no en té cap, ho diu i no fa res, perquè un desinstal·lador interactiu enmig d'un
+run desatès es queda penjat per sempre.
+
+Passa-hi `-Check` abans: t'ensenya exactament què esborraria, un per un.
+
+```powershell
+.\run.ps1 -Roles debloat -Check
+```
 
 ## Ajustos que aplica
 
@@ -448,15 +780,51 @@ El canvi al touchpad és immediat. **El del ratolí no s'aplica fins que
 desconnectis i tornis a connectar el dispositiu, o reiniciïs.** Si et queda al
 revés, canvia el booleà i torna a executar `.\run.ps1 -Roles system`.
 
-### Desenvolupament
+### Ajustos de desenvolupament
 
-**Aquest repo no toca l'energia.** Hi havia un bloc `power` que posava el pla
-«Alt rendiment» i desactivava la suspensió, i s'ha tret: era `[win]` sencer
-(`ansible-mac` no diu res d'energia) i en un portàtil té conseqüències reals
-sobre el ventilador i la bateria. A Windows, a més, els temps d'apagar pantalla
-i de suspensió són **propietats del pla**, no ajustos independents, així que
-treure'n un vol dir treure'ls tots. Es gestiona des de Configuració > Sistema >
-Energia.
+### Energia: treballar amb la tapa tancada
+
+L'únic ajust d'energia que toca el repo és **què passa en tancar la tapa**, per
+poder treballar amb el portàtil tancat sobre una dock USB-C i els monitors
+externs:
+
+```yaml
+system:
+  power:
+    lid_action_ac: 0   # endollat: no facis res
+    lid_action_dc: 1   # amb bateria: suspèn
+```
+
+Els valors són els de `LIDACTION` de `powercfg`: `0` no fer res, `1` suspendre,
+`2` hibernar, `3` apagar. Equival a:
+
+```
+powercfg /setacvalueindex SCHEME_CURRENT SUB_BUTTONS LIDACTION 0
+powercfg /setdcvalueindex SCHEME_CURRENT SUB_BUTTONS LIDACTION 1
+powercfg /setactive SCHEME_CURRENT
+```
+
+Detalls que val la pena saber:
+
+- **Cal admin**, i només s'aplica a l'**esquema actiu**. Si canvies de pla
+  d'energia, el pla nou porta els seus propis valors: torna a passar el rol.
+- El `/setactive` final no és decoratiu. Sense ell els índexs queden escrits
+  però no s'apliquen a la sessió.
+- `powercfg /query SCHEME_CURRENT SUB_BUTTONS LIDACTION` **no ensenya el valor**:
+  ve amagat de fàbrica. Per això la tasca comprova l'estat llegint
+  `HKLM\SYSTEM\CurrentControlSet\Control\Power\User\PowerSchemes\<pla>\...`, que
+  és d'on powercfg ho treu. En sobretaula aquesta clau no existeix i la tasca
+  surt com a `skipped`.
+- Amb `0` i la tapa tancada **sense cap monitor extern connectat**, l'equip
+  segueix engegat i cec. És el preu de l'ajust.
+
+**La resta d'energia no la gestiona el repo.** Hi havia un bloc `power` que posava
+el pla «Alt rendiment» i desactivava la suspensió, i es va treure: en un portàtil
+té conseqüències reals sobre el ventilador i la bateria, i a Windows els temps
+d'apagar pantalla i de suspensió són **propietats del pla**, no ajustos
+independents, així que treure'n un vol dir treure'ls tots. L'acció de tapa és
+l'excepció perquè és un interruptor aïllat: no arrossega cap altre paràmetre.
+Els temps es gestionen des de Configuració > Sistema > Energia.
 
 | Ajust | Per defecte |
 |---|---|
@@ -470,6 +838,54 @@ Alguns canvis de l'Explorador no es veuen fins que el reinicies:
 Stop-Process -Name explorer -Force
 ```
 
+## Les dues fases del run
+
+`run.ps1` **s'ha de llançar sense administrador**. No perquè sigui més segur, sinó
+perquè una part de la feina *només* es pot fer sense privilegis: les apps MSIX de
+la Microsoft Store s'instal·len per usuari i des d'un procés elevat fallen sempre.
+
+```
+$ .\run.ps1
+
+  FASE 1 - sense privilegis
+    Tot el que es pot fer com a usuari: apps de la Store, paquets de Scoop,
+    ajustos d'HKCU, perfils, dotfiles... Les tasques que necessiten admin no
+    peten ni se salten en silenci: s'apunten.
+
+  ARA VE LA PART QUE NECESSITA ADMINISTRADOR (4 tasques)
+    [core]   - prioritat PATH (sudo -> gsudo)
+    [system] - mode desenvolupador
+               rutes llargues (>260 car.)
+               scroll del ratolí (clàssic)
+
+  [UAC, un sol cop]
+
+  FASE 2 - elevada
+    Repassa els mateixos rols amb privilegis. El que ja estava fet surt com a
+    `ok`, i el que faltava s'aplica.
+```
+
+Què va a cada fase:
+
+| Fase 1 (usuari) | Fase 2 (admin) |
+|---|---|
+| Apps MSIX de la Store | Paquets de winget, Chocolatey i installers per URL |
+| Paquets de Scoop | Chocolatey mateix, si falta |
+| Ajustos d'HKCU (Explorador, barra de tasques, tema, privadesa, touchpad) | Ajustos d'HKLM (mode dev, rutes llargues, OpenSSH, tapa tancada, scroll del ratolí) |
+| Perfils, dotfiles, Tabby, apps d'inici | PATH de màquina (prioritat de `sudo`) |
+
+Detalls:
+
+- **Els paquets d'àmbit màquina ni s'intenten a la fase 1.** Podrien instal·lar-se
+  obrint un UAC per paquet; val més apuntar-los i fer-los tots de cop. El que ja
+  està instal·lat es detecta igualment a la fase 1 i surt com a `ok`.
+- **Un sol UAC.** Si no queda res pendent, no se'n demana cap.
+- `-NoElevate` es queda a la fase 1 i diu què ha deixat per fer.
+- `-Check` no eleva mai.
+- Si el llances **ja elevat**, el run t'avisa: les apps de la Store se saltaran.
+- Si dius que no a l'UAC, la fase 1 es dóna per bona i t'ho diu. Torna-hi quan
+  vulguis: és idempotent.
+
 ## `sudo` sense la `g`
 
 Windows 11 porta el seu propi `C:\Windows\System32\sudo.exe`. Com que el `PATH`
@@ -481,15 +897,32 @@ El rol `core` ho resol per dues bandes:
 1. **A PowerShell** — genera `files/profile.d/10-sudo.ps1` amb una *funció*
    `sudo`. A PowerShell les funcions tenen precedència sobre els executables del
    `PATH`, així que `sudo` és `gsudo` i punt. També deixa `s` com a abreviatura
-2. **A `cmd.exe` i companyia** — genera `bin\sudo.cmd`, que reenvia a `gsudo`, i
-   posa `bin\` al davant del `PATH` d'usuari
+2. **A `cmd.exe` i companyia** — mou `C:\tools\gsudo\Current` **davant de
+   `System32`** al `PATH` de màquina. gsudo ja hi instal·la el seu propi
+   `sudo.exe`, o sigui que amb l'ordre correcte `sudo` és gsudo a `cmd.exe`, als
+   `.bat`, al diàleg Executar i a les tasques programades
 
 ```yaml
 sudo:
   provider: gsudo        # 'native' deixa el sudo de Microsoft
   powershell_alias: true
-  cmd_shim: true
+  path_priority: true    # gsudo davant de System32 al PATH de màquina
+  cmd_shim: false        # shim bin\sudo.cmd (històric, vegeu avall)
 ```
+
+`path_priority` toca el `PATH` de màquina, o sigui que **cal el run elevat**
+(`run.ps1` s'eleva sol). Abans d'escriure desa el valor anterior a
+`logs\path-machine-<data>.bak`. Els canvis no arriben a les consoles ja obertes:
+cal reobrir-les.
+
+> **Compte:** posar un directori de tercers davant de `System32` fa que tot el
+> que hi hagi pugui ocultar binaris del sistema. `C:\tools\gsudo` només és
+> escrivible per administrador, però és un canvi global: té-ho present.
+
+L'altra opció, `cmd_shim`, genera `bin\sudo.cmd`. És històrica i per defecte va
+a `false`: `bin\` viu al `PATH` d'**usuari**, que s'avalua sempre després del de
+màquina, o sigui que el shim mai pot guanyar el `sudo.exe` de System32. Amb
+`cmd_shim: false` el rol esborra el fitxer si hi era.
 
 El repo **no gestiona la cache de credencials** de gsudo. `CacheDuration` és un
 ajust global del sistema que demana una elevació pròpia, i des d'un run que ja
@@ -552,6 +985,7 @@ roles/
   dev/tasks.ps1                  git, SSH, npm -g, uv, extensions de VS Code
   tabby/tasks.ps1                Connectors de Tabby via npm
   system/tasks.ps1               Ajustos de Windows (= rol desktop del Mac)
+  debloat/tasks.ps1              Treu el programari preinstal·lat de Windows 11
   startup/tasks.ps1              Aplicacions d'inici (= Login Items del Mac)
   dotfiles/tasks.ps1             Symlinks de configuració
 files/
@@ -581,8 +1015,8 @@ docs/APPS.md                     Taula de paritat macOS ↔ Windows
   de PowerShell 7, i també a les de OneDrive si té la carpeta Documents
   redirigida
 - Els paquets MSIX (font `msstore`) i els d'àmbit d'usuari només es poden
-  instal·lar sense elevar. És per això que `run.ps1` fa la categoria `store`
-  abans d'auto-elevar-se
+  instal·lar sense elevar. És per això que el run comença sense privilegis i
+  només s'eleva al final
 - Treure un paquet del catàleg **no el desinstal·la** de les màquines on ja hi és:
   el repo declara què hi ha d'haver, no què no hi ha d'haver. Cal fer-ho a mà amb
   `winget uninstall` o `choco uninstall`

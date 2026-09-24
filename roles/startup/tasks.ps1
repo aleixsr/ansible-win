@@ -115,7 +115,7 @@ foreach ($entry in $toDisable) {
 # -----------------------------------------------------------------------------
 $apps = @($Config.startup_apps)
 if ($apps.Count -eq 0) {
-    Write-TaskResult -Task 'aplicacions d''inici' -Status 'skipped' -Message 'startup_apps buit'
+    Write-TaskResult -Task 'aplicacions d''inici' -Status 'skipped' -Message 'startup_apps buit' -NotApplicable
     return
 }
 

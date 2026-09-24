@@ -14,7 +14,7 @@ $links = @()
 if ($Config.dotfiles -and $Config.dotfiles.links) { $links = @($Config.dotfiles.links) }
 
 if ($links.Count -eq 0) {
-    Write-TaskResult -Task 'enllaços' -Status 'skipped' -Message 'dotfiles.links buit'
+    Write-TaskResult -Task 'enllaços' -Status 'skipped' -Message 'dotfiles.links buit' -NotApplicable
     return
 }
 

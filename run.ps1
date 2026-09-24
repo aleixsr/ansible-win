@@ -24,7 +24,21 @@
     Ensenya el catàleg i surt.
 
 .PARAMETER NoElevate
-    No demanis privilegis encara que faltin.
+    No demanis privilegis encara que faltin. El que en necessiti se salta.
+
+.PARAMETER AdminPhase
+    Ús intern. Marca la segona passada, la que run.ps1 es llança a si mateix
+    elevat per fer la feina que havia quedat pendent. No el posis a mà.
+
+.NOTES
+    LLANÇA'L SENSE ADMINISTRADOR. El run va en dues fases:
+
+      1. Sense privilegis: tot el que es pot fer com a usuari, incloses les apps
+         MSIX de la Microsoft Store, que ELEVADES FALLEN SEMPRE.
+      2. Si ha quedat feina que necessita admin, diu exactament quina és i
+         demana l'UAC un sol cop per fer-la tota de cop.
+
+    Llançant-lo ja elevat, la fase 1 no pot instal·lar les apps de la Store.
 
 .EXAMPLE
     .\run.ps1
@@ -48,7 +62,8 @@ param(
     [switch]$Check,
     [switch]$Upgrade,
     [switch]$ListPackages,
-    [switch]$NoElevate
+    [switch]$NoElevate,
+    [switch]$AdminPhase
 )
 
 $ErrorActionPreference = 'Stop'
@@ -59,9 +74,9 @@ $RepoRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
     Parteix arguments de llista que arriben com un sol element separat per comes.
 .DESCRIPTION
     Amb `powershell -File`, "-Groups a,b" NO es parteix en dos elements: arriba
-    com la cadena "a,b" i no coincideix amb cap grup. I l'auto-elevació d'aquest
-    mateix script es rellança amb -File, així que sense això qualsevol run amb
-    -Groups que s'elevés seleccionaria zero paquets, en silenci.
+    com la cadena "a,b" i no coincideix amb cap grup. I la passada elevada es
+    rellança amb -File, així que sense això qualsevol run amb -Groups que
+    arribés a la fase d'admin seleccionaria zero paquets, en silenci.
 #>
 function Split-ListArgument {
     param([string[]]$Value)
@@ -144,75 +159,23 @@ if ($ListPackages) {
 }
 
 # -----------------------------------------------------------------------------
-# Elevació
+# Avís: elevat des de fora
 # -----------------------------------------------------------------------------
-# Instal·lar a escala de màquina i tocar HKLM necessita admin. Sense elevació el
-# run funciona igual, però cada paquet obre un UAC i els ajustos d'HKLM se salten.
-if (-not (Test-Elevated) -and -not $NoElevate -and -not $Check) {
-    $gsudo = Get-Command gsudo -ErrorAction SilentlyContinue
-    if ($gsudo) {
-
-        # Les apps de la Microsoft Store són MSIX i s'instal·len PER USUARI: des
-        # d'un procés elevat fallen sempre. Com que tot seguit ens reobrim
-        # elevats, les fem ara, que encara som al context d'usuari. Un cop
-        # elevats, Install-CatalogPackage les salta amb un missatge explicatiu.
-        $storePkgs = @(Select-CatalogPackages -Config $config -Groups $Groups |
-                       Where-Object { $_.source -eq 'msstore' })
-        # $rolesToRun encara no existeix aquí: mirem els paràmetres directament.
-        # Sense -Roles s'executen els default_roles, que inclouen 'apps'.
-        if ($storePkgs.Count -gt 0 -and (-not $Roles -or $Roles -contains 'apps')) {
-            Write-Play "ansible-win - apps de la Microsoft Store (sense elevar)"
-            Write-Info 'Els paquets MSIX no es poden instal·lar elevat: es fan abans.'
-            Set-ProvisionContext -Role 'apps/store'
-            foreach ($pkg in $storePkgs) {
-                Install-CatalogPackage -Package $pkg -ProviderOrder $config.provider_order -Upgrade:$Upgrade
-            }
-            Clear-ProvisionResults
-        }
-
-        Write-Host ''
-        Write-Host 'Reobrint el run amb privilegis via gsudo...' -ForegroundColor Yellow
-
-        $relaunch = @('powershell', '-NoProfile', '-ExecutionPolicy', 'Bypass',
-                      '-File', $MyInvocation.MyCommand.Path, '-NoElevate')
-        if ($Roles) { $relaunch += @('-Roles', ($Roles -join ',')) }
-        if ($Groups) { $relaunch += @('-Groups', ($Groups -join ',')) }
-        if ($Upgrade) { $relaunch += '-Upgrade' }
-
-        # $ErrorActionPreference = 'Stop' i els executables natius es porten
-        # malament a PowerShell 5.1: qualsevol cosa que gsudo escrigui a stderr
-        # (com "operation was canceled by the user" quan es rebutja l'UAC)
-        # avorta l'script aquí mateix, i el missatge d'ajuda de sota no s'arriba
-        # a imprimir mai.
-        $previousEap = $ErrorActionPreference
-        $ErrorActionPreference = 'Continue'
-        try {
-            & $gsudo.Source @relaunch
-            $elevatedCode = $LASTEXITCODE
-        } finally {
-            $ErrorActionPreference = $previousEap
-        }
-
-        # 231 i 1223 volen dir que algú ha dit que no al diàleg d'UAC. Sense
-        # això, el run mor amb un "Error: The operation was canceled by the
-        # user" pelat i sense cap pista de què fer.
-        if ($elevatedCode -eq 231 -or $elevatedCode -eq 1223) {
-            Write-Host ''
-            Write-Host 'UAC cancel·lat: no s''ha executat res.' -ForegroundColor Red
-            Write-Host 'Torna-ho a provar acceptant el diàleg, o fes servir -NoElevate' -ForegroundColor Yellow
-            Write-Host '(sense privilegis, els ajustos d''HKLM se salten).' -ForegroundColor Yellow
-        }
-        exit $elevatedCode
-    }
+# El run vol començar SENSE privilegis. Les apps MSIX de la Store s'instal·len
+# per usuari i des d'un procés elevat fallen sempre, o sigui que si algu ens
+# llança amb 'sudo .\run.ps1' aquestes es queden pel camí. La feina que necessita
+# admin ja se la busca ella al final: no cal elevar res a mà.
+if ((Test-Elevated) -and -not $AdminPhase -and -not $Check) {
     Write-Host ''
-    Write-Host 'Avís: sense privilegis d''administrador.' -ForegroundColor Yellow
-    Write-Host 'Cada instal·lació demanarà UAC i els ajustos d''HKLM se saltaran.' -ForegroundColor Yellow
+    Write-Host 'Avís: aquest run ja ve elevat.' -ForegroundColor Yellow
+    Write-Host 'Les apps de la Microsoft Store no es poden instal·lar amb privilegis i se saltaran.' -ForegroundColor Yellow
+    Write-Host 'Llança''l sense administrador: ell mateix demana l''UAC quan li cal.' -ForegroundColor Yellow
 }
 
 # -----------------------------------------------------------------------------
 # Execució dels rols
 # -----------------------------------------------------------------------------
-Set-ProvisionContext -CheckMode:([bool]$Check)
+Set-ProvisionContext -CheckMode:([bool]$Check) -AdminPhase:([bool]$AdminPhase)
 
 $rolesToRun = $Roles
 if (-not $rolesToRun -or $rolesToRun.Count -eq 0) {
@@ -225,6 +188,7 @@ if (-not $rolesToRun -or $rolesToRun.Count -eq 0) {
 $mode = 'aplicant canvis'
 if ($Check) { $mode = 'mode --check (simulació)' }
 if ($Upgrade) { $mode = "$mode, amb -Upgrade" }
+if ($AdminPhase) { $mode = "$mode — passada elevada" }
 
 Write-Play "ansible-win - $([Environment]::MachineName)"
 Write-Info "Repo    : $RepoRoot"
@@ -262,6 +226,96 @@ $failures = Write-PlayRecap
 $elapsed = (Get-Date) - $started
 Write-Host ''
 Write-Host ("Temps: {0:mm\:ss}" -f $elapsed) -ForegroundColor DarkGray
+
+# -----------------------------------------------------------------------------
+# Fase 2: la feina que necessita privilegis
+# -----------------------------------------------------------------------------
+# Els rols no peten quan els falta admin: apunten la tasca amb Register-AdminWork
+# i segueixen. Aquí mirem què ha quedat pendent i, si n'hi ha, ens tornem a
+# llançar UNA sola vegada elevats. Un únic UAC per a tot, i dient abans què farà.
+$pending = @(Get-PendingAdminWork)
+
+if ($pending.Count -gt 0 -and -not $AdminPhase -and -not $Check -and -not $NoElevate) {
+    Write-Host ''
+    Write-Host ('=' * 78) -ForegroundColor Yellow
+    Write-Host "ARA VE LA PART QUE NECESSITA ADMINISTRADOR ($($pending.Count) tasques)" -ForegroundColor Yellow
+    Write-Host ('=' * 78) -ForegroundColor Yellow
+    Write-Host 'Tot el que es pot fer com a usuari ja està fet. Només falta això, que' -ForegroundColor Gray
+    Write-Host 'toca Program Files, HKLM o el PATH de màquina:' -ForegroundColor Gray
+    Write-Host ''
+    $lastRole = $null
+    foreach ($item in $pending) {
+        if ($item.Role -ne $lastRole) {
+            $lastRole = $item.Role
+            Write-Host "  [$lastRole]" -ForegroundColor Cyan
+        }
+        Write-Host "    - $($item.Task)" -ForegroundColor White
+    }
+    Write-Host ''
+
+    $gsudo = Get-Command gsudo -ErrorAction SilentlyContinue
+    if (-not $gsudo) {
+        Write-Host 'No trobo gsudo per demanar l''elevació.' -ForegroundColor Red
+        Write-Host 'Obre una consola com a administrador i executa:  .\run.ps1 -NoElevate' -ForegroundColor Yellow
+    } else {
+        Write-Host 'Accepta l''UAC i es fa tot de cop. És l''únic cop que el demanarà.' -ForegroundColor Yellow
+
+        $relaunch = @('powershell', '-NoProfile', '-ExecutionPolicy', 'Bypass',
+                      '-File', $MyInvocation.MyCommand.Path, '-AdminPhase')
+        if ($Roles) { $relaunch += @('-Roles', ($Roles -join ',')) }
+        if ($Groups) { $relaunch += @('-Groups', ($Groups -join ',')) }
+        if ($Upgrade) { $relaunch += '-Upgrade' }
+
+        # $ErrorActionPreference = 'Stop' i els executables natius es porten
+        # malament a PowerShell 5.1: qualsevol cosa que gsudo escrigui a stderr
+        # (com "operation was canceled by the user" quan es rebutja l'UAC)
+        # avorta l'script aquí mateix, i el missatge d'ajuda de sota no s'arriba
+        # a imprimir mai.
+        $previousEap = $ErrorActionPreference
+        $ErrorActionPreference = 'Continue'
+        try {
+            & $gsudo.Source @relaunch
+            $elevatedCode = $LASTEXITCODE
+        } finally {
+            $ErrorActionPreference = $previousEap
+        }
+
+        # 231 i 1223 volen dir que algú ha dit que no al diàleg d'UAC.
+        if ($elevatedCode -eq 231 -or $elevatedCode -eq 1223) {
+            Write-Host ''
+            Write-Host 'UAC cancel·lat: la part que necessita admin no s''ha fet.' -ForegroundColor Red
+            Write-Host 'La resta sí. Torna a executar .\run.ps1 quan vulguis acabar-ho.' -ForegroundColor Yellow
+        }
+
+        if ($LogFile) {
+            Write-Host ''
+            Write-Host "Registre complet: $LogFile" -ForegroundColor DarkGray
+            try { Stop-Transcript | Out-Null } catch { }
+        }
+        exit $elevatedCode
+    }
+} elseif ($pending.Count -gt 0) {
+    Write-Host ''
+    if ($Check) {
+        Write-Host "Caldrà administrador per a $($pending.Count) tasques:" -ForegroundColor Yellow
+    } else {
+        Write-Host "$($pending.Count) tasques necessiten administrador i no s'han fet:" -ForegroundColor Yellow
+    }
+    $lastRole = $null
+    foreach ($item in $pending) {
+        if ($item.Role -ne $lastRole) {
+            $lastRole = $item.Role
+            Write-Host "  [$lastRole]" -ForegroundColor Cyan
+        }
+        Write-Host "    - $($item.Task)" -ForegroundColor White
+    }
+    Write-Host ''
+    if ($Check) {
+        Write-Host 'En --check no s''eleva res. Al run de debo se''t demanarà l''UAC un sol cop.' -ForegroundColor Yellow
+    } else {
+        Write-Host 'Executa .\run.ps1 sense -NoElevate i accepta l''UAC.' -ForegroundColor Yellow
+    }
+}
 
 if (-not $Check) {
     Write-Host ''

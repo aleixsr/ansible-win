@@ -11,6 +11,12 @@
 $script:Results = New-Object System.Collections.ArrayList
 $script:CurrentRole = 'general'
 $script:CheckMode = $false
+# El run va en dues fases: primer sense privilegis (fase 'user'), i despres, si
+# ha quedat feina que en necessita, una sola elevacio (fase 'admin'). Durant la
+# fase d'usuari les tasques que demanen admin no fallen ni se salten en silenci:
+# s'apunten aqui, i run.ps1 decideix si cal demanar l'UAC.
+$script:AdminPhase = $false
+$script:PendingAdmin = New-Object System.Collections.ArrayList
 
 #region ---------------------------------------------------------------- sortida
 
@@ -25,13 +31,85 @@ $script:Palette = @{
 function Set-ProvisionContext {
     param(
         [string]$Role,
-        [nullable[bool]]$CheckMode
+        [nullable[bool]]$CheckMode,
+        [nullable[bool]]$AdminPhase
     )
     if ($Role) { $script:CurrentRole = $Role }
     if ($null -ne $CheckMode) { $script:CheckMode = [bool]$CheckMode }
+    if ($null -ne $AdminPhase) { $script:AdminPhase = [bool]$AdminPhase }
 }
 
 function Get-ProvisionCheckMode { return $script:CheckMode }
+
+<#
+.SYNOPSIS
+    Cert si som a la segona passada, la que ja corre elevada.
+#>
+function Get-ProvisionAdminPhase { return $script:AdminPhase }
+
+<#
+.SYNOPSIS
+    Apunta que una tasca necessita privilegis i no s'ha pogut fer en aquesta passada.
+#>
+function Register-AdminWork {
+    param(
+        [Parameter(Mandatory)][string]$Task,
+        [string]$Role
+    )
+    if (-not $Role) { $Role = $script:CurrentRole }
+    [void]$script:PendingAdmin.Add([pscustomobject]@{ Role = $Role; Task = $Task })
+}
+
+<#
+.SYNOPSIS
+    Feina apuntada que espera l'elevacio.
+#>
+function Get-PendingAdminWork { return $script:PendingAdmin.ToArray() }
+
+<#
+.SYNOPSIS
+    Executa un bloc que necessita privilegis, o l'apunta per a la fase d'admin.
+.DESCRIPTION
+    El patro es sempre el mateix als rols: si som admin (o en --check, que no
+    escriu res) fem la feina; si no, l'apuntem i ho diem clar. Aixi run.ps1 pot
+    demanar una sola elevacio al final amb la llista del que falta, en comptes
+    de deixar un reguitzell de 'skipped: cal admin' que ningu llegeix.
+#>
+function Invoke-AdminWork {
+    param(
+        [Parameter(Mandatory)][string]$Task,
+        [Parameter(Mandatory)][scriptblock]$Action,
+        [scriptblock]$AlreadyDone
+    )
+
+    if (Test-Elevated) {
+        & $Action
+        return
+    }
+
+    # Llegir HKLM no demana privilegis; nomes escriure-hi. Si el valor ja es el
+    # que volem, el bloc no escriura res, o sigui que el podem executar tal qual
+    # i reportar 'ok'. Sense aixo una maquina ja convergida demanaria l'UAC a
+    # cada run per no fer res.
+    if ($AlreadyDone -and (& $AlreadyDone)) {
+        & $Action
+        return
+    }
+
+    # Sense privilegis l'apuntem sempre, tambe en --check: una simulacio que no
+    # digui que et demanara l'UAC no simula el run de debo.
+    Register-AdminWork -Task $Task
+
+    if ($script:CheckMode) {
+        # En --check no escrivim res igualment, o sigui que podem deixar que el
+        # bloc calculi i reporti que canviaria. El fet que calgui admin surt al
+        # resum del final.
+        & $Action
+        return
+    }
+
+    Write-TaskResult -Task $Task -Status 'skipped' -Message 'cal admin: es fara al bloc elevat del final'
+}
 
 function Write-Play {
     param([Parameter(Mandatory)][string]$Name)
@@ -59,8 +137,15 @@ function Write-TaskResult {
     param(
         [Parameter(Mandatory)][string]$Task,
         [Parameter(Mandatory)][ValidateSet('ok', 'changed', 'skipped', 'failed')][string]$Status,
-        [string]$Message
+        [string]$Message,
+        # La tasca no aplica en aquesta maquina (no hi ha el maquinari, la funcio
+        # de Windows no hi es, o la config la desactiva). No es feina pendent: es
+        # feina que no existeix. Ni s'imprimeix ni compta al recap -- un run ple
+        # de blau que no vol dir res tapa el que si que importa.
+        [switch]$NotApplicable
     )
+
+    if ($NotApplicable) { return }
 
     Write-Host ''
     Write-Host ("TASK [{0} : {1}] " -f $script:CurrentRole, $Task).PadRight(78, '*') -ForegroundColor DarkGray
@@ -86,6 +171,7 @@ function Write-PlayRecap {
     Write-Host ('PLAY RECAP ').PadRight(78, '*') -ForegroundColor Magenta
 
     $failed = @($script:Results | Where-Object { $_.Status -eq 'failed' })
+    $changed = @($script:Results | Where-Object { $_.Status -eq 'changed' })
 
     foreach ($role in ($script:Results | Select-Object -ExpandProperty Role -Unique)) {
         $inRole = @($script:Results | Where-Object { $_.Role -eq $role })
@@ -99,6 +185,23 @@ function Write-PlayRecap {
         if ($counts.failed -gt 0) { $color = 'Red' }
         elseif ($counts.changed -gt 0) { $color = 'Yellow' }
         Write-Host $text -ForegroundColor $color
+    }
+
+    # Un "changed=1" perdut entre dues-centes linies de 'ok' no serveix de res:
+    # per veure QUE ha canviat cal fer scroll fins a trobar-lo. Sobretot en
+    # --check, que es precisament on nomes vols saber aixo.
+    if ($changed.Count -gt 0) {
+        Write-Host ''
+        if ($script:CheckMode) {
+            Write-Host 'Canviaria:' -ForegroundColor Yellow
+        } else {
+            Write-Host 'Tasques amb canvis:' -ForegroundColor Yellow
+        }
+        foreach ($c in $changed) {
+            $line = "  - [{0}] {1}" -f $c.Role, $c.Task
+            if ($c.Message) { $line = "{0}: {1}" -f $line, $c.Message }
+            Write-Host $line -ForegroundColor Yellow
+        }
     }
 
     if ($failed.Count -gt 0) {
@@ -164,6 +267,46 @@ function Invoke-Elevated {
 function Test-CommandExists {
     param([Parameter(Mandatory)][string]$Name)
     return [bool](Get-Command $Name -ErrorAction SilentlyContinue)
+}
+
+<#
+.SYNOPSIS
+    Les últimes línies útils de la sortida d'una ordre, per posar-les en un error.
+.DESCRIPTION
+    Els gestors de paquets són xerraires. `scoop install` actualitza els buckets
+    i escup el git log sencer de cada repositori abans de dir res útil: centenars
+    de línies de commits per acabar amb un "Couldn't find manifest". Ficar tot
+    això dins del missatge d'error tapa la línia que importa i omple la pantalla.
+    Aquí ens quedem amb el final, que és on hi ha el motiu de debo; la sortida
+    sencera segueix sent al fitxer de logs/.
+
+    Compte amb l'altre extrem: scoop escriu els seus errors amb Write-Host, que
+    NO passa pel pipeline i no es pot capturar amb 2>&1. En aquests casos aquí
+    no arriba res, tot i que el motiu sí que s'ha imprimès a la consola (i al
+    log). Val més dir-ho que deixar un "(sense sortida)" que sembla un bug.
+#>
+function Get-OutputTail {
+    param(
+        [AllowEmptyString()][AllowNull()][string]$Output,
+        [int]$Lines = 5,
+        [int]$MaxLength = 500
+    )
+
+    $capNul = 'el motiu s''ha imprimès a la consola, just abans de la tasca; queda al log'
+
+    if (-not $Output) { return $capNul }
+
+    $useful = @($Output -split "`r?`n" | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+    if ($useful.Count -eq 0) { return $capNul }
+
+    $tail = @($useful | Select-Object -Last $Lines) -join ' | '
+    if ($tail.Length -gt $MaxLength) {
+        $tail = '...' + $tail.Substring($tail.Length - $MaxLength)
+    }
+    if ($useful.Count -gt $Lines) {
+        $tail = "$tail  [+$($useful.Count - $Lines) línies més al log]"
+    }
+    return $tail
 }
 
 <#
@@ -245,6 +388,86 @@ function Add-PathEntry {
 
 <#
 .SYNOPSIS
+    Assegura que un directori del PATH va DAVANT d'un altre.
+.DESCRIPTION
+    Add-PathEntry només mira si el directori hi és, no en quina posició. Quan el
+    que volem és guanyar una resolució (p. ex. que gsudo\sudo.exe mani sobre el
+    de System32) cal poder reordenar entrades que ja hi són.
+
+    Escriu directament al registre, no amb [Environment]::SetEnvironmentVariable:
+    aquest expandeix els %VARS% i escriu sempre REG_SZ, cosa que trencaria un PATH
+    guardat com a REG_EXPAND_SZ. Aquí es llegeix sense expandir i es torna a
+    escriure amb el mateix tipus.
+.OUTPUTS
+    $true si ha calgut canviar res.
+#>
+function Set-PathEntryPriority {
+    param(
+        [Parameter(Mandatory)][string]$Directory,
+        [Parameter(Mandatory)][string]$Before,
+        [ValidateSet('User', 'Machine')][string]$Scope = 'Machine',
+        [string]$BackupPath,
+        # Nomes mirar si caldria moure res. Llegir el PATH no demana privilegis,
+        # o sigui que aixi el rol pot saber si val la pena demanar l'UAC.
+        [switch]$TestOnly
+    )
+
+    if ($Scope -eq 'Machine') {
+        $keyPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment'
+    } else {
+        $keyPath = 'HKCU:\Environment'
+    }
+
+    $key = Get-Item -LiteralPath $keyPath
+    $current = $key.GetValue('Path', $null, 'DoNotExpandEnvironmentNames')
+    if (-not $current) { return $false }
+    $kind = $key.GetValueKind('Path')
+
+    $entries = @($current -split ';' | Where-Object { $_ })
+    $norm = { param($x) $x.Trim().TrimEnd([char]92).ToLowerInvariant() }
+
+    $idxDir = -1
+    $idxBefore = -1
+    for ($i = 0; $i -lt $entries.Count; $i++) {
+        $e = & $norm $entries[$i]
+        if ($idxDir -lt 0 -and $e -eq (& $norm $Directory)) { $idxDir = $i }
+        if ($idxBefore -lt 0 -and $e -eq (& $norm $Before)) { $idxBefore = $i }
+    }
+
+    # Si la referència no hi és no hi ha res a guanyar: prou amb ser al PATH.
+    if ($idxBefore -lt 0) { return $false }
+    if ($idxDir -ge 0 -and $idxDir -lt $idxBefore) { return $false }
+
+    if ($TestOnly -or $script:CheckMode) { return $true }
+
+    if ($BackupPath) {
+        $dir = Split-Path -Parent $BackupPath
+        if ($dir -and -not (Test-Path -LiteralPath $dir)) {
+            New-Item -ItemType Directory -Path $dir -Force | Out-Null
+        }
+        Set-Content -LiteralPath $BackupPath -Value $current -Encoding ASCII -NoNewline
+    }
+
+    # Treiem les aparicions del directori i el reinserim just davant de $Before.
+    $rest = @($entries | Where-Object { (& $norm $_) -ne (& $norm $Directory) })
+    $at = -1
+    for ($i = 0; $i -lt $rest.Count; $i++) {
+        if ((& $norm $rest[$i]) -eq (& $norm $Before)) { $at = $i; break }
+    }
+    if ($at -lt 0) { $at = 0 }
+
+    $new = @()
+    if ($at -gt 0) { $new += $rest[0..($at - 1)] }
+    $new += $Directory
+    $new += $rest[$at..($rest.Count - 1)]
+
+    Set-ItemProperty -LiteralPath $keyPath -Name 'Path' -Value ($new -join ';') -Type $kind
+    Update-SessionPath
+    return $true
+}
+
+<#
+.SYNOPSIS
     Escriu un fitxer només si el contingut difereix (idempotent).
 .OUTPUTS
     $true si el fitxer ha canviat.
@@ -283,6 +506,23 @@ function Set-FileContent {
 .SYNOPSIS
     Assegura un valor concret al registre. Retorna $true si ha canviat.
 #>
+function Test-RegistryValue {
+    param(
+        [Parameter(Mandatory)][string]$Path,
+        [Parameter(Mandatory)][string]$Name,
+        [Parameter(Mandatory)]$Value
+    )
+
+    if (-not (Test-Path -LiteralPath $Path)) { return $false }
+    $prop = Get-ItemProperty -LiteralPath $Path -Name $Name -ErrorAction SilentlyContinue
+    if (-not $prop) { return $false }
+    return ("$($prop.$Name)" -eq "$Value")
+}
+
+<#
+.SYNOPSIS
+    Assegura un valor concret al registre. Retorna $true si ha canviat.
+#>
 function Set-RegistryValue {
     param(
         [Parameter(Mandatory)][string]$Path,
@@ -292,13 +532,7 @@ function Set-RegistryValue {
         [string]$Type = 'DWord'
     )
 
-    $existing = $null
-    if (Test-Path -LiteralPath $Path) {
-        $prop = Get-ItemProperty -LiteralPath $Path -Name $Name -ErrorAction SilentlyContinue
-        if ($prop) { $existing = $prop.$Name }
-    }
-
-    if ($null -ne $existing -and "$existing" -eq "$Value") { return $false }
+    if (Test-RegistryValue -Path $Path -Name $Name -Value $Value) { return $false }
     if ($script:CheckMode) { return $true }
 
     if (-not (Test-Path -LiteralPath $Path)) {
@@ -562,7 +796,7 @@ function Install-ProviderPackage {
             $output = & winget @wingetArgs 2>&1 | Out-String
             # 0x8A15002B = cap actualització disponible; no és un error.
             if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne -1978335189 -and $LASTEXITCODE -ne -1978335212) {
-                throw "winget $verb $Id ha fallat (codi $LASTEXITCODE): $($output.Trim())"
+                throw "winget $verb $Id ha fallat (codi $LASTEXITCODE): $(Get-OutputTail $output)"
             }
             return
         }
@@ -573,7 +807,7 @@ function Install-ProviderPackage {
             $output = & choco @chocoArgs 2>&1 | Out-String
             # 3010 = cal reiniciar; 1641 = reinici iniciat. Cap dels dos és un error.
             if ($LASTEXITCODE -notin 0, 3010, 1641) {
-                throw "choco $verb $Id ha fallat (codi $LASTEXITCODE): $($output.Trim())"
+                throw "choco $verb $Id ha fallat (codi $LASTEXITCODE): $(Get-OutputTail $output)"
             }
             return
         }
@@ -582,7 +816,7 @@ function Install-ProviderPackage {
             if ($Upgrade) { $verb = 'update' }
             $output = & scoop $verb $Id 2>&1 | Out-String
             if ($LASTEXITCODE -ne 0) {
-                throw "scoop $verb $Id ha fallat (codi $LASTEXITCODE): $($output.Trim())"
+                throw "scoop $verb $Id ha fallat (codi $LASTEXITCODE): $(Get-OutputTail $output)"
             }
             return
         }
@@ -647,12 +881,13 @@ function Install-CatalogPackage {
     if (-not $label) { $label = $Package.id }
 
     # Els paquets MSIX de la Microsoft Store s'instal·len per usuari i fallen
-    # sempre des d'un procés elevat. run.ps1 els fa abans d'auto-elevar-se; si
-    # tot i així arribem aquí elevats, val més dir-ho clar que deixar un error
-    # criptic de winget.
+    # sempre des d'un proces elevat. Per aixo el run comenca sense privilegis: la
+    # primera passada els fa, i quan arribem aqui ja elevats nomes cal dir que ja
+    # estan coberts.
     if ($Package.source -eq 'msstore' -and (Test-Elevated)) {
-        Write-TaskResult -Task $label -Status 'skipped' `
-            -Message 'app de la Store: no es pot instal·lar elevat. Executa: .\run.ps1 -Roles apps -Groups store -NoElevate'
+        $why = 'app de la Store: nomes s''instal·la sense privilegis'
+        if ($script:AdminPhase) { $why = 'app de la Store: feta a la passada sense privilegis' }
+        Write-TaskResult -Task $label -Status 'skipped' -Message $why
         return
     }
 
@@ -681,10 +916,28 @@ function Install-CatalogPackage {
         return
     }
 
+    # Falta instal·lar-lo de debo. winget, choco i els installers baixats per URL
+    # escriuen a Program Files i al registre de maquina: sense privilegis obririen
+    # un UAC per paquet. Scoop no (viu tot al perfil d'usuari) i els MSIX de la
+    # Store tampoc (son per usuari i elevats fallen). Els que si que en necessiten
+    # els apuntem i els fa la passada elevada, tots de cop.
+    $userScope = ($resolved.Provider -eq 'scoop') -or ($Package.source -eq 'msstore')
+    $needsAdmin = (-not $userScope) -and (-not (Test-Elevated))
+
+    if ($needsAdmin) { Register-AdminWork -Task $label }
+
+    if ($needsAdmin -and -not $script:CheckMode) {
+        Write-TaskResult -Task $label -Status 'skipped' `
+            -Message "cal admin: s'instal·lara al bloc elevat del final"
+        return
+    }
+
     if ($script:CheckMode) {
         $what = 'instal·laria'
         if ($alreadyThere) { $what = 'actualitzaria' }
-        Write-TaskResult -Task $label -Status 'changed' -Message "$what $($resolved.Provider):$($resolved.Id)"
+        $msg = "$what $($resolved.Provider):$($resolved.Id)"
+        if ($needsAdmin) { $msg = "$msg (caldra admin)" }
+        Write-TaskResult -Task $label -Status 'changed' -Message $msg
         return
     }
 
@@ -765,11 +1018,62 @@ function Merge-Hashtable {
 .PARAMETER Groups
     Grups a incloure. Buit = tots els grups llistats a 'default_groups'.
 #>
-function Select-CatalogPackages {
+# Claus que indiquen que una entrada del catàleg es pot instal·lar a Windows. El
+# catàleg és compartit amb el d'ansible-mac, i les entrades que només porten
+# 'mac:' aquí no es poden instal·lar de cap manera.
+$script:WindowsProviderKeys = @('winget', 'choco', 'scoop', 'url')
+
+<#
+.SYNOPSIS
+    Entrades del catàleg que a Windows no es poden instal·lar i que encara no
+    tenen substitut decidit.
+.DESCRIPTION
+    Una entrada només de Mac està "resolta" quan porta `win_equivalent`, que diu
+    qui li fa la feina a Windows (una altra app del catàleg, o una funció nativa).
+    Les que no en porten són decisions pendents: el run les ha d'ensenyar perquè
+    alguí digui què hi posem.
+#>
+function Get-UndecidedPackages {
     param(
         [Parameter(Mandatory)]$Config,
         [string[]]$Groups = @()
     )
+
+    $catalog = $Config.packages
+    if (-not $catalog) { return @() }
+
+    $wanted = $Groups
+    if (-not $wanted -or $wanted.Count -eq 0) { $wanted = $Config.default_groups }
+    if (-not $wanted -or $wanted.Count -eq 0) { $wanted = @($catalog.Keys) }
+
+    $out = New-Object System.Collections.ArrayList
+    foreach ($group in $wanted) {
+        if (-not $catalog.ContainsKey($group)) { continue }
+        foreach ($pkg in @($catalog[$group])) {
+            if ($null -eq $pkg) { continue }
+            $hasWin = $false
+            foreach ($k in $script:WindowsProviderKeys) {
+                if ($pkg.ContainsKey($k) -and $pkg[$k]) { $hasWin = $true; break }
+            }
+            if ($hasWin) { continue }
+            if ($pkg.win_equivalent) { continue }
+
+            $entry = @{} + $pkg
+            $entry['group'] = $group
+            [void]$out.Add($entry)
+        }
+    }
+    return $out.ToArray()
+}
+
+function Select-CatalogPackages {
+    param(
+        [Parameter(Mandatory)]$Config,
+        [string[]]$Groups = @(),
+        [switch]$IncludeForeign
+    )
+
+    $winKeys = $script:WindowsProviderKeys
 
     $catalog = $Config.packages
     if (-not $catalog) { return @() }
@@ -790,6 +1094,18 @@ function Select-CatalogPackages {
         }
         foreach ($pkg in @($catalog[$group])) {
             if ($null -eq $pkg) { continue }
+
+            if (-not $IncludeForeign) {
+                $hasWin = $false
+                foreach ($k in $winKeys) {
+                    if ($pkg.ContainsKey($k) -and $pkg[$k]) { $hasWin = $true; break }
+                }
+                # Només filtrem per absència de clau, no per disponibilitat del
+                # gestor: si un paquet té 'winget' i winget no hi és, això sí que
+                # volem veure-ho com a 'skipped'.
+                if (-not $hasWin) { continue }
+            }
+
             $entry = @{} + $pkg
             $entry['group'] = $group
             [void]$selected.Add($entry)
@@ -803,10 +1119,12 @@ function Select-CatalogPackages {
 Export-ModuleMember -Function `
     Set-ProvisionContext, Get-ProvisionCheckMode, Write-Play, Write-Banner, Write-Info,
     Write-TaskResult, Write-PlayRecap, Get-ProvisionResults, Clear-ProvisionResults,
-    Test-Elevated, Invoke-Elevated, Test-CommandExists, Invoke-NativeCommand,
-    Update-SessionPath, Add-PathEntry,
-    Set-FileContent, Set-RegistryValue, Set-SymbolicLink,
+    Test-Elevated, Invoke-Elevated, Test-CommandExists, Invoke-NativeCommand, Get-OutputTail,
+    Get-ProvisionAdminPhase, Register-AdminWork, Get-PendingAdminWork, Invoke-AdminWork,
+    Update-SessionPath, Add-PathEntry, Set-PathEntryPriority,
+    Set-FileContent, Set-RegistryValue, Test-RegistryValue, Set-SymbolicLink,
     Test-WingetAvailable, Test-ChocoAvailable, Test-ScoopAvailable,
     Get-ArpEntry, Resolve-UrlAsset, Install-UrlPackage,
     Test-PackageInstalled, Install-ProviderPackage, Resolve-PackageProvider,
-    Install-CatalogPackage, Import-ProvisionConfig, Merge-Hashtable, Select-CatalogPackages
+    Install-CatalogPackage, Import-ProvisionConfig, Merge-Hashtable, Select-CatalogPackages,
+    Get-UndecidedPackages

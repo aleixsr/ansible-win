@@ -12,7 +12,7 @@ Set-ProvisionContext -Role 'shell'
 
 $shellCfg = $Config.shell
 if (-not $shellCfg) {
-    Write-TaskResult -Task 'configuració' -Status 'skipped' -Message 'cap secció shell: a la configuració'
+    Write-TaskResult -Task 'configuració' -Status 'skipped' -Message 'cap secció shell: a la configuració' -NotApplicable
     return
 }
 
@@ -70,7 +70,7 @@ switch ($prompt) {
         Install-CatalogPackage -Package $pkg -ProviderOrder $Config.provider_order -Upgrade:$Upgrade
     }
     default {
-        Write-TaskResult -Task 'prompt' -Status 'skipped' -Message "shell.prompt = $prompt"
+        Write-TaskResult -Task 'prompt' -Status 'skipped' -Message "shell.prompt = $prompt" -NotApplicable
     }
 }
 
@@ -121,7 +121,7 @@ Write-TaskResult -Task 'fragment de prompt' -Status $status -Message "shell.prom
 # mateixa ruta a les dues plataformes (~/.config/starship.toml). Per tant, el
 # prompt acaba sent idèntic al Mac i al Windows.
 if (-not $shellCfg.install_starship_config) {
-    Write-TaskResult -Task 'starship.toml' -Status 'skipped' -Message 'shell.install_starship_config = false'
+    Write-TaskResult -Task 'starship.toml' -Status 'skipped' -Message 'shell.install_starship_config = false' -NotApplicable
 } else {
     $starshipSource = Join-Path $RepoRoot 'files\starship.toml'
     if (-not (Test-Path -LiteralPath $starshipSource)) {
@@ -143,7 +143,7 @@ if (-not $shellCfg.install_starship_config) {
 # perfil de PowerShell
 # -----------------------------------------------------------------------------
 if (-not $shellCfg.install_profile) {
-    Write-TaskResult -Task 'perfil de PowerShell' -Status 'skipped' -Message 'shell.install_profile = false'
+    Write-TaskResult -Task 'perfil de PowerShell' -Status 'skipped' -Message 'shell.install_profile = false' -NotApplicable
 } else {
     $sourceProfile = Join-Path $RepoRoot 'files\profile.ps1'
     if (-not (Test-Path -LiteralPath $sourceProfile)) {
@@ -185,7 +185,7 @@ if (Test-Path -LiteralPath $profileSource) { . $profileSource }
 # Windows Terminal
 # -----------------------------------------------------------------------------
 if (-not $shellCfg.configure_terminal) {
-    Write-TaskResult -Task 'Windows Terminal' -Status 'skipped' -Message 'shell.configure_terminal = false'
+    Write-TaskResult -Task 'Windows Terminal' -Status 'skipped' -Message 'shell.configure_terminal = false' -NotApplicable
 } else {
     $source = Join-Path $RepoRoot 'files\windows-terminal.settings.json'
     $settingsDir = Join-Path $env:LOCALAPPDATA 'Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState'
@@ -193,7 +193,7 @@ if (-not $shellCfg.configure_terminal) {
     if (-not (Test-Path -LiteralPath $source)) {
         Write-TaskResult -Task 'Windows Terminal' -Status 'skipped' -Message 'no hi ha settings al repo'
     } elseif (-not (Test-Path -LiteralPath $settingsDir)) {
-        Write-TaskResult -Task 'Windows Terminal' -Status 'skipped' -Message 'Windows Terminal no instal·lat (o encara no obert un cop)'
+        Write-TaskResult -Task 'Windows Terminal' -Status 'skipped' -Message 'Windows Terminal no instal·lat (o encara no obert un cop)' -NotApplicable
     } else {
         $target = Join-Path $settingsDir 'settings.json'
         try {

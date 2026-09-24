@@ -20,7 +20,7 @@ Set-ProvisionContext -Role 'tabby'
 
 $tabbyCfg = $Config.tabby
 if (-not $tabbyCfg -or -not $tabbyCfg.install_plugins) {
-    Write-TaskResult -Task 'connectors' -Status 'skipped' -Message 'tabby.install_plugins = false'
+    Write-TaskResult -Task 'connectors' -Status 'skipped' -Message 'tabby.install_plugins = false' -NotApplicable
     return
 }
 
