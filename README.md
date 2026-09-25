@@ -45,6 +45,10 @@ sempre que existeixin per a Windows.
   - [Com es tracten les apps que només són del Mac](#com-es-tracten-les-apps-que-només-són-del-mac)
   - [Descartats a propòsit](#descartats-a-propòsit)
 - [Paquets que no són a cap gestor](#paquets-que-no-són-a-cap-gestor)
+- [Software opcional](#software-opcional)
+  - [Sense menú](#sense-menú)
+  - [Quan no hi ha ningú davant](#quan-no-hi-ha-ningú-davant)
+  - [Marcar-ne un](#marcar-ne-un)
 - [Treure el bloatware de Windows 11](#treure-el-bloatware-de-windows-11)
   - [Què treu](#què-treu)
   - [Què NO treu, a posta](#què-no-treu-a-posta)
@@ -151,6 +155,9 @@ un sol cop al final. Vegés [Les dues fases del run](#les-dues-fases-del-run).
 .\run.ps1 -Check                                # simulació (com --check)
 .\run.ps1 -Upgrade                              # actualitza el que ja hi ha
 .\run.ps1 -ListPackages                         # ensenya el catàleg sencer
+.\run.ps1 -Optional all                         # instal·la també tot l'opcional
+.\run.ps1 -Optional none                        # només l'essencial, sense preguntar
+.\run.ps1 -Optional obsidian,tailscale          # l'essencial i aquests dos
 .\run.ps1 -NoElevate                            # no demanis l'UAC: el que calgui admin se salta
 ```
 
@@ -229,199 +236,198 @@ catàleg i torna a executar l'script.
 
 Grup `development`. 14 aplicacions.
 
-| App | Per a què serveix | D'on surt |
-| --- | --- | --- |
-| **GitHub CLI** | Client de GitHub per a la terminal: PRs, issues i releases sense obrir el navegador. | winget |
-| **Git** | El control de versions. Porta Git Bash i Git Credential Manager. | winget |
-| **Node.js LTS** | Runtime de JavaScript, versió LTS. Arrossega npm, que fa falta per a Tabby i per a les eines globals. | winget |
-| **Python 3.14** | Intèrpret de Python 3.14, amb pip i el llançador py. | winget |
-| **Apache Directory Studio** | Navegador i editor de directoris LDAP. Per mirar l'Active Directory sense endevinar filtres. | winget |
-| **GitHub Copilot CLI** | GitHub Copilot a la terminal: explica i suggereix ordres. | winget |
-| **DBeaver Community** | Client SQL universal: PostgreSQL, MySQL, SQL Server, Oracle i companyia amb un sol client. | winget |
-| **draw.io** | Diagrames d'arquitectura i xarxa en local, sense compte ni núvol. | winget |
-| **GitHub Desktop** | GitHub amb finestres, per als repos on no vols pensar en ordres. | winget |
-| **SoapUI** | Proves de serveis web SOAP i REST. Encara fa falta per als SOAP de sempre. | choco |
-| **Notepad++** | Editor de text ràpid, per a un cop d'ull o una edició de quatre línies. | winget |
-| **Sublime Text** | Editor lleuger que obre fitxers de centenars de MB sense ofegar-se. | winget |
-| **Visual Studio Code** | L'editor principal: extensions, depurador i terminal integrada. | winget |
-| **Visual Studio Code Insiders** | La branca diària de VS Code, en paral·lel a l'estable. Per provar coses sense trencar l'entorn de feina. | winget |
+| App | Per a què serveix | D'on surt | |
+| --- | --- | --- | --- |
+| **GitHub CLI** | Client de GitHub per a la terminal: PRs, issues i releases sense obrir el navegador. | winget |  |
+| **Git** | El control de versions. Porta Git Bash i Git Credential Manager. | winget |  |
+| **Node.js LTS** | Runtime de JavaScript, versió LTS. Arrossega npm, que fa falta per a Tabby i per a les eines globals. | winget |  |
+| **Python 3.14** | Intèrpret de Python 3.14, amb pip i el llançador py. | winget |  |
+| **Apache Directory Studio** | Navegador i editor de directoris LDAP. Per mirar l'Active Directory sense endevinar filtres. | winget |  |
+| **GitHub Copilot CLI** | GitHub Copilot a la terminal: explica i suggereix ordres. | winget |  |
+| **DBeaver Community** | Client SQL universal: PostgreSQL, MySQL, SQL Server, Oracle i companyia amb un sol client. | winget |  |
+| **draw.io** | Diagrames d'arquitectura i xarxa en local, sense compte ni núvol. | winget |  |
+| **GitHub Desktop** | GitHub amb finestres, per als repos on no vols pensar en ordres. | winget |  |
+| **SoapUI** | Proves de serveis web SOAP i REST. Encara fa falta per als SOAP de sempre. | choco |  |
+| **Notepad++** | Editor de text ràpid, per a un cop d'ull o una edició de quatre línies. | winget |  |
+| **Sublime Text** | Editor lleuger que obre fitxers de centenars de MB sense ofegar-se. | winget |  |
+| **Visual Studio Code** | L'editor principal: extensions, depurador i terminal integrada. | winget |  |
+| **Visual Studio Code Insiders** | La branca diària de VS Code, en paral·lel a l'estable. Per provar coses sense trencar l'entorn de feina. | winget |  |
 
 ### Núvol i DevOps
 
 Grup `clouddevops`. 2 aplicacions.
 
-| App | Per a què serveix | D'on surt |
-| --- | --- | --- |
-| **Azure CLI** | CLI d'Azure: subscripcions, recursos i tot el tenant des de la terminal. | winget |
-| **OCI CLI (Oracle Cloud)** | CLI d'Oracle Cloud Infrastructure. | choco |
+| App | Per a què serveix | D'on surt | |
+| --- | --- | --- | --- |
+| **Azure CLI** | CLI d'Azure: subscripcions, recursos i tot el tenant des de la terminal. | winget |  |
+| **OCI CLI (Oracle Cloud)** | CLI d'Oracle Cloud Infrastructure. | choco |  |
 
 ### Xarxa (línia d'ordres)
 
 Grup `networking`. 8 aplicacions.
 
-| App | Per a què serveix | D'on surt |
-| --- | --- | --- |
-| **iperf3** | Mesura l'ample de banda real entre dos punts. L'eina per demostrar si la lentitud és de la xarxa. | winget |
-| **RustScan** | Escàner de ports molt ràpid; encadena amb Nmap per al detall. | winget |
-| **WinMTR** | traceroute i ping alhora, en continu: ensenya en quin salt es perden els paquets. | choco |
-| **Nmap** | Descoberta de xarxa i escaneig de ports i serveis. | winget |
-| **Speedtest CLI** | Speedtest d'Ookla per a la terminal, per deixar-ne constància en un log. | winget |
-| **mailsend-go** | Envia correu des de la línia d'ordres per provar SMTP, relays i autenticació. | winget |
-| **tcping** | Ping contra un port TCP. Per quan l'ICMP està bloquejat, que és gairebé sempre. | choco |
-| **wget** | Descàrregues no interactives, amb reintents i recursivitat. | winget |
+| App | Per a què serveix | D'on surt | |
+| --- | --- | --- | --- |
+| **iperf3** | Mesura l'ample de banda real entre dos punts. L'eina per demostrar si la lentitud és de la xarxa. | winget |  |
+| **RustScan** | Escàner de ports molt ràpid; encadena amb Nmap per al detall. | winget |  |
+| **WinMTR** | traceroute i ping alhora, en continu: ensenya en quin salt es perden els paquets. | choco |  |
+| **Nmap** | Descoberta de xarxa i escaneig de ports i serveis. | winget |  |
+| **Speedtest CLI** | Speedtest d'Ookla per a la terminal, per deixar-ne constància en un log. | winget |  |
+| **mailsend-go** | Envia correu des de la línia d'ordres per provar SMTP, relays i autenticació. | winget |  |
+| **tcping** | Ping contra un port TCP. Per quan l'ICMP està bloquejat, que és gairebé sempre. | choco |  |
+| **wget** | Descàrregues no interactives, amb reintents i recursivitat. | winget |  |
 
 ### Utilitats de sistema
 
 Grup `systemutilities`. 7 aplicacions.
 
-| App | Per a què serveix | D'on surt |
-| --- | --- | --- |
-| **PowerShell 7** | PowerShell 7, al costat del 5.1 que ve amb Windows. Multiplataforma i molt més ràpid. | winget |
-| **balenaEtcher** | Grava imatges ISO i IMG a USB, verificant el resultat. | winget |
-| **WizTree** | Què t'ocupa el disc, llegint la MFT: analitza un disc sencer en segons. | winget |
-| **PowerToys** | La caixa d'eines de Microsoft: FancyZones, PowerToys Run, Awake, Video Conference Mute i selector de colors. | winget |
-| **ScreenToGif** | Grava un tros de pantalla i el desa com a GIF o MP4. Per ensenyar un error sense escriure tres paràgrafs. | winget |
-| **Novabench** | Benchmark ràpid de CPU, GPU, RAM i disc. | winget |
-| **XCA** | Gestor d'autoritats de certificació i certificats X.509, amb interfície. | choco |
+| App | Per a què serveix | D'on surt | |
+| --- | --- | --- | --- |
+| **PowerShell 7** | PowerShell 7, al costat del 5.1 que ve amb Windows. Multiplataforma i molt més ràpid. | winget |  |
+| **balenaEtcher** | Grava imatges ISO i IMG a USB, verificant el resultat. | winget |  |
+| **WizTree** | Què t'ocupa el disc, llegint la MFT: analitza un disc sencer en segons. | winget |  |
+| **PowerToys** | La caixa d'eines de Microsoft: FancyZones, PowerToys Run, Awake, Video Conference Mute i selector de colors. | winget |  |
+| **ScreenToGif** | Grava un tros de pantalla i el desa com a GIF o MP4. Per ensenyar un error sense escriure tres paràgrafs. | winget |  |
+| **Novabench** | Benchmark ràpid de CPU, GPU, RAM i disc. | winget |  |
+| **XCA** | Gestor d'autoritats de certificació i certificats X.509, amb interfície. | choco |  |
 
 ### Navegadors
 
 Grup `browsers`. 5 aplicacions.
 
-| App | Per a què serveix | D'on surt |
-| --- | --- | --- |
-| **Brave** | Navegador Chromium amb bloqueig d'anuncis i de seguiment de sèrie. | winget |
-| **Chromium** | Chromium net, sense els serveis de Google. Útil per provar comportaments del motor. | winget |
-| **Mozilla Firefox** | Motor Gecko: el segon motor que cal tenir per comprovar que una web funciona de debò. | winget |
-| **Google Chrome** | Google Chrome, per al que només va bé a Chrome i per a les seves DevTools. | winget |
-| **Microsoft Edge** | Ve amb Windows; el catàleg només se n'assegura la versió. És el que millor s'entén amb els portals de Microsoft 365. | winget |
+| App | Per a què serveix | D'on surt | |
+| --- | --- | --- | --- |
+| **Brave** | Navegador Chromium amb bloqueig d'anuncis i de seguiment de sèrie. | winget |  |
+| **Chromium** | Chromium net, sense els serveis de Google. Útil per provar comportaments del motor. | winget |  |
+| **Mozilla Firefox** | Motor Gecko: el segon motor que cal tenir per comprovar que una web funciona de debò. | winget |  |
+| **Google Chrome** | Google Chrome, per al que només va bé a Chrome i per a les seves DevTools. | winget |  |
+| **Microsoft Edge** | Ve amb Windows; el catàleg només se n'assegura la versió. És el que millor s'entén amb els portals de Microsoft 365. | winget |  |
 
 ### Terminals
 
 Grup `terminal`. 3 aplicacions.
 
-| App | Per a què serveix | D'on surt |
-| --- | --- | --- |
-| **Windows Terminal** | El terminal de Windows: pestanyes, panells i perfils per a PowerShell, cmd i WSL. | winget |
-| **Tabby** | Terminal amb gestor de connexions SSH i sincronització de la configuració. | winget |
-| **Wave Terminal** | Terminal per blocs: desa la sortida de cada ordre perquè la puguis rellegir i compartir. | winget |
+| App | Per a què serveix | D'on surt | |
+| --- | --- | --- | --- |
+| **Windows Terminal** | El terminal de Windows: pestanyes, panells i perfils per a PowerShell, cmd i WSL. | winget |  |
+| **Tabby** | Terminal amb gestor de connexions SSH i sincronització de la configuració. | winget |  |
+| **Wave Terminal** | Terminal per blocs: desa la sortida de cada ordre perquè la puguis rellegir i compartir. | winget |  |
 
 ### Comunicació
 
 Grup `communication`. 5 aplicacions.
 
-| App | Per a què serveix | D'on surt |
-| --- | --- | --- |
-| **Mailspring** | Client de correu d'escriptori per a diversos comptes IMAP. | choco |
-| **Microsoft Teams** | Microsoft Teams: xat, reunions i trucades del tenant. | winget |
-| **Telegram** | Telegram d'escriptori. | winget |
-| **WhatsApp** | WhatsApp d'escriptori (paquet MSIX de la Store). | Store |
-| **Zoho Mail** | Client d'escriptori de Zoho Mail. | winget |
+| App | Per a què serveix | D'on surt | |
+| --- | --- | --- | --- |
+| **Mailspring** | Client de correu d'escriptori per a diversos comptes IMAP. | choco | opcional |
+| **Microsoft Teams** | Microsoft Teams: xat, reunions i trucades del tenant. | winget | opcional |
+| **Telegram** | Telegram d'escriptori. | winget | opcional |
+| **WhatsApp** | WhatsApp d'escriptori (paquet MSIX de la Store). | Store | opcional |
+| **Zoho Mail** | Client d'escriptori de Zoho Mail. | winget | opcional |
 
 ### Productivitat
 
 Grup `productivity`. 8 aplicacions.
 
-| App | Per a què serveix | D'on surt |
-| --- | --- | --- |
-| **Claude Desktop** | Claude d'escriptori. | winget |
-| **7-Zip** | 7-Zip: compressió i descompressió de gairebé qualsevol format. | winget |
-| **PeaZip** | Gestor d'arxius amb interfície, xifratge i comparació de continguts. | winget |
-| **Obsidian** | Notes en Markdown desades com a fitxers locals, amb enllaços entre elles. | winget |
-| **Calcator** | Calculadora de text: escrius «3 GB / 40 min» i respon. | descàrrega directa |
-| **Charmy: Hot Corners** | Accions en portar el cursor a una cantonada de la pantalla. | Store |
-| **ShareX** | ShareX: captures, gravació, anotacions i pujada automàtica. | winget |
-| **HWiNFO** | HWiNFO: sensors de temperatura, rellotges i consum de tot el maquinari. | choco |
+| App | Per a què serveix | D'on surt | |
+| --- | --- | --- | --- |
+| **Claude Desktop** | Claude d'escriptori. | winget |  |
+| **7-Zip** | 7-Zip: compressió i descompressió de gairebé qualsevol format. | winget |  |
+| **PeaZip** | Gestor d'arxius amb interfície, xifratge i comparació de continguts. | winget |  |
+| **Obsidian** | Notes en Markdown desades com a fitxers locals, amb enllaços entre elles. | winget | opcional |
+| **Calcator** | Calculadora de text: escrius «3 GB / 40 min» i respon. | descàrrega directa | opcional |
+| **Charmy: Hot Corners** | Accions en portar el cursor a una cantonada de la pantalla. | Store | opcional |
+| **ShareX** | ShareX: captures, gravació, anotacions i pujada automàtica. | winget |  |
+| **HWiNFO** | HWiNFO: sensors de temperatura, rellotges i consum de tot el maquinari. | choco |  |
 
 ### Xarxa i VPN
 
 Grup `networkingvpn`. 3 aplicacions.
 
-| App | Per a què serveix | D'on surt |
-| --- | --- | --- |
-| **SwitchHosts** | Canvia de fitxer hosts amb un clic. Per apuntar un domini a preproducció i tornar enrere. | winget |
-| **Tailscale** | VPN de malla sobre WireGuard: connecta els teus equips sense obrir ports. | winget |
-| **OpenVPN Connect** | Client d'OpenVPN, per als túnels dels clients que el fan servir. | winget |
+| App | Per a què serveix | D'on surt | |
+| --- | --- | --- | --- |
+| **SwitchHosts** | Canvia de fitxer hosts amb un clic. Per apuntar un domini a preproducció i tornar enrere. | winget |  |
+| **Tailscale** | VPN de malla sobre WireGuard: connecta els teus equips sense obrir ports. | winget | opcional |
+| **OpenVPN Connect** | Client d'OpenVPN, per als túnels dels clients que el fan servir. | winget |  |
 
 ### Accés remot
 
 Grup `remoteaccess`. 2 aplicacions.
 
-| App | Per a què serveix | D'on surt |
-| --- | --- | --- |
-| **Royal TS** | Gestor de connexions remotes: RDP, SSH, VNC i webs, en un arbre amb credencials. | winget |
-| **RustDesk** | Escriptori remot obert, amb servidor propi si el vols. Alternativa a TeamViewer. | choco |
+| App | Per a què serveix | D'on surt | |
+| --- | --- | --- | --- |
+| **Royal TS** | Gestor de connexions remotes: RDP, SSH, VNC i webs, en un arbre amb credencials. | winget |  |
+| **RustDesk** | Escriptori remot obert, amb servidor propi si el vols. Alternativa a TeamViewer. | choco |  |
 
 ### Fitxers i núvol
 
 Grup `filemanagementcloud`. 3 aplicacions.
 
-| App | Per a què serveix | D'on surt |
-| --- | --- | --- |
-| **Box Drive** | Munta Box com una unitat de xarxa, amb els fitxers sota demanda. | winget |
-| **LocalSend** | Envia fitxers entre dispositius de la mateixa xarxa, sense núvol ni comptes. | winget |
-| **Synology Drive Client** | Sincronitza carpetes amb un NAS de Synology. | winget |
+| App | Per a què serveix | D'on surt | |
+| --- | --- | --- | --- |
+| **Box Drive** | Munta Box com una unitat de xarxa, amb els fitxers sota demanda. | winget |  |
+| **LocalSend** | Envia fitxers entre dispositius de la mateixa xarxa, sense núvol ni comptes. | winget |  |
+| **Synology Drive Client** | Sincronitza carpetes amb un NAS de Synology. | winget | opcional |
 
 ### Entorn Microsoft
 
 Grup `microsoftsuite`. 1 aplicacions.
 
-| App | Per a què serveix | D'on surt |
-| --- | --- | --- |
-| **Azure Storage Explorer** | Explora blobs, cues, taules i fitxers d'Azure Storage amb interfície. | winget |
+| App | Per a què serveix | D'on surt | |
+| --- | --- | --- | --- |
+| **Azure Storage Explorer** | Explora blobs, cues, taules i fitxers d'Azure Storage amb interfície. | winget |  |
 
 ### Àudio i vídeo
 
 Grup `media`. 6 aplicacions.
 
-| App | Per a què serveix | D'on surt |
-| --- | --- | --- |
-| **HandBrake** | Recodifica vídeo amb perfils ja fets: per abaixar el pes d'un MP4 sense pensar-hi. | winget |
-| **VLC** | Reprodueix qualsevol cosa sense haver d'instal·lar còdecs. | winget |
-| **mpv** | Reproductor mínim i molt ràpid, controlat per teclat i scripts. | winget |
-| **FFmpeg** | La navalla suïssa de l'àudio i el vídeo: converteix, retalla i transmet. | winget |
-| **yt-dlp** | Descarrega vídeo i àudio de centenars de webs. Arrossega Deno i FFmpeg com a dependències. | winget |
-| **Open TV** | Reproductor de llistes IPTV M3U. | descàrrega directa |
+| App | Per a què serveix | D'on surt | |
+| --- | --- | --- | --- |
+| **HandBrake** | Recodifica vídeo amb perfils ja fets: per abaixar el pes d'un MP4 sense pensar-hi. | winget |  |
+| **VLC** | Reprodueix qualsevol cosa sense haver d'instal·lar còdecs. | winget |  |
+| **mpv** | Reproductor mínim i molt ràpid, controlat per teclat i scripts. | winget |  |
+| **FFmpeg** | La navalla suïssa de l'àudio i el vídeo: converteix, retalla i transmet. | winget |  |
+| **yt-dlp** | Descarrega vídeo i àudio de centenars de webs. Arrossega Deno i FFmpeg com a dependències. | winget | opcional |
+| **Open TV** | Reproductor de llistes IPTV M3U. | descàrrega directa | opcional |
 
 ### Documents
 
-Grup `documents`. 6 aplicacions.
+Grup `documents`. 5 aplicacions.
 
-| App | Per a què serveix | D'on surt |
-| --- | --- | --- |
-| **Adobe Acrobat Reader** | Lector de PDF de referència, per als formularis i les signatures que només hi funcionen. | winget |
-| **Mark Text** | Editor de Markdown amb la previsualització al mateix lloc on escrius. | choco |
-| **Modern CSV** | Obre i edita CSV de milions de línies sense que l'Excel se'ls inventi. | winget |
-| **ONLYOFFICE Desktop Editors** | Suite ofimàtica compatible amb els formats de Microsoft. El substitut de l'Office al catàleg. | winget |
-| **PDF24 Creator** | Eines de PDF en local: unir, partir, comprimir, convertir i signar. | winget |
-| **Xournal++** | Anota i omple PDFs a mà, amb tauleta o amb el ratolí. | winget |
+| App | Per a què serveix | D'on surt | |
+| --- | --- | --- | --- |
+| **Adobe Acrobat Reader** | Lector de PDF de referència, per als formularis i les signatures que només hi funcionen. | winget |  |
+| **Mark Text** | Editor de Markdown amb la previsualització al mateix lloc on escrius. | choco |  |
+| **Modern CSV** | Obre i edita CSV de milions de línies sense que l'Excel se'ls inventi. | winget |  |
+| **ONLYOFFICE Desktop Editors** | Suite ofimàtica compatible amb els formats de Microsoft. El substitut de l'Office al catàleg. | winget |  |
+| **PDF24 Creator** | Eines de PDF en local: unir, partir, comprimir, convertir i signar. | winget | opcional |
 
 ### Maquinari
 
 Grup `hardware`. 1 aplicacions.
 
-| App | Per a què serveix | D'on surt |
-| --- | --- | --- |
-| **Logi Options+** | Configura teclats i ratolins Logitech: botons, gestos i canvi entre equips. | winget |
+| App | Per a què serveix | D'on surt | |
+| --- | --- | --- | --- |
+| **Logi Options+** | Configura teclats i ratolins Logitech: botons, gestos i canvi entre equips. | winget | opcional |
 
 ### Microsoft Store
 
 Grup `store`. 4 aplicacions.
 
-| App | Per a què serveix | D'on surt |
-| --- | --- | --- |
-| **PingoMeter** | Latència a la barra de tasques, per veure d'un cop d'ull si la connexió va bé. | winget |
-| **Microsoft To Do** | Tasques de Microsoft To Do, sincronitzades amb el compte de feina. | Store |
-| **Azure VPN Client** | Client oficial per a les VPN Point-to-Site d'Azure. | Store |
-| **WireGuard** | Client de WireGuard, per als túnels que no passen per Tailscale. | winget |
+| App | Per a què serveix | D'on surt | |
+| --- | --- | --- | --- |
+| **PingoMeter** | Latència a la barra de tasques, per veure d'un cop d'ull si la connexió va bé. | winget |  |
+| **Microsoft To Do** | Tasques de Microsoft To Do, sincronitzades amb el compte de feina. | Store |  |
+| **Azure VPN Client** | Client oficial per a les VPN Point-to-Site d'Azure. | Store |  |
+| **WireGuard** | Client de WireGuard, per als túnels que no passen per Tailscale. | winget |  |
 
 ### Tipografies
 
 Grup `fonts`. 1 aplicacions.
 
-| App | Per a què serveix | D'on surt |
-| --- | --- | --- |
-| **Meslo LG Nerd Font** | Meslo amb les icones de Nerd Fonts. Fa falta perquè el prompt d'Starship es vegi bé. | choco |
+| App | Per a què serveix | D'on surt | |
+| --- | --- | --- | --- |
+| **Meslo LG Nerd Font** | Meslo amb les icones de Nerd Fonts. Fa falta perquè el prompt d'Starship es vegi bé. | choco |  |
 
 ### Del catàleg del Mac, no s'instal·len
 
@@ -446,7 +452,9 @@ substitueix.
 | Shortwave | Client de Gmail només per a macOS i web. Aquí fem servir Mailspring. — mailspring |
 | Wins | Canviador de finestres de macOS. A Windows, Alt+Tab i PowerToys. — Alt+Tab (natiu) |
 
-**79 aplicacions** en 17 categories. 14 entrades més són del catàleg del Mac i no apliquen aquí.
+**78 aplicacions** en 17 categories, de les quals **14 són opcionals**: no
+s'instal·len si no les tries en llançar el run. 14 entrades més són del
+catàleg del Mac i no apliquen aquí.
 <!-- APPS:FI -->
 
 ### Aplicacions d'inici
@@ -586,6 +594,60 @@ paquets no hi ha a qui preguntar si una cosa està instal·lada, així que la
 detecció va per `arp:`, el nom a «Programes i característiques» — que el
 fabricant pot canviar quan vulgui. `provider: url` només per a coses que
 realment no siguin a cap gestor.
+
+## Software opcional
+
+No tot el catàleg s'instal·la sempre. Els paquets marcats amb `optional: true`
+només hi entren si els tries, i en llançar el run et surt un menú per decidir-ho:
+
+```
+SOFTWARE OPCIONAL
+  Espai marca  |  a tots  |  n cap  |  Enter continua  |  Esc cap
+
+> [ ] Mailspring                 Client de correu d'escriptori per a diversos...
+  [ ] Microsoft Teams            Xat, reunions i trucades del tenant.
+  [ ] Obsidian                   Notes en Markdown desades com a fitxers locals...
+  [ ] Tailscale                  VPN de malla sobre WireGuard: connecta els teus...
+
+  0 de 14 seleccionats
+```
+
+Fletxes o `j`/`k` per moure's, espai per marcar, `a` i `n` per marcar-ho o
+desmarcar-ho tot, Enter per continuar. Esc no n'instal·la cap.
+
+### Sense menú
+
+```powershell
+.\run.ps1 -Optional all                  # tots
+.\run.ps1 -Optional none                 # cap, i no preguntis
+.\run.ps1 -Optional obsidian,tailscale   # només aquests, per id
+```
+
+Un id que no existeixi atura el run i et llista els que hi ha. Val més això que
+no pas acabar buscant per què no s'ha instal·lat una cosa que mai s'ha demanat.
+
+### Quan no hi ha ningú davant
+
+Un run per tasca programada, per CI o amb l'entrada redirigida **no instal·la cap
+opcional** i ho diu. Preguntar allà seria pitjor que no fer res: el run es
+quedaria penjat per sempre esperant una tecla que no arribarà. La detecció es pot
+forçar amb la variable d'entorn `ANSIBLE_WIN_NONINTERACTIVE`.
+
+La tria es passa a la passada elevada per paràmetre, o sigui que no te la torna a
+preguntar ni es deixa pel camí els opcionals que necessiten administrador.
+
+### Marcar-ne un
+
+```yaml
+- id: obsidian
+  name: Obsidian
+  optional: true
+  preselected: true      # surt ja marcat al menú
+  winget: Obsidian.Obsidian
+```
+
+Sense `optional:`, el paquet s'instal·la sempre. `preselected` només canvia com
+surt el menú: si el desmarques, no s'instal·la.
 
 ## Treure el bloatware de Windows 11
 

@@ -101,6 +101,7 @@ function Add-App { param([string]$Text = '') [void]$appLines.Add($Text) }
 $ordre = @($config.packages.Keys | Sort-Object { if ($defaultGroups -contains $_) { $defaultGroups.IndexOf($_) } else { 999 } })
 
 $installables = 0
+$opcionals = 0
 $senseEquivalent = New-Object System.Collections.ArrayList
 
 foreach ($group in $ordre) {
@@ -108,6 +109,7 @@ foreach ($group in $ordre) {
     $ambProveidor = @($entries | Where-Object { Test-HasProvider $_ })
     if ($ambProveidor.Count -eq 0) { continue }
     $installables += $ambProveidor.Count
+    $opcionals += @($ambProveidor | Where-Object { $_.optional }).Count
 
     foreach ($pkg in $entries) {
         if (-not (Test-HasProvider $pkg)) { [void]$senseEquivalent.Add($pkg) }
@@ -121,11 +123,13 @@ foreach ($group in $ordre) {
     Add-App ''
     Add-App ("Grup ``{0}``. {1} aplicacions." -f $group, $ambProveidor.Count)
     Add-App ''
-    Add-App '| App | Per a què serveix | D''on surt |'
-    Add-App '| --- | --- | --- |'
+    Add-App '| App | Per a què serveix | D''on surt | |'
+    Add-App '| --- | --- | --- | --- |'
     foreach ($pkg in $ambProveidor) {
-        Add-App ("| **{0}** | {1} | {2} |" -f `
-            (Escape-Cell $pkg.name), (Escape-Cell $pkg.desc), (Get-SourceCell $pkg))
+        $marca = ''
+        if ($pkg.optional) { $marca = 'opcional' }
+        Add-App ("| **{0}** | {1} | {2} | {3} |" -f `
+            (Escape-Cell $pkg.name), (Escape-Cell $pkg.desc), (Get-SourceCell $pkg), $marca)
     }
 }
 
@@ -150,8 +154,11 @@ if ($senseEquivalent.Count -gt 0) {
 }
 
 Add-App ''
-Add-App ("**{0} aplicacions** en {1} categories. {2} entrades més són del catàleg del Mac i no apliquen aquí." -f `
-    $installables, $ordre.Count, $senseEquivalent.Count)
+Add-App ("**{0} aplicacions** en {1} categories, de les quals **{2} són opcionals**: no" -f `
+    $installables, $ordre.Count, $opcionals)
+Add-App ("s'instal·len si no les tries en llançar el run. {0} entrades més són del" -f `
+    $senseEquivalent.Count)
+Add-App 'catàleg del Mac i no apliquen aquí.'
 
 # =============================================================================
 # docs/APPS.md: paritat amb ansible-mac

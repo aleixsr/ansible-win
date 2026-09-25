@@ -23,6 +23,17 @@
 .PARAMETER ListPackages
     Ensenya el catàleg i surt.
 
+.PARAMETER Optional
+    Quin software opcional s'instal·la. Els paquets amb `optional: true` al
+    catàleg no entren mai si no es demanen.
+
+      -Optional all              tots
+      -Optional none             cap, i no preguntis
+      -Optional dbeaver,soapui   només aquests, per id
+
+    Sense aquest paràmetre, si hi ha terminal el run et pregunta amb un menú; si
+    no n'hi ha (CI, tasca programada), no n'instal·la cap.
+
 .PARAMETER NoElevate
     No demanis privilegis encara que faltin. El que en necessiti se salta.
 
@@ -61,6 +72,7 @@ param(
     [string[]]$Groups,
     [switch]$Check,
     [switch]$Upgrade,
+    [string[]]$Optional,
     [switch]$ListPackages,
     [switch]$NoElevate,
     [switch]$AdminPhase
@@ -159,6 +171,53 @@ if ($ListPackages) {
 }
 
 # -----------------------------------------------------------------------------
+# Software opcional
+# -----------------------------------------------------------------------------
+# Els paquets amb `optional: true` no entren si ningú els demana. L'ordre és:
+# el que digui -Optional; si no, el menú; i si no hi ha terminal per preguntar,
+# cap. Així un run desatès mai instal·la res que no s'hagi decidit abans.
+$optionalTriats = @()
+$optionalTots = $false
+
+if ($AdminPhase) {
+    # La passada elevada rep la tria ja feta per paràmetre: no torna a preguntar.
+    $optionalTriats = @(Split-ListArgument $Optional)
+    if ($optionalTriats -contains 'all') { $optionalTots = $true; $optionalTriats = @() }
+} elseif ($Optional) {
+    $optionalTriats = @(Split-ListArgument $Optional)
+    if ($optionalTriats -contains 'all') {
+        $optionalTots = $true
+        $optionalTriats = @()
+    } elseif ($optionalTriats -contains 'none') {
+        $optionalTriats = @()
+    } else {
+        # Un id mal escrit no ha de passar desapercebut: acabaries buscant per
+        # què no s'ha instal·lat una cosa que mai s'ha arribat a demanar.
+        $coneguts = @(Get-OptionalPackages -Config $config -Groups $Groups | ForEach-Object { $_.id })
+        foreach ($id in $optionalTriats) {
+            if ($coneguts -notcontains $id) {
+                Write-Host ''
+                Write-Host "No hi ha cap paquet opcional amb l'id '$id'." -ForegroundColor Red
+                Write-Host "Opcionals disponibles: $($coneguts -join ', ')" -ForegroundColor Yellow
+                exit 1
+            }
+        }
+    }
+} elseif (-not $ListPackages) {
+    $opcionals = @(Get-OptionalPackages -Config $config -Groups $Groups)
+    if ($opcionals.Count -gt 0) {
+        if (Test-CanPrompt) {
+            $optionalTriats = @(Show-PackageChooser -Packages $opcionals)
+            Write-Host ''
+        } else {
+            Write-Host ''
+            Write-Host "$($opcionals.Count) paquets opcionals no s'instal·laran: no hi ha terminal per preguntar." -ForegroundColor Yellow
+            Write-Host 'Fes servir -Optional all, -Optional none o -Optional <ids> per decidir-ho.' -ForegroundColor Yellow
+        }
+    }
+}
+
+# -----------------------------------------------------------------------------
 # Avís: elevat des de fora
 # -----------------------------------------------------------------------------
 # El run vol començar SENSE privilegis. Les apps MSIX de la Store s'instal·len
@@ -209,6 +268,8 @@ foreach ($role in $rolesToRun) {
     $roleParams = @{ Config = $config; RepoRoot = $RepoRoot; Upgrade = $Upgrade }
     if ($role -eq 'apps') {
         $roleParams['Groups'] = @($Groups)
+        $roleParams['Optional'] = @($optionalTriats)
+        $roleParams['AllOptional'] = $optionalTots
     }
 
     try {
@@ -265,6 +326,16 @@ if ($pending.Count -gt 0 -and -not $AdminPhase -and -not $Check -and -not $NoEle
         if ($Roles) { $relaunch += @('-Roles', ($Roles -join ',')) }
         if ($Groups) { $relaunch += @('-Groups', ($Groups -join ',')) }
         if ($Upgrade) { $relaunch += '-Upgrade' }
+        # Sense això, la passada elevada tornaria a preguntar (o pitjor: no
+        # instal·laria els opcionals que acabes de triar, que son justament els
+        # que necessiten privilegis).
+        if ($optionalTots) {
+            $relaunch += @('-Optional', 'all')
+        } elseif ($optionalTriats.Count -gt 0) {
+            $relaunch += @('-Optional', ($optionalTriats -join ','))
+        } else {
+            $relaunch += @('-Optional', 'none')
+        }
 
         # $ErrorActionPreference = 'Stop' i els executables natius es porten
         # malament a PowerShell 5.1: qualsevol cosa que gsudo escrigui a stderr

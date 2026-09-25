@@ -6,12 +6,18 @@ param(
     [Parameter(Mandatory)]$Config,
     [string]$RepoRoot,
     [string[]]$Groups = @(),
+    [string[]]$Optional = @(),
+    [switch]$AllOptional,
     [switch]$Upgrade
 )
 
 Set-ProvisionContext -Role 'apps'
 
-$packages = Select-CatalogPackages -Config $Config -Groups $Groups
+# El @() no es decoratiu: amb un sol paquet, PowerShell desempaqueta l'array i
+# ens deixa el hashtable pelat. Aleshores $packages.Count compta les CLAUS del
+# paquet (id, name, desc...) en comptes dels paquets, i el banner menteix.
+$packages = @(Select-CatalogPackages -Config $Config -Groups $Groups `
+                                     -Optional $Optional -AllOptional:$AllOptional)
 
 if (-not $packages -or $packages.Count -eq 0) {
     Write-TaskResult -Task 'catàleg' -Status 'skipped' -Message 'cap paquet seleccionat'

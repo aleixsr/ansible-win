@@ -64,7 +64,6 @@ Serveix per comprovar d'un cop d'ull que cap app del Mac s'ha quedat pel camí.
 | `modern-csv` | Modern CSV | Obre i edita CSV de milions de línies sense que l'Excel se'ls inventi. | `PFOJEnterprisesLLC.ModernCSV` | — | — |
 | `onlyoffice` | ONLYOFFICE Desktop Editors | Suite ofimàtica compatible amb els formats de Microsoft. El substitut de l'Office al catàleg. | `ONLYOFFICE.DesktopEditors` | `onlyoffice` | — |
 | `revpdf-editor` | PDF24 Creator | Eines de PDF en local: unir, partir, comprimir, convertir i signar. | `geeksoftwareGmbH.PDF24Creator` | `pdf24` | — |
-| `xournal++` | Xournal++ | Anota i omple PDFs a mà, amb tauleta o amb el ratolí. | `Xournal++.Xournal++` | `xournalplusplus` | — |
 
 ## `filemanagementcloud`
 
@@ -187,8 +186,8 @@ Serveix per comprovar d'un cop d'ull que cap app del Mac s'ha quedat pel camí.
 
 ---
 
-**93 entrades** en 17 categories, de les quals
-**79 s'instal·len** i **14 són només del Mac**.
+**92 entrades** en 17 categories, de les quals
+**78 s'instal·len** i **14 són només del Mac**.
 
 Les que són només del Mac porten `win_equivalent`, que diu qui els fa la feina
 aquí. No surten al `run.ps1`: `Select-CatalogPackages` les deixa fora perquè no

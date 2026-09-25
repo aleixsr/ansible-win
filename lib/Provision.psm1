@@ -1070,7 +1070,13 @@ function Select-CatalogPackages {
     param(
         [Parameter(Mandatory)]$Config,
         [string[]]$Groups = @(),
-        [switch]$IncludeForeign
+        [switch]$IncludeForeign,
+        # Ids de paquets opcionals que s'han triat. Els marcats amb `optional: true`
+        # que no siguin en aquesta llista es queden fora. Sense la llista no
+        # n'entra cap: el comportament segur per a un run desates.
+        [string[]]$Optional = @(),
+        # Els opcionals entren tots, s'hagin triat o no.
+        [switch]$AllOptional
     )
 
     $winKeys = $script:WindowsProviderKeys
@@ -1106,12 +1112,153 @@ function Select-CatalogPackages {
                 if (-not $hasWin) { continue }
             }
 
+            if ($pkg.optional -and -not $AllOptional -and ($Optional -notcontains $pkg.id)) {
+                continue
+            }
+
             $entry = @{} + $pkg
             $entry['group'] = $group
             [void]$selected.Add($entry)
         }
     }
     return $selected.ToArray()
+}
+
+<#
+.SYNOPSIS
+    Els paquets marcats com a opcionals que entren en aquesta selecció de grups.
+.DESCRIPTION
+    Serveix per preguntar què es vol instal·lar abans de començar. Torna només
+    els que a Windows tenen algú que els instal·li: un opcional que aquí no
+    existeix no té cap sentit oferir-lo.
+#>
+function Get-OptionalPackages {
+    param(
+        [Parameter(Mandatory)]$Config,
+        [string[]]$Groups = @()
+    )
+
+    $catalog = $Config.packages
+    if (-not $catalog) { return @() }
+
+    $wanted = $Groups
+    if (-not $wanted -or $wanted.Count -eq 0) { $wanted = $Config.default_groups }
+    if (-not $wanted -or $wanted.Count -eq 0) { $wanted = @($catalog.Keys) }
+
+    $out = New-Object System.Collections.ArrayList
+    foreach ($group in $wanted) {
+        if (-not $catalog.ContainsKey($group)) { continue }
+        foreach ($pkg in @($catalog[$group])) {
+            if ($null -eq $pkg -or -not $pkg.optional) { continue }
+
+            $hasWin = $false
+            foreach ($k in $script:WindowsProviderKeys) {
+                if ($pkg.ContainsKey($k) -and $pkg[$k]) { $hasWin = $true; break }
+            }
+            if (-not $hasWin) { continue }
+
+            $entry = @{} + $pkg
+            $entry['group'] = $group
+            [void]$out.Add($entry)
+        }
+    }
+    return $out.ToArray()
+}
+
+<#
+.SYNOPSIS
+    Cert si podem fer preguntes per consola.
+.DESCRIPTION
+    Un run per tasca programada, per CI o amb l'entrada redirigida no pot
+    preguntar res: si ho intentés, es quedaria penjat per sempre esperant una
+    tecla que no arribarà mai. Més val detectar-ho i tirar pel camí segur.
+#>
+function Test-CanPrompt {
+    if ($env:ANSIBLE_WIN_NONINTERACTIVE) { return $false }
+    try {
+        if ([Console]::IsInputRedirected) { return $false }
+        if (-not $Host.UI.RawUI) { return $false }
+        # A l'ISE i a alguns hosts encastats, ReadKey no hi és.
+        $null = $Host.UI.RawUI.KeyAvailable
+    } catch {
+        return $false
+    }
+    return $true
+}
+
+<#
+.SYNOPSIS
+    Menú de selecció amb caselles. Torna els ids triats.
+.DESCRIPTION
+    Fletxes o j/k per moure's, espai per marcar, a/n per marcar-ho o
+    desmarcar-ho tot, Enter per continuar, Esc per no instal·lar cap opcional.
+    Els que porten `preselected: true` al catàleg surten ja marcats.
+#>
+function Show-PackageChooser {
+    param(
+        [Parameter(Mandatory)][object[]]$Packages,
+        [string]$Title = 'SOFTWARE OPCIONAL'
+    )
+
+    $marcat = @{}
+    foreach ($p in $Packages) { $marcat[$p.id] = [bool]$p.preselected }
+
+    $cursor = 0
+    $primera = $true
+
+    while ($true) {
+        if (-not $primera) {
+            # Pugem el cursor per reescriure el menú al mateix lloc, en comptes
+            # d'anar omplint la pantalla de còpies.
+            $amunt = $Packages.Count + 6
+            $y = [Math]::Max(0, $Host.UI.RawUI.CursorPosition.Y - $amunt)
+            $Host.UI.RawUI.CursorPosition = New-Object System.Management.Automation.Host.Coordinates 0, $y
+        }
+        $primera = $false
+
+        Write-Host ''
+        Write-Host $Title.PadRight(78, ' ') -ForegroundColor Yellow
+        Write-Host ('  Espai marca  |  a tots  |  n cap  |  Enter continua  |  Esc cap'.PadRight(78)) -ForegroundColor DarkGray
+        Write-Host ''
+
+        for ($i = 0; $i -lt $Packages.Count; $i++) {
+            $p = $Packages[$i]
+            $casella = '[ ]'
+            if ($marcat[$p.id]) { $casella = '[x]' }
+            $fletxa = '  '
+            if ($i -eq $cursor) { $fletxa = '> ' }
+
+            $desc = "$($p.desc)"
+            if ($desc.Length -gt 44) { $desc = $desc.Substring(0, 41) + '...' }
+            $linia = ('{0}{1} {2,-26} {3}' -f $fletxa, $casella, $p.name, $desc)
+
+            $color = 'Gray'
+            if ($marcat[$p.id]) { $color = 'Green' }
+            if ($i -eq $cursor) { $color = 'White' }
+            Write-Host $linia.PadRight(78) -ForegroundColor $color
+        }
+
+        $triats = @($marcat.Keys | Where-Object { $marcat[$_] })
+        Write-Host ''
+        Write-Host ("  {0} de {1} seleccionats" -f $triats.Count, $Packages.Count).PadRight(78) -ForegroundColor DarkGray
+
+        $tecla = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+        switch ($tecla.VirtualKeyCode) {
+            38 { $cursor = [Math]::Max(0, $cursor - 1) }                      # amunt
+            40 { $cursor = [Math]::Min($Packages.Count - 1, $cursor + 1) }    # avall
+            32 { $marcat[$Packages[$cursor].id] = -not $marcat[$Packages[$cursor].id] }
+            13 { return @($marcat.Keys | Where-Object { $marcat[$_] }) }      # Enter
+            27 { return @() }                                                 # Esc
+            default {
+                switch ("$($tecla.Character)".ToLowerInvariant()) {
+                    'k' { $cursor = [Math]::Max(0, $cursor - 1) }
+                    'j' { $cursor = [Math]::Min($Packages.Count - 1, $cursor + 1) }
+                    'a' { foreach ($p in $Packages) { $marcat[$p.id] = $true } }
+                    'n' { foreach ($p in $Packages) { $marcat[$p.id] = $false } }
+                }
+            }
+        }
+    }
 }
 
 #endregion
@@ -1127,4 +1274,4 @@ Export-ModuleMember -Function `
     Get-ArpEntry, Resolve-UrlAsset, Install-UrlPackage,
     Test-PackageInstalled, Install-ProviderPackage, Resolve-PackageProvider,
     Install-CatalogPackage, Import-ProvisionConfig, Merge-Hashtable, Select-CatalogPackages,
-    Get-UndecidedPackages
+    Get-UndecidedPackages, Get-OptionalPackages, Test-CanPrompt, Show-PackageChooser

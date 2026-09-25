@@ -400,12 +400,14 @@ packages:
     mac: (no gestionat per ansible-mac)
   communication:
   - id: mailspring
+    optional: true
     desc: "Client de correu d'escriptori per a diversos comptes IMAP."
     name: Mailspring
     choco: mailspring
     provider: choco
     mac: mailspring
   - id: teams
+    optional: true
     desc: "Microsoft Teams: xat, reunions i trucades del tenant."
     name: Microsoft Teams
     winget: Microsoft.Teams
@@ -418,18 +420,21 @@ packages:
     note: "Nom\xE9s macOS i web. A Windows fem servir Mailspring, que ja \xE9s\
       \ en aquesta categoria."
   - id: telegram
+    optional: true
     desc: "Telegram d'escriptori."
     name: Telegram
     winget: Telegram.TelegramDesktop
     choco: telegram
     mac: telegram
   - id: whatsapp
+    optional: true
     desc: "WhatsApp d'escriptori (paquet MSIX de la Store)."
     name: WhatsApp
     winget: 9NKSQGP7F2NH
     source: msstore
     mac: whatsapp
   - id: zoho-mail
+    optional: true
     desc: "Client d'escriptori de Zoho Mail."
     name: Zoho Mail
     winget: Zoho.Mail
@@ -478,12 +483,14 @@ packages:
     mac: maccy
     note: "Historial de porta-retalls. A Windows \xE9s natiu: Win+V."
   - id: obsidian
+    optional: true
     desc: "Notes en Markdown desades com a fitxers locals, amb enllaços entre elles."
     name: Obsidian
     winget: Obsidian.Obsidian
     choco: obsidian
     mac: (no hi es a ansible-mac)
   - id: numi
+    optional: true
     desc: "Calculadora de text: escrius «3 GB / 40 min» i respon."
     name: Calcator
     provider: url
@@ -503,6 +510,7 @@ packages:
     note: "Gesti\xF3 de finestres: PowerToys FancyZones + Win+fletxes, ja cobert a\
       \ systemutilities."
   - id: hotcorners
+    optional: true
     desc: "Accions en portar el cursor a una cantonada de la pantalla."
     name: 'Charmy: Hot Corners'
     winget: 9P5PK6TVQXF7
@@ -528,6 +536,7 @@ packages:
     choco: switchhosts
     mac: switchhosts
   - id: tailscale
+    optional: true
     desc: "VPN de malla sobre WireGuard: connecta els teus equips sense obrir ports."
     name: Tailscale
     winget: Tailscale.Tailscale
@@ -571,6 +580,7 @@ packages:
     choco: localsend
     mac: localsend
   - id: synology-drive
+    optional: true
     desc: "Sincronitza carpetes amb un NAS de Synology."
     name: Synology Drive Client
     winget: Synology.DriveClient
@@ -615,6 +625,7 @@ packages:
     mac: (no hi es a ansible-mac)
     test: ffmpeg
   - id: yt-dlp
+    optional: true
     desc: "Descarrega vídeo i àudio de centenars de webs. Arrossega Deno i FFmpeg com a dependències."
     name: yt-dlp
     winget: yt-dlp.yt-dlp
@@ -622,6 +633,7 @@ packages:
     mac: (no hi es a ansible-mac)
     test: yt-dlp
   - id: opentv
+    optional: true
     desc: "Reproductor de llistes IPTV M3U."
     name: Open TV
     provider: url
@@ -662,19 +674,15 @@ packages:
     choco: onlyoffice
     mac: onlyoffice
   - id: pdf24
+    optional: true
     desc: "Eines de PDF en local: unir, partir, comprimir, convertir i signar."
     name: PDF24 Creator
     winget: geeksoftwareGmbH.PDF24Creator
     choco: pdf24
     mac: revpdf-editor
-  - id: xournalpp
-    desc: "Anota i omple PDFs a mà, amb tauleta o amb el ratolí."
-    name: Xournal++
-    winget: Xournal++.Xournal++
-    choco: xournalplusplus
-    mac: xournal++
   hardware:
   - id: logi-options
+    optional: true
     desc: "Configura teclats i ratolins Logitech: botons, gestos i canvi entre equips."
     name: Logi Options+
     winget: Logitech.OptionsPlus
