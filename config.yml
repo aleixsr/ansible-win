@@ -289,6 +289,30 @@ packages:
     choco: powershell-core
     mac: powershell
     test: pwsh
+  - id: betterdisplay
+    win_equivalent: Configuració de pantalla (natiu)
+    desc: "Gestió de monitors de macOS. El substitut de Windows, Twinkle Tray, només fa brillantor per DDC/CI."
+    name: BetterDisplay
+    mac: betterdisplay
+    note: "Descartat: Twinkle Tray no cobreix resolucions ni escalat."
+  - id: macfuse
+    win_equivalent: WinFsp (a mà, si cal)
+    desc: "Sistemes de fitxers en espai d'usuari. A Windows ho faria WinFsp, però només cal si en muntes."
+    name: macFUSE
+    mac: macfuse
+    note: "Descartat: instal·la WinFsp a mà el dia que et faci falta."
+  - id: superduper
+    win_equivalent: Còpies de seguretat de Windows
+    desc: "Clonatge del disc d'arrencada a macOS. El substitut, Veeam Agent, és backup empresarial."
+    name: SuperDuper!
+    mac: superduper
+    note: "Descartat: Veeam Agent no fa clonatge d'arrencada simple."
+  - id: htop
+    win_equivalent: Administrador de tasques (natiu)
+    desc: "Monitor de processos de terminal. A Windows no el volem: l'Administrador de tasques i PowerToys ja hi arriben."
+    name: htop
+    mac: htop
+    note: "Decidit no portar-lo: a Windows no fa prou falta per justificar-lo."
   - id: mas
     desc: "CLI de la Mac App Store. A Windows, winget --source msstore."
     win_equivalent: winget --source msstore
@@ -398,6 +422,12 @@ packages:
     name: Wave Terminal
     winget: CommandLine.Wave
     mac: (no gestionat per ansible-mac)
+  - id: warp
+    win_equivalent: windows-terminal
+    desc: "Terminal amb funcions d'IA. Al Mac s'instal·la; aquí no el volem."
+    name: Warp
+    mac: warp
+    note: "Decidit no portar-lo: ja tenim Windows Terminal, Tabby i Wave."
   communication:
   - id: mailspring
     optional: true
@@ -484,11 +514,11 @@ packages:
     note: "Historial de porta-retalls. A Windows \xE9s natiu: Win+V."
   - id: obsidian
     optional: true
-    desc: "Notes en Markdown desades com a fitxers locals, amb enllaços entre elles."
+    desc: "Notes en Markdown desades com a fitxers locals, amb enllaços entre elles. Fa la feina que al Mac fa Notion."
     name: Obsidian
     winget: Obsidian.Obsidian
     choco: obsidian
-    mac: (no hi es a ansible-mac)
+    mac: notion
   - id: numi
     optional: true
     desc: "Calculadora de text: escrius «3 GB / 40 min» i respon."

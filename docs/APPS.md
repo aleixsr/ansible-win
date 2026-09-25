@@ -128,7 +128,6 @@ Serveix per comprovar d'un cop d'ull que cap app del Mac s'ha quedat pel camí.
 | A ansible-mac | A Windows | Per a què serveix | winget | Chocolatey | Scoop |
 | --- | --- | --- | --- | --- | --- |
 | `(hot corners natius de macOS)` | Charmy: Hot Corners | Accions en portar el cursor a una cantonada de la pantalla. | `9P5PK6TVQXF7` | — | — |
-| `(no hi es a ansible-mac)` | Obsidian | Notes en Markdown desades com a fitxers locals, amb enllaços entre elles. | `Obsidian.Obsidian` | `obsidian` | — |
 | `alt-tab` | _no s'instal·la_ — `Alt+Tab (natiu)` | Canviador de finestres de macOS. A Windows, Alt+Tab de sèrie. | — | — | — |
 | `caffeine` | _no s'instal·la_ — `powertoys (Awake)` | Impedeix que l'equip s'adormi. A Windows, PowerToys Awake. | — | — | — |
 | `claude` | Claude Desktop | Claude d'escriptori. | `Anthropic.Claude` | — | — |
@@ -136,6 +135,7 @@ Serveix per comprovar d'un cop d'ull que cap app del Mac s'ha quedat pel camí.
 | `keka` | 7-Zip | 7-Zip: compressió i descompressió de gairebé qualsevol format. | `7zip.7zip` | `7zip` | — |
 | `keka` | PeaZip | Gestor d'arxius amb interfície, xifratge i comparació de continguts. | `Giorgiotani.Peazip` | `peazip` | — |
 | `maccy` | _no s'instal·la_ — `Win+V (natiu)` | Historial del porta-retalls. A Windows, Win+V. | — | — | — |
+| `notion` | Obsidian | Notes en Markdown desades com a fitxers locals, amb enllaços entre elles. Fa la feina que al Mac fa Notion. | `Obsidian.Obsidian` | `obsidian` | — |
 | `numi` | Calcator | Calculadora de text: escrius «3 GB / 40 min» i respon. | — | — | — |
 | `rectangle` | _no s'instal·la_ — `powertoys (FancyZones)` | Col·loca finestres per zones. A Windows, FancyZones i Win+fletxes. | — | — | — |
 | `shottr` | ShareX | ShareX: captures, gravació, anotacions i pujada automàtica. | `ShareX.ShareX` | `sharex` | — |
@@ -164,14 +164,18 @@ Serveix per comprovar d'un cop d'ull que cap app del Mac s'ha quedat pel camí.
 | A ansible-mac | A Windows | Per a què serveix | winget | Chocolatey | Scoop |
 | --- | --- | --- | --- | --- | --- |
 | `balenaetcher` | balenaEtcher | Grava imatges ISO i IMG a USB, verificant el resultat. | `Balena.Etcher` | `etcher` | — |
+| `betterdisplay` | _no s'instal·la_ — `Configuració de pantalla (natiu)` | Gestió de monitors de macOS. El substitut de Windows, Twinkle Tray, només fa brillantor per DDC/CI. | — | — | — |
 | `bluesnooze` | _no s'instal·la_ — `Administrador de dispositius` | Evita que el Bluetooth desperti el Mac. A Windows es mira des de l'Administrador de dispositius. | — | — | — |
 | `disk-inventory-x` | WizTree | Què t'ocupa el disc, llegint la MFT: analitza un disc sencer en segons. | `AntibodySoftware.WizTree` | `wiztree` | — |
+| `htop` | _no s'instal·la_ — `Administrador de tasques (natiu)` | Monitor de processos de terminal. A Windows no el volem: l'Administrador de tasques i PowerToys ja hi arriben. | — | — | — |
 | `karabiner-elements` | PowerToys | La caixa d'eines de Microsoft: FancyZones, PowerToys Run, Awake, Video Conference Mute i selector de colors. | `Microsoft.PowerToys` | `powertoys` | — |
 | `licecap` | ScreenToGif | Grava un tros de pantalla i el desa com a GIF o MP4. Per ensenyar un error sense escriure tres paràgrafs. | `NickeManarin.ScreenToGif` | `screentogif` | — |
+| `macfuse` | _no s'instal·la_ — `WinFsp (a mà, si cal)` | Sistemes de fitxers en espai d'usuari. A Windows ho faria WinFsp, però només cal si en muntes. | — | — | — |
 | `mas` | _no s'instal·la_ — `winget --source msstore` | CLI de la Mac App Store. A Windows, winget --source msstore. | — | — | — |
 | `novabench` | Novabench | Benchmark ràpid de CPU, GPU, RAM i disc. | `NovabenchInc.Novabench` | — | — |
 | `powershell` | PowerShell 7 | PowerShell 7, al costat del 5.1 que ve amb Windows. Multiplataforma i molt més ràpid. | `Microsoft.PowerShell` | `powershell-core` | — |
 | `resolutionator` | _no s'instal·la_ — `Win+P (natiu)` | Canvi ràpid de resolució. A Windows, Win+P i la configuració de pantalla. | — | — | — |
+| `superduper` | _no s'instal·la_ — `Còpies de seguretat de Windows` | Clonatge del disc d'arrencada a macOS. El substitut, Veeam Agent, és backup empresarial. | — | — | — |
 | `wins` | _no s'instal·la_ — `Alt+Tab (natiu)` | Canviador de finestres de macOS. A Windows, Alt+Tab i PowerToys. | — | — | — |
 | `xca` | XCA | Gestor d'autoritats de certificació i certificats X.509, amb interfície. | — | `xca` | — |
 
@@ -182,11 +186,12 @@ Serveix per comprovar d'un cop d'ull que cap app del Mac s'ha quedat pel camí.
 | `(no gestionat per ansible-mac)` | Wave Terminal | Terminal per blocs: desa la sortida de cada ordre perquè la puguis rellegir i compartir. | `CommandLine.Wave` | — | — |
 | `iterm2` | Windows Terminal | El terminal de Windows: pestanyes, panells i perfils per a PowerShell, cmd i WSL. | `Microsoft.WindowsTerminal` | — | — |
 | `tabby` | Tabby | Terminal amb gestor de connexions SSH i sincronització de la configuració. | `Eugeny.Tabby` | `tabby` | — |
+| `warp` | _no s'instal·la_ — `windows-terminal` | Terminal amb funcions d'IA. Al Mac s'instal·la; aquí no el volem. | — | — | — |
 
 ---
 
-**91 entrades** en 17 categories, de les quals
-**77 s'instal·len** i **14 són només del Mac**.
+**96 entrades** en 17 categories, de les quals
+**77 s'instal·len** i **19 són només del Mac**.
 
 Les que són només del Mac porten `win_equivalent`, que diu qui els fa la feina
 aquí. No surten al `run.ps1`: `Select-CatalogPackages` les deixa fora perquè no

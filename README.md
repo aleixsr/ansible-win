@@ -331,7 +331,7 @@ Grup `productivity`. 8 aplicacions.
 | **Claude Desktop** | Claude d'escriptori. | winget |  |
 | **7-Zip** | 7-Zip: compressió i descompressió de gairebé qualsevol format. | winget |  |
 | **PeaZip** | Gestor d'arxius amb interfície, xifratge i comparació de continguts. | winget |  |
-| **Obsidian** | Notes en Markdown desades com a fitxers locals, amb enllaços entre elles. | winget | opcional |
+| **Obsidian** | Notes en Markdown desades com a fitxers locals, amb enllaços entre elles. Fa la feina que al Mac fa Notion. | winget | opcional |
 | **Calcator** | Calculadora de text: escrius «3 GB / 40 min» i respon. | descàrrega directa | opcional |
 | **Charmy: Hot Corners** | Accions en portar el cursor a una cantonada de la pantalla. | Store | opcional |
 | **ShareX** | ShareX: captures, gravació, anotacions i pujada automàtica. | winget |  |
@@ -434,22 +434,27 @@ substitueix.
 | Al Mac | Què ho cobreix a Windows |
 | --- | --- |
 | AltTab | Canviador de finestres de macOS. A Windows, Alt+Tab de sèrie. — Alt+Tab (natiu) |
+| BetterDisplay | Gestió de monitors de macOS. El substitut de Windows, Twinkle Tray, només fa brillantor per DDC/CI. — Configuració de pantalla (natiu) |
 | Bluesnooze | Evita que el Bluetooth desperti el Mac. A Windows es mira des de l'Administrador de dispositius. — Administrador de dispositius |
 | Caffeine | Impedeix que l'equip s'adormi. A Windows, PowerToys Awake. — powertoys (Awake) |
 | DockDoor | Previsualització de finestres del dock. A Windows ja hi és, a la barra de tasques. — natiu (barra de tasques) |
 | Escriptori remot (mstsc) | Client RDP. A Windows ja hi és: mstsc.exe. — mstsc.exe (natiu) |
 | FancyZones (PowerToys) | Col·loca finestres per zones. A Windows, FancyZones i Win+fletxes. — powertoys (FancyZones) |
+| htop | Monitor de processos de terminal. A Windows no el volem: l'Administrador de tasques i PowerToys ja hi arriben. — Administrador de tasques (natiu) |
 | Mac App Store CLI | CLI de la Mac App Store. A Windows, winget --source msstore. — winget --source msstore |
 | Maccy | Historial del porta-retalls. A Windows, Win+V. — Win+V (natiu) |
 | MacDown | Editor de Markdown de macOS. Aquí el cobreix Mark Text. — marktext |
+| macFUSE | Sistemes de fitxers en espai d'usuari. A Windows ho faria WinFsp, però només cal si en muntes. — WinFsp (a mà, si cal) |
 | Microsoft AutoUpdate | Actualitzador de l'Office per a macOS. A Windows ho fa Click-to-Run. — Windows Update |
 | MuteKey | Silencia el micròfon amb una tecla. A Windows, Win+Maj+A de PowerToys. — powertoys (Video Conference Mute) |
 | Resolutionator | Canvi ràpid de resolució. A Windows, Win+P i la configuració de pantalla. — Win+P (natiu) |
 | Shortwave | Client de Gmail només per a macOS i web. Aquí fem servir Mailspring. — mailspring |
+| SuperDuper! | Clonatge del disc d'arrencada a macOS. El substitut, Veeam Agent, és backup empresarial. — Còpies de seguretat de Windows |
+| Warp | Terminal amb funcions d'IA. Al Mac s'instal·la; aquí no el volem. — windows-terminal |
 | Wins | Canviador de finestres de macOS. A Windows, Alt+Tab i PowerToys. — Alt+Tab (natiu) |
 
 **77 aplicacions** en 17 categories, de les quals **13 són opcionals**: no
-s'instal·len si no les tries en llançar el run. 14 entrades més són del
+s'instal·len si no les tries en llançar el run. 19 entrades més són del
 catàleg del Mac i no apliquen aquí.
 <!-- APPS:FI -->
 
@@ -520,23 +525,22 @@ Aquestes 1 apps del catàleg del Mac no tenen res assignat a Windows:
 
 ### Descartats a propòsit
 
-Aquests quatre **existeixen** a Windows, però el substitut no valia la pena i
-s'han tret del catàleg. No s'instal·len i no hi ha cap entrada a `config.yml`:
+Aquestes sí que existeixen a Windows d'una manera o altra, però el substitut no
+valia la pena. Tenen entrada a `config.yml` amb `win_equivalent`, o sigui que
+surten a la taula de més amunt i a [`docs/APPS.md`](docs/APPS.md) però **no
+s'instal·len mai**:
 
 | Al Mac | El substitut descartat | Per què |
 |---|---|---|
-| `htop` | btop4win | El port a Windows està abandonat. Administrador de tasques o Process Explorer |
+| `htop` | btop4win | El port a Windows està abandonat. L'Administrador de tasques ja hi arriba |
 | `betterdisplay` | Twinkle Tray | Només fa brillantor i contrast per DDC/CI; no cobreix resolucions ni escalat |
 | `macfuse` | WinFsp | No cal si no muntes sistemes de fitxers en espai d'usuari. Instal·la'l a mà si algun dia et fa falta |
 | `superduper` | Veeam Agent | Backup empresarial, no clonatge d'arrencada simple |
+| `warp` | — | Aquí el terminal és Windows Terminal, Tabby i Wave |
 
-Aquests dos **sí que s'instal·len a `ansible-mac`** i aquí no. És l'única
-divergència volguda entre els dos repos:
-
-| Al Mac | Per què no a Windows |
-|---|---|
-| `notion` | No es vol en aquesta màquina |
-| `warp` | No es vol en aquesta màquina; el terminal aquí és Windows Terminal, Tabby i Wave |
+**Notion** és un cas a part: al Mac s'instal·la i aquí la seva feina la fa
+**Obsidian**, que és l'entrada que porta `mac: notion`. No és una divergència,
+és una substitució.
 
 I **Microsoft 365** hi és al Mac però aquí no s'instal·la: el manifest
 `Microsoft.Office` de winget apunta a `officecdn.microsoft.com`, un fitxer que
@@ -593,7 +597,7 @@ realment no siguin a cap gestor.
 
 ## Software opcional
 
-No tot el catàleg s'instal{mig}la sempre. Els paquets marcats amb `optional: true`
+No tot el catàleg s'instal·la sempre. Els paquets marcats amb `optional: true`
 només hi entren si els demanes:
 
 ```powershell
@@ -605,12 +609,12 @@ només hi entren si els demanes:
 **El run no pregunta mai res.** És desatès sempre: el pots posar en una tasca
 programada, en un CI o en la primera arrencada d'una màquina sense que es quedi
 esperant ningú. Per contra, has de dir què vols: sense `-Full` ni `-Optional`,
-l'opcional no s'instal{mig}la.
+l'opcional no s'instal·la.
 
 Per si de cas, el run et diu què s'ha deixat fora:
 
 ```
-14 paquets opcionals no s'instal{mig}len: mailspring, teams, telegram, whatsapp,
+14 paquets opcionals no s'instal·len: mailspring, teams, telegram, whatsapp,
 zoho-mail, obsidian, numi, hotcorners, tailscale, synology-drive, opentv,
 pdf24, logi-options
 Amb -Full hi entren tots; amb -Optional <ids>, només els que diguis.
@@ -620,7 +624,7 @@ Sense aquest avís, que una app no aparegui semblaria un error del playbook quan
 en realitat és el comportament demanat.
 
 Un id que no existeixi atura el run i et llista els que hi ha. Val més això que
-no pas acabar buscant per què no s'ha instal{mig}lat una cosa que mai s'ha demanat.
+no pas acabar buscant per què no s'ha instal·lat una cosa que mai s'ha demanat.
 
 La tria es passa a la passada elevada per paràmetre, o sigui que no es deixa pel
 camí els opcionals que necessiten administrador.
@@ -634,7 +638,7 @@ camí els opcionals que necessiten administrador.
   winget: Obsidian.Obsidian
 ```
 
-Sense `optional:`, el paquet s'instal{mig}la sempre.
+Sense `optional:`, el paquet s'instal·la sempre.
 
 ## Treure el bloatware de Windows 11
 
