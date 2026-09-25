@@ -63,33 +63,20 @@ if ($exp) {
     # el torna a escriure, tant mentre corre com en sortir. Cal ATURAR-LO PRIMER,
     # escriure despres i tornar-lo a obrir. Provat: a l'inreves no enganxa.
     if ($null -ne $exp.hide_desktop_icons) {
-        $wanted = 0; if ($exp.hide_desktop_icons) { $wanted = 1 }
-        $currentIcons = $null
-        $prop = Get-ItemProperty -LiteralPath $ADVANCED -Name 'HideIcons' -ErrorAction SilentlyContinue
-        if ($prop) { $currentIcons = [int]$prop.HideIcons }
-
-        if ($currentIcons -eq $wanted) {
-            Write-TaskResult -Task 'icones de l''escriptori' -Status 'ok' -Message "HideIcons = $wanted"
-        } elseif ($checkMode) {
-            Write-TaskResult -Task 'icones de l''escriptori' -Status 'changed' -Message "posaria HideIcons = $wanted"
-        } else {
-            try {
-                Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue
-                Start-Sleep -Seconds 2
-                New-ItemProperty -LiteralPath $ADVANCED -Name 'HideIcons' -Value $wanted `
-                    -PropertyType DWord -Force | Out-Null
-                Start-Sleep -Seconds 1
-                if (-not (Get-Process explorer -ErrorAction SilentlyContinue)) {
-                    Start-Process explorer.exe
-                }
-                Write-TaskResult -Task 'icones de l''escriptori' -Status 'changed' `
-                    -Message "HideIcons = $wanted (Explorador reiniciat)"
-            } catch {
-                Write-TaskResult -Task 'icones de l''escriptori' -Status 'failed' -Message $_.Exception.Message
-            }
+        # No es fa amb Set-Tweak: escriure HideIcons al registre no serveix de
+        # res, perquè l'Explorador el reescriu amb el seu valor en memòria. Cal
+        # enviar-li l'ordre al shell; Set-DesktopIconsVisible ho explica.
+        $volVisibles = -not $exp.hide_desktop_icons
+        try {
+            $estat = Set-DesktopIconsVisible -Visible $volVisibles
+            $què = 'visibles'; if (-not $volVisibles) { $què = 'amagades' }
+            Write-TaskResult -Task 'icones de l''escriptori' -Status $estat -Message $què
+        } catch {
+            Write-TaskResult -Task 'icones de l''escriptori' -Status 'failed' -Message $_.Exception.Message
         }
     }
-    if ($null -ne $exp.show_file_extensions) {
+
+        if ($null -ne $exp.show_file_extensions) {
         # HideFileExt està invertit: 0 = mostra les extensions.
         $v = 1; if ($exp.show_file_extensions) { $v = 0 }
         Set-Tweak -Task 'mostrar extensions de fitxer' -Path $ADVANCED -Name 'HideFileExt' -Value $v -RestartsExplorer | Out-Null
@@ -168,10 +155,12 @@ if ($tb) {
 # -----------------------------------------------------------------------------
 $ap = $sys.appearance
 if ($ap) {
+    $temaCanviat = $false
     if ($null -ne $ap.dark_mode) {
         $v = 1; if ($ap.dark_mode) { $v = 0 }
-        Set-Tweak -Task 'tema fosc (aplicacions)' -Path $THEMES -Name 'AppsUseLightTheme' -Value $v -RestartsExplorer | Out-Null
-        Set-Tweak -Task 'tema fosc (sistema)' -Path $THEMES -Name 'SystemUsesLightTheme' -Value $v -RestartsExplorer | Out-Null
+        $etiqueta = 'tema clar'; if ($ap.dark_mode) { $etiqueta = 'tema fosc' }
+        if (Set-Tweak -Task "$etiqueta (aplicacions)" -Path $THEMES -Name 'AppsUseLightTheme' -Value $v) { $temaCanviat = $true }
+        if (Set-Tweak -Task "$etiqueta (sistema)" -Path $THEMES -Name 'SystemUsesLightTheme' -Value $v) { $temaCanviat = $true }
     }
     if ($null -ne $ap.transparency) {
         $v = 0; if ($ap.transparency) { $v = 1 }
@@ -179,7 +168,20 @@ if ($ap) {
     }
     if ($null -ne $ap.accent_on_taskbar) {
         $v = 0; if ($ap.accent_on_taskbar) { $v = 1 }
-        Set-Tweak -Task 'color d''accent a la barra' -Path $THEMES -Name 'ColorPrevalence' -Value $v -RestartsExplorer | Out-Null
+        if (Set-Tweak -Task 'color d''accent a la barra' -Path $THEMES -Name 'ColorPrevalence' -Value $v) { $temaCanviat = $true }
+    }
+
+    # El tema escrit al registre no s'aplica sol: les finestres obertes s'han
+    # d'assabentar del canvi. Amb un Windows sense activar aixo es l'unic cami,
+    # perque Configuracio > Personalitzacio hi esta bloquejat. Sense aquest avis
+    # el tema no es veuria fins a tancar i obrir sessio.
+    if ($temaCanviat -and -not $checkMode) {
+        try {
+            Publish-SettingChange -Area 'ImmersiveColorSet'
+            Write-Info 'Tema aplicat a les finestres obertes.'
+        } catch {
+            Write-Info "El tema queda escrit pero no s'ha pogut refrescar: $($_.Exception.Message)"
+        }
     }
 }
 

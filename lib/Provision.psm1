@@ -18,6 +18,128 @@ $script:CheckMode = $false
 $script:AdminPhase = $false
 $script:PendingAdmin = New-Object System.Collections.ArrayList
 
+#region --------------------------------------------------------- shell de Windows
+
+# Hi ha ajustos que no n'hi ha prou d'escriure'ls al registre: l'Explorador es
+# guarda el seu estat en memoria i, o be no se n'assabenta, o be el reescriu per
+# sobre quan es tanca. Per a aquests cal parlar amb el shell directament.
+#
+# Aixo importa especialment en un Windows sense activar: el panell de
+# Personalitzacio hi esta bloquejat, o sigui que aquest es l'unic cami que queda.
+if (-not ('AnsibleWin.Shell' -as [type])) {
+    Add-Type -Namespace AnsibleWin -Name Shell -MemberDefinition @'
+[DllImport("user32.dll", SetLastError = true)]
+public static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+
+[DllImport("user32.dll", SetLastError = true)]
+public static extern IntPtr FindWindowEx(IntPtr parent, IntPtr child, string cls, string win);
+
+[DllImport("user32.dll", CharSet = CharSet.Auto)]
+public static extern IntPtr SendMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+
+[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+public static extern IntPtr SendMessageTimeout(IntPtr hWnd, uint msg, IntPtr wParam,
+    string lParam, uint flags, uint timeout, out IntPtr result);
+'@
+}
+
+<#
+.SYNOPSIS
+    La finestra SHELLDLL_DefView de l'escriptori, o IntPtr::Zero si no hi es.
+.DESCRIPTION
+    Normalment penja de Progman. Amb fons dinamic o presentacio, l'Explorador
+    crea un WorkerW i l'hi mou; per aixo hi ha el segon intent.
+#>
+function Get-DesktopView {
+    $progman = [AnsibleWin.Shell]::FindWindow('Progman', $null)
+    if ($progman -ne [IntPtr]::Zero) {
+        $dv = [AnsibleWin.Shell]::FindWindowEx($progman, [IntPtr]::Zero, 'SHELLDLL_DefView', $null)
+        if ($dv -ne [IntPtr]::Zero) { return $dv }
+    }
+
+    $worker = [IntPtr]::Zero
+    while ($true) {
+        $worker = [AnsibleWin.Shell]::FindWindowEx([IntPtr]::Zero, $worker, 'WorkerW', $null)
+        if ($worker -eq [IntPtr]::Zero) { break }
+        $dv = [AnsibleWin.Shell]::FindWindowEx($worker, [IntPtr]::Zero, 'SHELLDLL_DefView', $null)
+        if ($dv -ne [IntPtr]::Zero) { return $dv }
+    }
+    return [IntPtr]::Zero
+}
+
+<#
+.SYNOPSIS
+    Ensenya o amaga les icones de l'escriptori. Retorna 'ok', 'changed' o llanca.
+.DESCRIPTION
+    Escriure HideIcons al registre i prou NO funciona: l'Explorador el reescriu
+    amb el seu valor en memoria. Reiniciar-lo tampoc es fiable, perque en morir
+    torna a desar l'estat antic.
+
+    El que si que funciona es enviar-li la mateixa ordre que el menu contextual
+    "Visualitza > Mostra les icones de l'escriptori" (WM_COMMAND 0x7402). El
+    shell aplica el canvi en calent i desa ell mateix el valor al registre.
+
+    Com que es un commutador i no un interruptor, mirem primer el registre: es
+    l'ultim estat que el shell hi ha desat.
+#>
+function Set-DesktopIconsVisible {
+    param([Parameter(Mandatory)][bool]$Visible)
+
+    $clau = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced'
+    $vol = 1; if ($Visible) { $vol = 0 }       # HideIcons esta invertit
+
+    $ara = (Get-ItemProperty -LiteralPath $clau -Name 'HideIcons' -ErrorAction SilentlyContinue).HideIcons
+    if ($null -eq $ara) { $ara = 0 }
+    if ($ara -eq $vol) { return 'ok' }
+
+    if ($script:CheckMode) { return 'changed' }
+
+    $dv = Get-DesktopView
+    if ($dv -eq [IntPtr]::Zero) {
+        # Sense escriptori (sessio de servei, Server Core) deixem el valor escrit
+        # perque l'agafi la propera sessio, pero no podem aplicar-ho ara.
+        Set-RegistryValue -Path $clau -Name 'HideIcons' -Value $vol | Out-Null
+        throw "no trobo l'escriptori per aplicar-ho; el valor queda escrit per a la propera sessio"
+    }
+
+    [void][AnsibleWin.Shell]::SendMessage($dv, 0x0111, [IntPtr]0x7402, [IntPtr]::Zero)
+    Start-Sleep -Milliseconds 700
+
+    $despres = (Get-ItemProperty -LiteralPath $clau -Name 'HideIcons' -ErrorAction SilentlyContinue).HideIcons
+    if ($null -eq $despres) { $despres = 0 }
+    if ($despres -ne $vol) {
+        throw "el shell no ha agafat el canvi (HideIcons = $despres)"
+    }
+    return 'changed'
+}
+
+<#
+.SYNOPSIS
+    Avisa les finestres obertes que una configuracio ha canviat.
+.DESCRIPTION
+    Sense aquest avis, coses com el tema clar/fosc queden escrites al registre
+    pero no s'apliquen fins a tancar i obrir sessio. Amb un Windows sense
+    activar aixo es especialment moles: el panell de Personalitzacio esta
+    bloquejat i no hi ha cap altra manera de refrescar-ho.
+
+    S'usa SendMessageTimeout i no SendMessage: si alguna finestra penjada no
+    respon, un SendMessage a HWND_BROADCAST bloquejaria el run per sempre.
+#>
+function Publish-SettingChange {
+    param([string]$Area = 'ImmersiveColorSet')
+
+    $HWND_BROADCAST = [IntPtr]0xffff
+    $WM_SETTINGCHANGE = 0x001A
+    $SMTO_ABORTIFHUNG = 0x0002
+    $resultat = [IntPtr]::Zero
+
+    [void][AnsibleWin.Shell]::SendMessageTimeout(
+        $HWND_BROADCAST, $WM_SETTINGCHANGE, [IntPtr]::Zero, $Area,
+        $SMTO_ABORTIFHUNG, 3000, [ref]$resultat)
+}
+
+#endregion
+
 #region ---------------------------------------------------------------- sortida
 
 $script:Palette = @{
@@ -1173,6 +1295,7 @@ Export-ModuleMember -Function `
     Test-Elevated, Invoke-Elevated, Test-CommandExists, Invoke-NativeCommand, Get-OutputTail,
     Get-ProvisionAdminPhase, Register-AdminWork, Get-PendingAdminWork, Invoke-AdminWork,
     Update-SessionPath, Add-PathEntry, Set-PathEntryPriority,
+    Get-DesktopView, Set-DesktopIconsVisible, Publish-SettingChange,
     Set-FileContent, Set-RegistryValue, Test-RegistryValue, Set-SymbolicLink,
     Test-WingetAvailable, Test-ChocoAvailable, Test-ScoopAvailable,
     Get-ArpEntry, Resolve-UrlAsset, Install-UrlPackage,

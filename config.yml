@@ -788,7 +788,9 @@ system:
     hide_widgets: true
     hide_chat: true
   appearance:
-    dark_mode: true
+    # Amb un Windows sense activar, Configuració > Personalització està bloquejat:
+    # aquest és l'únic lloc des d'on es pot canviar el tema.
+    dark_mode: false
     transparency: true
     accent_on_taskbar: false
   privacy:
