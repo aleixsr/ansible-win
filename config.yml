@@ -624,14 +624,6 @@ packages:
     choco: ffmpeg
     mac: (no hi es a ansible-mac)
     test: ffmpeg
-  - id: yt-dlp
-    optional: true
-    desc: "Descarrega vídeo i àudio de centenars de webs. Arrossega Deno i FFmpeg com a dependències."
-    name: yt-dlp
-    winget: yt-dlp.yt-dlp
-    choco: yt-dlp
-    mac: (no hi es a ansible-mac)
-    test: yt-dlp
   - id: opentv
     optional: true
     desc: "Reproductor de llistes IPTV M3U."

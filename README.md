@@ -46,8 +46,6 @@ sempre que existeixin per a Windows.
   - [Descartats a propòsit](#descartats-a-propòsit)
 - [Paquets que no són a cap gestor](#paquets-que-no-són-a-cap-gestor)
 - [Software opcional](#software-opcional)
-  - [Sense menú](#sense-menú)
-  - [Quan no hi ha ningú davant](#quan-no-hi-ha-ningú-davant)
   - [Marcar-ne un](#marcar-ne-un)
 - [Treure el bloatware de Windows 11](#treure-el-bloatware-de-windows-11)
   - [Què treu](#què-treu)
@@ -155,8 +153,7 @@ un sol cop al final. Vegés [Les dues fases del run](#les-dues-fases-del-run).
 .\run.ps1 -Check                                # simulació (com --check)
 .\run.ps1 -Upgrade                              # actualitza el que ja hi ha
 .\run.ps1 -ListPackages                         # ensenya el catàleg sencer
-.\run.ps1 -Optional all                         # instal·la també tot l'opcional
-.\run.ps1 -Optional none                        # només l'essencial, sense preguntar
+.\run.ps1 -Full                                 # instal·la també tot l'opcional
 .\run.ps1 -Optional obsidian,tailscale          # l'essencial i aquests dos
 .\run.ps1 -NoElevate                            # no demanis l'UAC: el que calgui admin se salta
 ```
@@ -379,7 +376,7 @@ Grup `microsoftsuite`. 1 aplicacions.
 
 ### Àudio i vídeo
 
-Grup `media`. 6 aplicacions.
+Grup `media`. 5 aplicacions.
 
 | App | Per a què serveix | D'on surt | |
 | --- | --- | --- | --- |
@@ -387,7 +384,6 @@ Grup `media`. 6 aplicacions.
 | **VLC** | Reprodueix qualsevol cosa sense haver d'instal·lar còdecs. | winget |  |
 | **mpv** | Reproductor mínim i molt ràpid, controlat per teclat i scripts. | winget |  |
 | **FFmpeg** | La navalla suïssa de l'àudio i el vídeo: converteix, retalla i transmet. | winget |  |
-| **yt-dlp** | Descarrega vídeo i àudio de centenars de webs. Arrossega Deno i FFmpeg com a dependències. | winget | opcional |
 | **Open TV** | Reproductor de llistes IPTV M3U. | descàrrega directa | opcional |
 
 ### Documents
@@ -452,7 +448,7 @@ substitueix.
 | Shortwave | Client de Gmail només per a macOS i web. Aquí fem servir Mailspring. — mailspring |
 | Wins | Canviador de finestres de macOS. A Windows, Alt+Tab i PowerToys. — Alt+Tab (natiu) |
 
-**78 aplicacions** en 17 categories, de les quals **14 són opcionals**: no
+**77 aplicacions** en 17 categories, de les quals **13 són opcionals**: no
 s'instal·len si no les tries en llançar el run. 14 entrades més són del
 catàleg del Mac i no apliquen aquí.
 <!-- APPS:FI -->
@@ -597,44 +593,37 @@ realment no siguin a cap gestor.
 
 ## Software opcional
 
-No tot el catàleg s'instal·la sempre. Els paquets marcats amb `optional: true`
-només hi entren si els tries, i en llançar el run et surt un menú per decidir-ho:
-
-```
-SOFTWARE OPCIONAL
-  Espai marca  |  a tots  |  n cap  |  Enter continua  |  Esc cap
-
-> [ ] Mailspring                 Client de correu d'escriptori per a diversos...
-  [ ] Microsoft Teams            Xat, reunions i trucades del tenant.
-  [ ] Obsidian                   Notes en Markdown desades com a fitxers locals...
-  [ ] Tailscale                  VPN de malla sobre WireGuard: connecta els teus...
-
-  0 de 14 seleccionats
-```
-
-Fletxes o `j`/`k` per moure's, espai per marcar, `a` i `n` per marcar-ho o
-desmarcar-ho tot, Enter per continuar. Esc no n'instal·la cap.
-
-### Sense menú
+No tot el catàleg s'instal{mig}la sempre. Els paquets marcats amb `optional: true`
+només hi entren si els demanes:
 
 ```powershell
-.\run.ps1 -Optional all                  # tots
-.\run.ps1 -Optional none                 # cap, i no preguntis
-.\run.ps1 -Optional obsidian,tailscale   # només aquests, per id
+.\run.ps1                                 # només l'essencial
+.\run.ps1 -Full                           # també tot l'opcional
+.\run.ps1 -Optional obsidian,tailscale    # l'essencial i aquests dos
 ```
 
+**El run no pregunta mai res.** És desatès sempre: el pots posar en una tasca
+programada, en un CI o en la primera arrencada d'una màquina sense que es quedi
+esperant ningú. Per contra, has de dir què vols: sense `-Full` ni `-Optional`,
+l'opcional no s'instal{mig}la.
+
+Per si de cas, el run et diu què s'ha deixat fora:
+
+```
+14 paquets opcionals no s'instal{mig}len: mailspring, teams, telegram, whatsapp,
+zoho-mail, obsidian, numi, hotcorners, tailscale, synology-drive, opentv,
+pdf24, logi-options
+Amb -Full hi entren tots; amb -Optional <ids>, només els que diguis.
+```
+
+Sense aquest avís, que una app no aparegui semblaria un error del playbook quan
+en realitat és el comportament demanat.
+
 Un id que no existeixi atura el run i et llista els que hi ha. Val més això que
-no pas acabar buscant per què no s'ha instal·lat una cosa que mai s'ha demanat.
+no pas acabar buscant per què no s'ha instal{mig}lat una cosa que mai s'ha demanat.
 
-### Quan no hi ha ningú davant
-
-Un run per tasca programada, per CI o amb l'entrada redirigida **no instal·la cap
-opcional** i ho diu. Preguntar allà seria pitjor que no fer res: el run es
-quedaria penjat per sempre esperant una tecla que no arribarà. La detecció es pot
-forçar amb la variable d'entorn `ANSIBLE_WIN_NONINTERACTIVE`.
-
-La tria es passa a la passada elevada per paràmetre, o sigui que no te la torna a
-preguntar ni es deixa pel camí els opcionals que necessiten administrador.
+La tria es passa a la passada elevada per paràmetre, o sigui que no es deixa pel
+camí els opcionals que necessiten administrador.
 
 ### Marcar-ne un
 
@@ -642,12 +631,10 @@ preguntar ni es deixa pel camí els opcionals que necessiten administrador.
 - id: obsidian
   name: Obsidian
   optional: true
-  preselected: true      # surt ja marcat al menú
   winget: Obsidian.Obsidian
 ```
 
-Sense `optional:`, el paquet s'instal·la sempre. `preselected` només canvia com
-surt el menú: si el desmarques, no s'instal·la.
+Sense `optional:`, el paquet s'instal{mig}la sempre.
 
 ## Treure el bloatware de Windows 11
 

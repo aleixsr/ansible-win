@@ -23,16 +23,17 @@
 .PARAMETER ListPackages
     Ensenya el catàleg i surt.
 
+.PARAMETER Full
+    Instal·la també el software opcional. Equival a -Optional all.
+
 .PARAMETER Optional
-    Quin software opcional s'instal·la. Els paquets amb `optional: true` al
-    catàleg no entren mai si no es demanen.
+    Quin software opcional s'instal·la, per id. Els paquets amb `optional: true`
+    al catàleg no entren mai si no es demanen explícitament.
 
-      -Optional all              tots
-      -Optional none             cap, i no preguntis
-      -Optional dbeaver,soapui   només aquests, per id
+      -Optional obsidian,tailscale
 
-    Sense aquest paràmetre, si hi ha terminal el run et pregunta amb un menú; si
-    no n'hi ha (CI, tasca programada), no n'instal·la cap.
+    El run no pregunta mai res: sense -Full ni -Optional s'instal·la només
+    l'essencial, i el recap diu què s'ha deixat fora.
 
 .PARAMETER NoElevate
     No demanis privilegis encara que faltin. El que en necessiti se salta.
@@ -73,6 +74,7 @@ param(
     [switch]$Check,
     [switch]$Upgrade,
     [string[]]$Optional,
+    [switch]$Full,
     [switch]$ListPackages,
     [switch]$NoElevate,
     [switch]$AdminPhase
@@ -173,24 +175,20 @@ if ($ListPackages) {
 # -----------------------------------------------------------------------------
 # Software opcional
 # -----------------------------------------------------------------------------
-# Els paquets amb `optional: true` no entren si ningú els demana. L'ordre és:
-# el que digui -Optional; si no, el menú; i si no hi ha terminal per preguntar,
-# cap. Així un run desatès mai instal·la res que no s'hagi decidit abans.
+# Els paquets amb `optional: true` no entren si ningú els demana. El run és
+# desatès sempre: no pregunta res. Amb -Full hi entren tots; amb -Optional,
+# només els que diguis. Sense cap dels dos, cap.
 $optionalTriats = @()
-$optionalTots = $false
+$optionalTots = [bool]$Full
 
-if ($AdminPhase) {
-    # La passada elevada rep la tria ja feta per paràmetre: no torna a preguntar.
-    $optionalTriats = @(Split-ListArgument $Optional)
-    if ($optionalTriats -contains 'all') { $optionalTots = $true; $optionalTriats = @() }
-} elseif ($Optional) {
+if ($Optional) {
     $optionalTriats = @(Split-ListArgument $Optional)
     if ($optionalTriats -contains 'all') {
         $optionalTots = $true
         $optionalTriats = @()
     } elseif ($optionalTriats -contains 'none') {
         $optionalTriats = @()
-    } else {
+    } elseif (-not $AdminPhase) {
         # Un id mal escrit no ha de passar desapercebut: acabaries buscant per
         # què no s'ha instal·lat una cosa que mai s'ha arribat a demanar.
         $coneguts = @(Get-OptionalPackages -Config $config -Groups $Groups | ForEach-Object { $_.id })
@@ -203,17 +201,17 @@ if ($AdminPhase) {
             }
         }
     }
-} elseif (-not $ListPackages) {
-    $opcionals = @(Get-OptionalPackages -Config $config -Groups $Groups)
-    if ($opcionals.Count -gt 0) {
-        if (Test-CanPrompt) {
-            $optionalTriats = @(Show-PackageChooser -Packages $opcionals)
-            Write-Host ''
-        } else {
-            Write-Host ''
-            Write-Host "$($opcionals.Count) paquets opcionals no s'instal·laran: no hi ha terminal per preguntar." -ForegroundColor Yellow
-            Write-Host 'Fes servir -Optional all, -Optional none o -Optional <ids> per decidir-ho.' -ForegroundColor Yellow
-        }
+}
+
+# Dir què s'ha deixat fora. Sense això, que una app no apareixi sembla un error
+# del playbook quan en realitat és el comportament demanat.
+if (-not $ListPackages -and -not $AdminPhase -and -not $optionalTots) {
+    $fora = @(Get-OptionalPackages -Config $config -Groups $Groups |
+              Where-Object { $optionalTriats -notcontains $_.id })
+    if ($fora.Count -gt 0) {
+        Write-Host ''
+        Write-Host "$($fora.Count) paquets opcionals no s'instal·len: $(($fora | ForEach-Object { $_.id }) -join ', ')" -ForegroundColor DarkGray
+        Write-Host 'Amb -Full hi entren tots; amb -Optional <ids>, només els que diguis.' -ForegroundColor DarkGray
     }
 }
 

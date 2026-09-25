@@ -91,7 +91,6 @@ Serveix per comprovar d'un cop d'ull que cap app del Mac s'ha quedat pel camí.
 | --- | --- | --- | --- | --- | --- |
 | `(no hi es a ansible-mac)` | mpv | Reproductor mínim i molt ràpid, controlat per teclat i scripts. | `shinchiro.mpv` | `mpv` | — |
 | `(no hi es a ansible-mac)` | FFmpeg | La navalla suïssa de l'àudio i el vídeo: converteix, retalla i transmet. | `Gyan.FFmpeg` | `ffmpeg` | — |
-| `(no hi es a ansible-mac)` | yt-dlp | Descarrega vídeo i àudio de centenars de webs. Arrossega Deno i FFmpeg com a dependències. | `yt-dlp.yt-dlp` | `yt-dlp` | — |
 | `(no hi es a ansible-mac)` | Open TV | Reproductor de llistes IPTV M3U. | — | — | — |
 | `handbrake-app` | HandBrake | Recodifica vídeo amb perfils ja fets: per abaixar el pes d'un MP4 sense pensar-hi. | `HandBrake.HandBrake` | `handbrake` | — |
 | `vlc` | VLC | Reprodueix qualsevol cosa sense haver d'instal·lar còdecs. | `VideoLAN.VLC` | `vlc` | — |
@@ -186,8 +185,8 @@ Serveix per comprovar d'un cop d'ull que cap app del Mac s'ha quedat pel camí.
 
 ---
 
-**92 entrades** en 17 categories, de les quals
-**78 s'instal·len** i **14 són només del Mac**.
+**91 entrades** en 17 categories, de les quals
+**77 s'instal·len** i **14 són només del Mac**.
 
 Les que són només del Mac porten `win_equivalent`, que diu qui els fa la feina
 aquí. No surten al `run.ps1`: `Select-CatalogPackages` les deixa fora perquè no
