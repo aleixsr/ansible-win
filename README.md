@@ -45,6 +45,7 @@ sempre que existeixin per a Windows.
   - [Com es tracten les apps que només són del Mac](#com-es-tracten-les-apps-que-només-són-del-mac)
   - [Descartats a propòsit](#descartats-a-propòsit)
 - [Paquets que no són a cap gestor](#paquets-que-no-són-a-cap-gestor)
+- [Posar les apps al dia](#posar-les-apps-al-dia)
 - [Software opcional](#software-opcional)
   - [Marcar-ne un](#marcar-ne-un)
 - [Treure el bloatware de Windows 11](#treure-el-bloatware-de-windows-11)
@@ -151,7 +152,7 @@ un sol cop al final. Vegés [Les dues fases del run](#les-dues-fases-del-run).
 ```powershell
 .\run.ps1                                       # tot
 .\run.ps1 -Check                                # simulació (com --check)
-.\run.ps1 -Upgrade                              # actualitza el que ja hi ha
+.\run.ps1 -Upgrade                              # posa al dia el que tens instal·lat
 .\run.ps1 -ListPackages                         # ensenya el catàleg sencer
 .\run.ps1 -Full                                 # instal·la també tot l'opcional
 .\run.ps1 -Optional obsidian,tailscale          # l'essencial i aquests dos
@@ -594,6 +595,28 @@ paquets no hi ha a qui preguntar si una cosa està instal·lada, així que la
 detecció va per `arp:`, el nom a «Programes i característiques» — que el
 fabricant pot canviar quan vulgui. `provider: url` només per a coses que
 realment no siguin a cap gestor.
+
+## Posar les apps al dia
+
+```powershell
+.\run.ps1 -Upgrade
+```
+
+Passa per tot el catàleg i actualitza el que ja tens. El que et falti, te
+l'instal·la; el que no tinguis i sigui opcional, el deixa estar.
+
+Això últim és la diferència amb un run normal: **en mode `-Upgrade` els opcionals
+hi entren encara que no els demanis**, però només per posar-los al dia. Una app
+opcional que tens al disc s'ha de poder actualitzar sense haver de recordar-ne
+l'id cada vegada; una que no tens no s'ha d'instal·lar per la porta del darrere.
+
+```
+3 opcionals: nomes s'actualitzaran els que ja tinguis (obsidian, numi, hotcorners)
+```
+
+La major part de paquets són d'àmbit màquina, o sigui que el gruix de la feina
+anirà a la fase elevada i et demanarà l'UAC **un sol cop**. Com sempre, `-Check`
+abans t'ensenya què actualitzaria sense tocar res.
 
 ## Software opcional
 

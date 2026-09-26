@@ -17,7 +17,8 @@ Set-ProvisionContext -Role 'apps'
 # ens deixa el hashtable pelat. Aleshores $packages.Count compta les CLAUS del
 # paquet (id, name, desc...) en comptes dels paquets, i el banner menteix.
 $packages = @(Select-CatalogPackages -Config $Config -Groups $Groups `
-                                     -Optional $Optional -AllOptional:$AllOptional)
+                                     -Optional $Optional -AllOptional:$AllOptional `
+                                     -UpgradeMode:$Upgrade)
 
 if (-not $packages -or $packages.Count -eq 0) {
     Write-TaskResult -Task 'catàleg' -Status 'skipped' -Message 'cap paquet seleccionat'

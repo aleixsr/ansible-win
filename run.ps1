@@ -210,7 +210,15 @@ if (-not $ListPackages -and -not $AdminPhase -and -not $optionalTots) {
               Where-Object { $optionalTriats -notcontains $_.id })
     if ($fora.Count -gt 0) {
         Write-Host ''
-        Write-Host "$($fora.Count) paquets opcionals no s'instal·len: $(($fora | ForEach-Object { $_.id }) -join ', ')" -ForegroundColor DarkGray
+        $llista = ($fora | ForEach-Object { $_.id }) -join ', '
+        if ($Upgrade) {
+            # En mode actualitzacio els opcionals hi entren igualment, pero nomes
+            # per posar-los al dia si ja els tens. Dir "no s'instal·len" aqui seria
+            # enganyos: el que no passa es que se n'instal·li cap de nou.
+            Write-Host "$($fora.Count) opcionals: nomes s'actualitzaran els que ja tinguis ($llista)" -ForegroundColor DarkGray
+        } else {
+            Write-Host "$($fora.Count) paquets opcionals no s'instal·len: $llista" -ForegroundColor DarkGray
+        }
         Write-Host 'Amb -Full hi entren tots; amb -Optional <ids>, només els que diguis.' -ForegroundColor DarkGray
     }
 }

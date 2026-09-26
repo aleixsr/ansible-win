@@ -1038,6 +1038,13 @@ function Install-CatalogPackage {
         return
     }
 
+    # Opcional que no s'ha demanat i que no tens: en mode actualitzacio no s'ha
+    # d'instal·lar. Nomes hi era per si calia posar-lo al dia.
+    if ($Package.upgrade_only -and -not $alreadyThere) {
+        Write-TaskResult -Task $label -Status 'skipped' -Message 'opcional no instal·lat' -NotApplicable
+        return
+    }
+
     # Falta instal·lar-lo de debo. winget, choco i els installers baixats per URL
     # escriuen a Program Files i al registre de maquina: sense privilegis obririen
     # un UAC per paquet. Scoop no (viu tot al perfil d'usuari) i els MSIX de la
@@ -1066,9 +1073,12 @@ function Install-CatalogPackage {
     try {
         $extra = @()
         if ($Package.args) { $extra = @($Package.args) }
+        # `winget upgrade` d'una cosa que no tens falla amb "no installed package
+        # found". El verb ha de dependre de si hi es, no de si hem dit -Upgrade:
+        # si no, un -Upgrade en una maquina nova peta a cada paquet que falti.
         Install-ProviderPackage -Provider $resolved.Provider -Id $resolved.Id `
             -Scope $Package.scope -Source $Package.source -UrlSpec $Package.url `
-            -ExtraArgs $extra -Upgrade:$Upgrade
+            -ExtraArgs $extra -Upgrade:($Upgrade -and $alreadyThere)
         Update-SessionPath
         $verb = 'instal·lat'
         if ($Upgrade -and $alreadyThere) { $verb = 'actualitzat' }
@@ -1198,7 +1208,13 @@ function Select-CatalogPackages {
         # n'entra cap: el comportament segur per a un run desates.
         [string[]]$Optional = @(),
         # Els opcionals entren tots, s'hagin triat o no.
-        [switch]$AllOptional
+        [switch]$AllOptional,
+        # Mode actualitzacio: els opcionals que no s'han triat hi entren igualment,
+        # pero marcats perque nomes se'ls actualitzi si JA estan instal·lats. Una
+        # app opcional que tens al disc s'ha de poder actualitzar sense haver de
+        # recordar el seu id cada vegada; una que no tens, no s'ha d'instal·lar
+        # per la porta del darrere.
+        [switch]$UpgradeMode
     )
 
     $winKeys = $script:WindowsProviderKeys
@@ -1234,12 +1250,15 @@ function Select-CatalogPackages {
                 if (-not $hasWin) { continue }
             }
 
+            $nomesSiHiEs = $false
             if ($pkg.optional -and -not $AllOptional -and ($Optional -notcontains $pkg.id)) {
-                continue
+                if (-not $UpgradeMode) { continue }
+                $nomesSiHiEs = $true
             }
 
             $entry = @{} + $pkg
             $entry['group'] = $group
+            if ($nomesSiHiEs) { $entry['upgrade_only'] = $true }
             [void]$selected.Add($entry)
         }
     }
