@@ -70,6 +70,24 @@ foreach ($conflict in 'ls', 'cat', 'g', 'gs', 'ga', 'gc', 'gp', 'gl', 'gd', 'gb'
     }
 }
 
+# curl i wget són un cas a part, i el motiu és un altre: aquí l'àlies no tapa
+# una funció nostra, sinó els EXECUTABLES DE DEBÒ que Windows ja porta.
+#
+# Windows 10 en endavant inclou C:\Windows\System32\curl.exe, el curl de veritat.
+# Però Windows PowerShell 5.1 defineix `curl` i `wget` com a àlies
+# d'Invoke-WebRequest, i els àlies guanyen els executables del PATH. El resultat
+# és que `curl -I https://exemple.com` no fa el que sembla: Invoke-WebRequest no
+# entén els paràmetres de curl i peta amb un error que no hi té res a veure.
+#
+# PowerShell 7 ja va treure aquests àlies, i a cmd.exe no hi han existit mai, o
+# sigui que això només canvia res a 5.1. Si algun script teu comptava amb `curl`
+# com a Invoke-WebRequest, fes servir `iwr`, que es queda tal com estava.
+foreach ($natiu in 'curl', 'wget') {
+    if (Test-Path "Alias:$natiu") {
+        Remove-Item "Alias:$natiu" -Force -ErrorAction SilentlyContinue
+    }
+}
+
 if (Get-Command eza -ErrorAction SilentlyContinue) {
     function ls { eza --icons --group-directories-first @args }
     function ll { eza -l --icons --group-directories-first --git @args }
