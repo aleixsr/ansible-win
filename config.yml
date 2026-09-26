@@ -455,6 +455,14 @@ packages:
     winget: Eugeny.Tabby
     choco: tabby
     mac: tabby
+  - id: nushell
+    optional: true
+    home: https://www.nushell.sh/
+    desc: "Shell on tot són dades estructurades: la sortida de cada ordre és una taula que pots filtrar i ordenar."
+    name: Nushell
+    winget: Nushell.Nushell
+    mac: (no hi es a ansible-mac)
+    test: nu
   - id: wave
     home: https://waveterm.dev/
     desc: "Terminal per blocs: desa la sortida de cada ordre perquè la puguis rellegir i compartir."

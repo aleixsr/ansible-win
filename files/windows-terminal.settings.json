@@ -27,6 +27,23 @@
             "antialiasingMode": "grayscale",
             "bellStyle": "none",
             "startingDirectory": "%USERPROFILE%"
-        }
+        },
+        "list": [
+            {
+                "guid": "{2ece5bfe-50ed-5f3a-ab87-5cd4baafed2b}",
+                "name": "Git Bash",
+                "commandline": "\"%PROGRAMFILES%\\Git\\bin\\bash.exe\" -li",
+                "icon": "%PROGRAMFILES%\\Git\\mingw64\\share\\git\\git-for-windows.ico",
+                "startingDirectory": "%USERPROFILE%",
+                "hidden": false
+            },
+            {
+                "guid": "{1e8a1b0f-6a41-5c3d-9f2e-7b4c8d9e0a15}",
+                "name": "Nushell",
+                "commandline": "\"%LOCALAPPDATA%\\Programs\\nu\\bin\\nu.exe\"",
+                "startingDirectory": "%USERPROFILE%",
+                "hidden": false
+            }
+        ]
     }
 }

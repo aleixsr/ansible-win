@@ -1,4 +1,4 @@
-﻿# Paritat d'aplicacions: `ansible-mac` ↔ `ansible-win`
+# Paritat d'aplicacions: `ansible-mac` ↔ `ansible-win`
 
 > Generat automàticament per `scripts/Export-AppsTable.ps1` a partir de
 > `config.yml`. No l'editis a mà.
@@ -89,9 +89,9 @@ Serveix per comprovar d'un cop d'ull que cap app del Mac s'ha quedat pel camí.
 
 | A ansible-mac | A Windows | Per a què serveix | winget | Chocolatey | Scoop |
 | --- | --- | --- | --- | --- | --- |
-| `(no hi es a ansible-mac)` | [Open TV](https://github.com/Fredolx/open-tv) | Reproductor de llistes IPTV M3U. | — | — | — |
-| `(no hi es a ansible-mac)` | [FFmpeg](https://www.gyan.dev/ffmpeg/builds/) | La navalla suïssa de l'àudio i el vídeo: converteix, retalla i transmet. | `Gyan.FFmpeg` | `ffmpeg` | — |
 | `(no hi es a ansible-mac)` | [mpv](https://github.com/shinchiro/mpv-winbuild-cmake) | Reproductor mínim i molt ràpid, controlat per teclat i scripts. | `shinchiro.mpv` | `mpv` | — |
+| `(no hi es a ansible-mac)` | [FFmpeg](https://www.gyan.dev/ffmpeg/builds/) | La navalla suïssa de l'àudio i el vídeo: converteix, retalla i transmet. | `Gyan.FFmpeg` | `ffmpeg` | — |
+| `(no hi es a ansible-mac)` | [Open TV](https://github.com/Fredolx/open-tv) | Reproductor de llistes IPTV M3U. | — | — | — |
 | `handbrake-app` | [HandBrake](https://handbrake.fr/) | Recodifica vídeo amb perfils ja fets: per abaixar el pes d'un MP4 sense pensar-hi. | `HandBrake.HandBrake` | `handbrake` | — |
 | `vlc` | [VLC](https://www.videolan.org/vlc/) | Reprodueix qualsevol cosa sense haver d'instal·lar còdecs. | `VideoLAN.VLC` | `vlc` | — |
 
@@ -184,14 +184,15 @@ Serveix per comprovar d'un cop d'ull que cap app del Mac s'ha quedat pel camí.
 | A ansible-mac | A Windows | Per a què serveix | winget | Chocolatey | Scoop |
 | --- | --- | --- | --- | --- | --- |
 | `(no gestionat per ansible-mac)` | [Wave Terminal](https://waveterm.dev/) | Terminal per blocs: desa la sortida de cada ordre perquè la puguis rellegir i compartir. | `CommandLine.Wave` | — | — |
+| `(no hi es a ansible-mac)` | [Nushell](https://www.nushell.sh/) | Shell on tot són dades estructurades: la sortida de cada ordre és una taula que pots filtrar i ordenar. | `Nushell.Nushell` | — | — |
 | `iterm2` | [Windows Terminal](https://docs.microsoft.com/windows/terminal) | El terminal de Windows: pestanyes, panells i perfils per a PowerShell, cmd i WSL. | `Microsoft.WindowsTerminal` | — | — |
 | `tabby` | [Tabby](https://tabby.sh/) | Terminal amb gestor de connexions SSH i sincronització de la configuració. | `Eugeny.Tabby` | `tabby` | — |
 | `warp` | _no s'instal·la_ — `windows-terminal` | Terminal amb funcions d'IA. Al Mac s'instal·la; aquí no el volem. | — | — | — |
 
 ---
 
-**96 entrades** en 17 categories, de les quals
-**77 s'instal·len** i **19 són només del Mac**.
+**97 entrades** en 17 categories, de les quals
+**78 s'instal·len** i **19 són només del Mac**.
 
 Les que són només del Mac porten `win_equivalent`, que diu qui els fa la feina
 aquí. No surten al `run.ps1`: `Select-CatalogPackages` les deixa fora perquè no

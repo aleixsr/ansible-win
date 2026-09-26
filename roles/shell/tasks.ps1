@@ -237,8 +237,81 @@ if (-not $shellCfg.configure_terminal) {
                     return $result
                 }
 
+                <#
+                .SYNOPSIS
+                    Cert si l'executable d'un perfil existeix en aquesta maquina.
+                .DESCRIPTION
+                    Un perfil que apunta a un binari que no hi es surt igualment
+                    al menu de Windows Terminal i peta en obrir-lo. Val mes no
+                    posar-lo: el Nushell, per exemple, es opcional al cataleg.
+                #>
+                function Test-ProfileCommand {
+                    param($Perfil)
+                    if (-not $Perfil.commandline) { return $true }
+
+                    # El primer element de la linia d'ordres, tregui o no cometes.
+                    $cmd = "$($Perfil.commandline)".Trim()
+                    if ($cmd.StartsWith('"')) {
+                        $tancament = $cmd.IndexOf('"', 1)
+                        if ($tancament -lt 0) { return $false }
+                        $exe = $cmd.Substring(1, $tancament - 1)
+                    } else {
+                        $exe = ($cmd -split '\s+')[0]
+                    }
+
+                    $exe = [Environment]::ExpandEnvironmentVariables($exe)
+                    if (Test-Path -LiteralPath $exe) { return $true }
+                    return [bool](Get-Command $exe -ErrorAction SilentlyContinue)
+                }
+
+                <#
+                .SYNOPSIS
+                    Fusiona profiles.list per guid, en comptes de substituir-la.
+                .DESCRIPTION
+                    Merge-JsonObject substitueix les llistes senceres, i aqui aixo
+                    seria desastros: Windows Terminal genera sol els perfils de
+                    PowerShell, WSL i Azure, i els perdriem tots a cada run.
+                    El repo mana sobre els perfils que declara, i la resta es
+                    queden tal com estan.
+                #>
+                function Merge-TerminalProfiles {
+                    param($Base, $Override)
+
+                    $resultat = New-Object System.Collections.ArrayList
+                    foreach ($p in @($Base)) { [void]$resultat.Add($p) }
+
+                    foreach ($nou in @($Override)) {
+                        if (-not $nou -or -not $nou.guid) { continue }
+                        if (-not (Test-ProfileCommand $nou)) { continue }
+
+                        $i = -1
+                        for ($k = 0; $k -lt $resultat.Count; $k++) {
+                            if ("$($resultat[$k].guid)" -eq "$($nou.guid)") { $i = $k; break }
+                        }
+                        if ($i -ge 0) {
+                            $resultat[$i] = Merge-JsonObject -Base $resultat[$i] -Override $nou
+                        } else {
+                            [void]$resultat.Add($nou)
+                        }
+                    }
+                    return $resultat.ToArray()
+                }
+
                 $before = $current | ConvertTo-Json -Depth 32
+
+                # Els perfils van a part; la resta del fitxer, pel cami de sempre.
+                $perfilsDesitjats = $null
+                if ($desired.profiles -and $desired.profiles.PSObject.Properties['list']) {
+                    $perfilsDesitjats = $desired.profiles.list
+                    $desired.profiles.PSObject.Properties.Remove('list')
+                }
+
                 $merged = Merge-JsonObject -Base $current -Override $desired
+
+                if ($perfilsDesitjats) {
+                    $merged.profiles.list = Merge-TerminalProfiles `
+                        -Base $merged.profiles.list -Override $perfilsDesitjats
+                }
                 $after = $merged | ConvertTo-Json -Depth 32
 
                 if ($before -eq $after) {

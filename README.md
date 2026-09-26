@@ -1,4 +1,4 @@
-﻿# ansible-win
+# ansible-win
 
 Provisionament personal d'una màquina Windows: paquets de winget/Chocolatey/Scoop,
 apps de la Microsoft Store, aplicacions d'inici, configuració de la shell
@@ -233,7 +233,7 @@ catàleg i torna a executar l'script.
 
 ### Índex d'aplicacions
 
-[7-Zip](#app-keka) · [Adobe Acrobat Reader](#app-acrobat-reader) · [Apache Directory Studio](#app-apache-directory-studio) · [Azure CLI](#app-azure-cli) · [Azure Storage Explorer](#app-azure-storage-explorer) · [Azure VPN Client](#app-azure-vpn-client) · [balenaEtcher](#app-balenaetcher) · [Box Drive](#app-box-drive) · [Brave](#app-brave) · [Calcator](#app-numi) · [Charmy: Hot Corners](#app-hotcorners) · [Chromium](#app-chromium) · [Claude Desktop](#app-claude) · [DBeaver Community](#app-dbeaver) · [draw.io](#app-drawio) · [FFmpeg](#app-ffmpeg) · [Git](#app-git) · [GitHub CLI](#app-gh) · [GitHub Copilot CLI](#app-copilot-cli) · [GitHub Desktop](#app-github-desktop) · [Google Chrome](#app-chrome) · [HandBrake](#app-handbrake) · [HWiNFO](#app-stats) · [iperf3](#app-iperf3) · [LocalSend](#app-localsend) · [Logi Options+](#app-logi-options) · [mailsend-go](#app-swaks) · [Mailspring](#app-mailspring) · [Mark Text](#app-marktext) · [Meslo LG Nerd Font](#app-font-meslo) · [Microsoft Edge](#app-edge) · [Microsoft Teams](#app-teams) · [Microsoft To Do](#app-microsoft-todo) · [Modern CSV](#app-modern-csv) · [Mozilla Firefox](#app-firefox) · [mpv](#app-mpv) · [Nmap](#app-nmap) · [Node.js LTS](#app-node) · [Notepad++](#app-notepadplusplus) · [Novabench](#app-novabench) · [Obsidian](#app-obsidian) · [OCI CLI (Oracle Cloud)](#app-oci-cli) · [ONLYOFFICE Desktop Editors](#app-onlyoffice) · [Open TV](#app-opentv) · [OpenVPN Connect](#app-openvpn) · [PDF24 Creator](#app-pdf24) · [PeaZip](#app-peazip) · [PingoMeter](#app-ping-status) · [PowerShell 7](#app-powershell) · [PowerToys](#app-powertoys) · [Python 3.14](#app-python) · [Royal TS](#app-royal-ts) · [RustDesk](#app-rustdesk) · [RustScan](#app-rustscan) · [ScreenToGif](#app-screentogif) · [ShareX](#app-shottr) · [SoapUI](#app-soapui) · [Speedtest CLI](#app-speedtest) · [Sublime Text](#app-sublime-text) · [SwitchHosts](#app-switchhosts) · [Synology Drive Client](#app-synology-drive) · [Tabby](#app-tabby) · [Tailscale](#app-tailscale) · [tcping](#app-tcping) · [Telegram](#app-telegram) · [Visual Studio Code](#app-vscode) · [Visual Studio Code Insiders](#app-vscode-insiders) · [VLC](#app-vlc) · [Wave Terminal](#app-wave) · [wget](#app-wget) · [WhatsApp](#app-whatsapp) · [Windows Terminal](#app-windows-terminal) · [WinMTR](#app-mtr) · [WireGuard](#app-wireguard) · [WizTree](#app-wiztree) · [XCA](#app-xca) · [Zoho Mail](#app-zoho-mail)
+[7-Zip](#app-keka) · [Adobe Acrobat Reader](#app-acrobat-reader) · [Apache Directory Studio](#app-apache-directory-studio) · [Azure CLI](#app-azure-cli) · [Azure Storage Explorer](#app-azure-storage-explorer) · [Azure VPN Client](#app-azure-vpn-client) · [balenaEtcher](#app-balenaetcher) · [Box Drive](#app-box-drive) · [Brave](#app-brave) · [Calcator](#app-numi) · [Charmy: Hot Corners](#app-hotcorners) · [Chromium](#app-chromium) · [Claude Desktop](#app-claude) · [DBeaver Community](#app-dbeaver) · [draw.io](#app-drawio) · [FFmpeg](#app-ffmpeg) · [Git](#app-git) · [GitHub CLI](#app-gh) · [GitHub Copilot CLI](#app-copilot-cli) · [GitHub Desktop](#app-github-desktop) · [Google Chrome](#app-chrome) · [HandBrake](#app-handbrake) · [HWiNFO](#app-stats) · [iperf3](#app-iperf3) · [LocalSend](#app-localsend) · [Logi Options+](#app-logi-options) · [mailsend-go](#app-swaks) · [Mailspring](#app-mailspring) · [Mark Text](#app-marktext) · [Meslo LG Nerd Font](#app-font-meslo) · [Microsoft Edge](#app-edge) · [Microsoft Teams](#app-teams) · [Microsoft To Do](#app-microsoft-todo) · [Modern CSV](#app-modern-csv) · [Mozilla Firefox](#app-firefox) · [mpv](#app-mpv) · [Nmap](#app-nmap) · [Node.js LTS](#app-node) · [Notepad++](#app-notepadplusplus) · [Novabench](#app-novabench) · [Nushell](#app-nushell) · [Obsidian](#app-obsidian) · [OCI CLI (Oracle Cloud)](#app-oci-cli) · [ONLYOFFICE Desktop Editors](#app-onlyoffice) · [Open TV](#app-opentv) · [OpenVPN Connect](#app-openvpn) · [PDF24 Creator](#app-pdf24) · [PeaZip](#app-peazip) · [PingoMeter](#app-ping-status) · [PowerShell 7](#app-powershell) · [PowerToys](#app-powertoys) · [Python 3.14](#app-python) · [Royal TS](#app-royal-ts) · [RustDesk](#app-rustdesk) · [RustScan](#app-rustscan) · [ScreenToGif](#app-screentogif) · [ShareX](#app-shottr) · [SoapUI](#app-soapui) · [Speedtest CLI](#app-speedtest) · [Sublime Text](#app-sublime-text) · [SwitchHosts](#app-switchhosts) · [Synology Drive Client](#app-synology-drive) · [Tabby](#app-tabby) · [Tailscale](#app-tailscale) · [tcping](#app-tcping) · [Telegram](#app-telegram) · [Visual Studio Code](#app-vscode) · [Visual Studio Code Insiders](#app-vscode-insiders) · [VLC](#app-vlc) · [Wave Terminal](#app-wave) · [wget](#app-wget) · [WhatsApp](#app-whatsapp) · [Windows Terminal](#app-windows-terminal) · [WinMTR](#app-mtr) · [WireGuard](#app-wireguard) · [WizTree](#app-wiztree) · [XCA](#app-xca) · [Zoho Mail](#app-zoho-mail)
 
 Cada app enllaça amb la seva fila; des d'allà, el nom porta al web del projecte.
 
@@ -310,12 +310,13 @@ Grup `browsers`. 5 aplicacions.
 
 ### Terminals
 
-Grup `terminal`. 3 aplicacions.
+Grup `terminal`. 4 aplicacions.
 
 | App | Per a què serveix | D'on surt | |
 | --- | --- | --- | --- |
 | <a id="app-windows-terminal"></a>**[Windows Terminal](https://docs.microsoft.com/windows/terminal)** | El terminal de Windows: pestanyes, panells i perfils per a PowerShell, cmd i WSL. | winget |  |
 | <a id="app-tabby"></a>**[Tabby](https://tabby.sh/)** | Terminal amb gestor de connexions SSH i sincronització de la configuració. | winget |  |
+| <a id="app-nushell"></a>**[Nushell](https://www.nushell.sh/)** | Shell on tot són dades estructurades: la sortida de cada ordre és una taula que pots filtrar i ordenar. | winget | opcional |
 | <a id="app-wave"></a>**[Wave Terminal](https://waveterm.dev/)** | Terminal per blocs: desa la sortida de cada ordre perquè la puguis rellegir i compartir. | winget |  |
 
 ### Comunicació
@@ -461,7 +462,7 @@ substitueix.
 | Warp | Terminal amb funcions d'IA. Al Mac s'instal·la; aquí no el volem. — windows-terminal |
 | Wins | Canviador de finestres de macOS. A Windows, Alt+Tab i PowerToys. — Alt+Tab (natiu) |
 
-**77 aplicacions** en 17 categories, de les quals **13 són opcionals**: no
+**78 aplicacions** en 17 categories, de les quals **14 són opcionals**: no
 s'instal·len si no les tries en llançar el run. 19 entrades més són del
 catàleg del Mac i no apliquen aquí.
 <!-- APPS:FI -->
