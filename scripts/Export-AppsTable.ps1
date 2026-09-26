@@ -221,7 +221,8 @@ foreach ($group in @($config.packages.Keys | Sort-Object)) {
         if ($mac) { $mac = "``$mac``" } else { $mac = '—' }
 
         if (Test-HasProvider $pkg) {
-            $windows = $pkg.name
+            $windows = Escape-Cell $pkg.name
+            if ($pkg.home) { $windows = "[$windows]($($pkg.home))" }
         } else {
             $equiv = $pkg.win_equivalent
             if (-not $equiv) { $equiv = 'PENDENT DE DECIDIR' }

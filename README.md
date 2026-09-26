@@ -1,4 +1,4 @@
-# ansible-win
+﻿# ansible-win
 
 Provisionament personal d'una màquina Windows: paquets de winget/Chocolatey/Scoop,
 apps de la Microsoft Store, aplicacions d'inici, configuració de la shell
