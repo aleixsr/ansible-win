@@ -103,6 +103,7 @@ $ordre = @($config.packages.Keys | Sort-Object { if ($defaultGroups -contains $_
 $installables = 0
 $opcionals = 0
 $senseEquivalent = New-Object System.Collections.ArrayList
+$totesLesApps = New-Object System.Collections.ArrayList
 
 foreach ($group in $ordre) {
     $entries = @($config.packages[$group] | Where-Object { $_ })
@@ -126,12 +127,31 @@ foreach ($group in $ordre) {
     Add-App '| App | Per a què serveix | D''on surt | |'
     Add-App '| --- | --- | --- | --- |'
     foreach ($pkg in $ambProveidor) {
+        [void]$totesLesApps.Add($pkg)
         $marca = ''
         if ($pkg.optional) { $marca = 'opcional' }
-        Add-App ("| **{0}** | {1} | {2} | {3} |" -f `
-            (Escape-Cell $pkg.name), (Escape-Cell $pkg.desc), (Get-SourceCell $pkg), $marca)
+        # L'ancora fa que l'index hi pugui saltar; GitHub respecta l'<a id>.
+        $nom = Escape-Cell $pkg.name
+        if ($pkg.home) { $nom = "[$nom]($($pkg.home))" }
+        Add-App ('| <a id="app-{0}"></a>**{1}** | {2} | {3} | {4} |' -f `
+            $pkg.id, $nom, (Escape-Cell $pkg.desc), (Get-SourceCell $pkg), $marca)
     }
 }
+
+# L'index va al davant, pero es construeix al final: fins ara no sabiem quines
+# apps hi hauria. Els enllacos van a l'ancora de cada fila, no al web: des de la
+# fila ja hi ha l'enllac al projecte, i aixi primer veus que fa l'app.
+$index = New-Object System.Collections.ArrayList
+[void]$index.Add('')
+[void]$index.Add('### Índex d''aplicacions')
+[void]$index.Add('')
+$enllacos = @($totesLesApps | Sort-Object { "$($_.name)" } | ForEach-Object {
+    "[$(Escape-Cell $_.name)](#app-$($_.id))"
+})
+[void]$index.Add(($enllacos -join ' · '))
+[void]$index.Add('')
+[void]$index.Add('Cada app enllaça amb la seva fila; des d''allà, el nom porta al web del projecte.')
+[void]$appLines.InsertRange(0, $index)
 
 # Les entrades que només són del Mac: no s'instal·len ni surten al run, però
 # documenten qui els fa la feina aquí.

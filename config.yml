@@ -135,6 +135,7 @@ debloat:
 packages:
   development:
   - id: gh
+    home: https://cli.github.com/
     desc: "Client de GitHub per a la terminal: PRs, issues i releases sense obrir el navegador."
     name: GitHub CLI
     winget: GitHub.cli
@@ -142,6 +143,7 @@ packages:
     mac: gh
     test: gh
   - id: git
+    home: https://gitforwindows.org/
     desc: "El control de versions. Porta Git Bash i Git Credential Manager."
     name: Git
     winget: Git.Git
@@ -149,6 +151,7 @@ packages:
     mac: git
     test: git
   - id: node
+    home: https://nodejs.org/
     desc: "Runtime de JavaScript, versió LTS. Arrossega npm, que fa falta per a Tabby i per a les eines globals."
     name: Node.js LTS
     winget: OpenJS.NodeJS.LTS
@@ -156,58 +159,68 @@ packages:
     mac: node
     test: node
   - id: python
+    home: https://www.python.org/
     desc: "Intèrpret de Python 3.14, amb pip i el llançador py."
     name: Python 3.14
     winget: Python.Python.3.14
     choco: python314
     mac: python@3.14
   - id: apache-directory-studio
+    home: https://directory.apache.org/studio/
     desc: "Navegador i editor de directoris LDAP. Per mirar l'Active Directory sense endevinar filtres."
     name: Apache Directory Studio
     winget: Apache.DirectoryStudio
     mac: apache-directory-studio
   - id: copilot-cli
+    home: https://github.com/github/copilot-cli
     desc: "GitHub Copilot a la terminal: explica i suggereix ordres."
     name: GitHub Copilot CLI
     winget: GitHub.Copilot
     mac: copilot-cli
   - id: dbeaver
+    home: https://dbeaver.io/download/
     desc: "Client SQL universal: PostgreSQL, MySQL, SQL Server, Oracle i companyia amb un sol client."
     name: DBeaver Community
     winget: DBeaver.DBeaver.Community
     choco: dbeaver
     mac: dbeaver-community
   - id: drawio
+    home: https://github.com/jgraph/drawio-desktop
     desc: "Diagrames d'arquitectura i xarxa en local, sense compte ni núvol."
     name: draw.io
     winget: JGraph.Draw
     choco: drawio
     mac: drawio
   - id: github-desktop
+    home: https://github.com/apps/desktop
     desc: "GitHub amb finestres, per als repos on no vols pensar en ordres."
     name: GitHub Desktop
     winget: GitHub.GitHubDesktop
     choco: github-desktop
     mac: github
   - id: soapui
+    home: http://www.soapui.org/
     desc: "Proves de serveis web SOAP i REST. Encara fa falta per als SOAP de sempre."
     name: SoapUI
     choco: soapui
     provider: choco
     mac: soapui
   - id: notepadplusplus
+    home: https://notepad-plus-plus.org/
     desc: "Editor de text ràpid, per a un cop d'ull o una edició de quatre línies."
     name: Notepad++
     winget: Notepad++.Notepad++
     choco: notepadplusplus
     mac: (no hi es a ansible-mac)
   - id: sublime-text
+    home: https://www.sublimetext.com/
     desc: "Editor lleuger que obre fitxers de centenars de MB sense ofegar-se."
     name: Sublime Text
     winget: SublimeHQ.SublimeText.4
     choco: sublimetext4
     mac: sublime-text
   - id: vscode
+    home: https://code.visualstudio.com/
     desc: "L'editor principal: extensions, depurador i terminal integrada."
     name: Visual Studio Code
     winget: Microsoft.VisualStudioCode
@@ -215,6 +228,7 @@ packages:
     mac: visual-studio-code
     scope: user
   - id: vscode-insiders
+    home: https://code.visualstudio.com/insiders/
     desc: "La branca diària de VS Code, en paral·lel a l'estable. Per provar coses sense trencar l'entorn de feina."
     name: Visual Studio Code Insiders
     winget: Microsoft.VisualStudioCode.Insiders
@@ -223,12 +237,14 @@ packages:
     scope: user
   clouddevops:
   - id: azure-cli
+    home: https://docs.microsoft.com/en-us/cli/azure/
     desc: "CLI d'Azure: subscripcions, recursos i tot el tenant des de la terminal."
     name: Azure CLI
     winget: Microsoft.AzureCLI
     choco: azure-cli
     mac: azure-cli
   - id: oci-cli
+    home: https://docs.oracle.com/en-us/iaas/Content/API/Concepts/cliconcepts.htm
     desc: "CLI d'Oracle Cloud Infrastructure."
     name: OCI CLI (Oracle Cloud)
     choco: oci-cli
@@ -236,46 +252,54 @@ packages:
     mac: oci-cli
   networking:
   - id: iperf3
+    home: https://github.com/ar51an/iperf3-win-builds
     desc: "Mesura l'ample de banda real entre dos punts. L'eina per demostrar si la lentitud és de la xarxa."
     name: iperf3
     winget: ar51an.iPerf3
     mac: iperf3
     test: iperf3
   - id: rustscan
+    home: https://github.com/bee-san/RustScan
     desc: "Escàner de ports molt ràpid; encadena amb Nmap per al detall."
     name: RustScan
     winget: bee-san.RustScan
     mac: rustscan
   - id: mtr
+    home: https://github.com/White-Tiger/WinMTR
     desc: "traceroute i ping alhora, en continu: ensenya en quin salt es perden els paquets."
     name: WinMTR
     choco: winmtr-redux
     provider: choco
     mac: mtr
   - id: nmap
+    home: https://nmap.org
     desc: "Descoberta de xarxa i escaneig de ports i serveis."
     name: Nmap
     winget: Insecure.Nmap
     choco: nmap
     mac: nmap
   - id: speedtest
+    home: https://www.speedtest.net/apps/cli
     desc: "Speedtest d'Ookla per a la terminal, per deixar-ne constància en un log."
     name: Speedtest CLI
     winget: Ookla.Speedtest.CLI
     choco: speedtest
     mac: speedtest
   - id: swaks
+    home: https://github.com/muquit/mailsend-go
     desc: "Envia correu des de la línia d'ordres per provar SMTP, relays i autenticació."
     name: mailsend-go
     winget: muquit.mailsend-go
     mac: swaks
   - id: tcping
+    home: https://www.elifulkerson.com/projects/tcping.php
     desc: "Ping contra un port TCP. Per quan l'ICMP està bloquejat, que és gairebé sempre."
     name: tcping
     choco: tcping
     provider: choco
     mac: tcping
   - id: wget
+    home: https://eternallybored.org/misc/wget/
     desc: "Descàrregues no interactives, amb reintents i recursivitat."
     name: wget
     winget: JernejSimoncic.Wget
@@ -283,6 +307,7 @@ packages:
     mac: wget
   systemutilities:
   - id: powershell
+    home: https://microsoft.com/PowerShell
     desc: "PowerShell 7, al costat del 5.1 que ve amb Windows. Multiplataforma i molt més ràpid."
     name: PowerShell 7
     winget: Microsoft.PowerShell
@@ -320,6 +345,7 @@ packages:
     mac: mas
     note: 'A Windows no cal: winget ja parla amb la Microsoft Store (--source msstore).'
   - id: balenaetcher
+    home: https://etcher.balena.io/
     desc: "Grava imatges ISO i IMG a USB, verificant el resultat."
     name: balenaEtcher
     winget: Balena.Etcher
@@ -333,24 +359,28 @@ packages:
     note: "Espec\xEDfic de macOS (evita que el Bluetooth desperti el Mac). A Windows\
       \ es gestiona des de l'Administrador de dispositius."
   - id: wiztree
+    home: https://diskanalyzer.com/
     desc: "Què t'ocupa el disc, llegint la MFT: analitza un disc sencer en segons."
     name: WizTree
     winget: AntibodySoftware.WizTree
     choco: wiztree
     mac: disk-inventory-x
   - id: powertoys
+    home: https://github.com/microsoft/PowerToys
     desc: "La caixa d'eines de Microsoft: FancyZones, PowerToys Run, Awake, Video Conference Mute i selector de colors."
     name: PowerToys
     winget: Microsoft.PowerToys
     choco: powertoys
     mac: karabiner-elements
   - id: screentogif
+    home: https://www.screentogif.com/
     desc: "Grava un tros de pantalla i el desa com a GIF o MP4. Per ensenyar un error sense escriure tres paràgrafs."
     name: ScreenToGif
     winget: NickeManarin.ScreenToGif
     choco: screentogif
     mac: licecap
   - id: novabench
+    home: https://novabench.com
     desc: "Benchmark ràpid de CPU, GPU, RAM i disc."
     name: Novabench
     winget: NovabenchInc.Novabench
@@ -370,6 +400,7 @@ packages:
     note: "Espec\xEDfic de macOS (canviador de finestres). A Windows: Alt+Tab natiu\
       \ / PowerToys."
   - id: xca
+    home: https://www.hohnstaedt.de/xca/
     desc: "Gestor d'autoritats de certificació i certificats X.509, amb interfície."
     name: XCA
     choco: xca
@@ -377,47 +408,55 @@ packages:
     mac: xca
   browsers:
   - id: brave
+    home: https://brave.com/download
     desc: "Navegador Chromium amb bloqueig d'anuncis i de seguiment de sèrie."
     name: Brave
     winget: Brave.Brave
     choco: brave
     mac: brave-browser
   - id: chromium
+    home: https://github.com/Hibbiki/chromium-win64
     desc: "Chromium net, sense els serveis de Google. Útil per provar comportaments del motor."
     name: Chromium
     winget: Hibbiki.Chromium
     choco: chromium
     mac: chromium
   - id: firefox
+    home: https://www.mozilla.org/firefox/
     desc: "Motor Gecko: el segon motor que cal tenir per comprovar que una web funciona de debò."
     name: Mozilla Firefox
     winget: Mozilla.Firefox
     choco: firefox
     mac: firefox
   - id: chrome
+    home: https://www.google.com/chrome/
     desc: "Google Chrome, per al que només va bé a Chrome i per a les seves DevTools."
     name: Google Chrome
     winget: Google.Chrome
     choco: googlechrome
     mac: google-chrome
   - id: edge
+    home: https://www.microsoft.com/en-us/edge
     desc: "Ve amb Windows; el catàleg només se n'assegura la versió. És el que millor s'entén amb els portals de Microsoft 365."
     name: Microsoft Edge
     winget: Microsoft.Edge
     mac: microsoft-edge
   terminal:
   - id: windows-terminal
+    home: https://docs.microsoft.com/windows/terminal
     desc: "El terminal de Windows: pestanyes, panells i perfils per a PowerShell, cmd i WSL."
     name: Windows Terminal
     winget: Microsoft.WindowsTerminal
     mac: iterm2
   - id: tabby
+    home: https://tabby.sh/
     desc: "Terminal amb gestor de connexions SSH i sincronització de la configuració."
     name: Tabby
     winget: Eugeny.Tabby
     choco: tabby
     mac: tabby
   - id: wave
+    home: https://waveterm.dev/
     desc: "Terminal per blocs: desa la sortida de cada ordre perquè la puguis rellegir i compartir."
     name: Wave Terminal
     winget: CommandLine.Wave
@@ -430,6 +469,7 @@ packages:
     note: "Decidit no portar-lo: ja tenim Windows Terminal, Tabby i Wave."
   communication:
   - id: mailspring
+    home: https://getmailspring.com/
     optional: true
     desc: "Client de correu d'escriptori per a diversos comptes IMAP."
     name: Mailspring
@@ -437,6 +477,7 @@ packages:
     provider: choco
     mac: mailspring
   - id: teams
+    home: https://www.microsoft.com/microsoft-teams/group-chat-software
     optional: true
     desc: "Microsoft Teams: xat, reunions i trucades del tenant."
     name: Microsoft Teams
@@ -450,6 +491,7 @@ packages:
     note: "Nom\xE9s macOS i web. A Windows fem servir Mailspring, que ja \xE9s\
       \ en aquesta categoria."
   - id: telegram
+    home: https://desktop.telegram.org/
     optional: true
     desc: "Telegram d'escriptori."
     name: Telegram
@@ -457,6 +499,7 @@ packages:
     choco: telegram
     mac: telegram
   - id: whatsapp
+    home: http://whatsapp.com/
     optional: true
     desc: "WhatsApp d'escriptori (paquet MSIX de la Store)."
     name: WhatsApp
@@ -464,6 +507,7 @@ packages:
     source: msstore
     mac: whatsapp
   - id: zoho-mail
+    home: https://www.zoho.com/mail/desktop/
     optional: true
     desc: "Client d'escriptori de Zoho Mail."
     name: Zoho Mail
@@ -483,6 +527,7 @@ packages:
     mac: caffeine
     note: "Equivalent a Windows: PowerToys Awake, que ja s'instal\xB7la a systemutilities."
   - id: claude
+    home: https://claude.ai/download
     desc: "Claude d'escriptori."
     name: Claude Desktop
     winget: Anthropic.Claude
@@ -495,12 +540,14 @@ packages:
     note: "Porta a macOS la previsualitzaci\xF3 de finestres de la barra de tasques.\
       \ A Windows ja hi \xE9s."
   - id: keka
+    home: https://7-zip.org/
     desc: "7-Zip: compressió i descompressió de gairebé qualsevol format."
     name: 7-Zip
     winget: 7zip.7zip
     choco: 7zip
     mac: keka
   - id: peazip
+    home: https://peazip.github.io/
     desc: "Gestor d'arxius amb interfície, xifratge i comparació de continguts."
     name: PeaZip
     winget: Giorgiotani.Peazip
@@ -513,6 +560,7 @@ packages:
     mac: maccy
     note: "Historial de porta-retalls. A Windows \xE9s natiu: Win+V."
   - id: obsidian
+    home: https://obsidian.md/
     optional: true
     desc: "Notes en Markdown desades com a fitxers locals, amb enllaços entre elles. Fa la feina que al Mac fa Notion."
     name: Obsidian
@@ -520,6 +568,7 @@ packages:
     choco: obsidian
     mac: notion
   - id: numi
+    home: https://calcator.app/
     optional: true
     desc: "Calculadora de text: escrius «3 GB / 40 min» i respon."
     name: Calcator
@@ -540,6 +589,7 @@ packages:
     note: "Gesti\xF3 de finestres: PowerToys FancyZones + Win+fletxes, ja cobert a\
       \ systemutilities."
   - id: hotcorners
+    home: https://yourordinarycat.com/Charmy
     optional: true
     desc: "Accions en portar el cursor a una cantonada de la pantalla."
     name: 'Charmy: Hot Corners'
@@ -547,12 +597,14 @@ packages:
     source: msstore
     mac: (hot corners natius de macOS)
   - id: shottr
+    home: https://getsharex.com/
     desc: "ShareX: captures, gravació, anotacions i pujada automàtica."
     name: ShareX
     winget: ShareX.ShareX
     choco: sharex
     mac: shottr
   - id: stats
+    home: http://www.hwinfo.com/
     desc: "HWiNFO: sensors de temperatura, rellotges i consum de tot el maquinari."
     name: HWiNFO
     choco: hwinfo.install
@@ -560,12 +612,14 @@ packages:
     mac: stats
   networkingvpn:
   - id: switchhosts
+    home: https://github.com/oldj/SwitchHosts
     desc: "Canvia de fitxer hosts amb un clic. Per apuntar un domini a preproducció i tornar enrere."
     name: SwitchHosts
     winget: oldj.switchhosts
     choco: switchhosts
     mac: switchhosts
   - id: tailscale
+    home: https://tailscale.com/download
     optional: true
     desc: "VPN de malla sobre WireGuard: connecta els teus equips sense obrir ports."
     name: Tailscale
@@ -573,6 +627,7 @@ packages:
     choco: tailscale
     mac: tailscale-app
   - id: openvpn
+    home: https://openvpn.net/client/
     desc: "Client d'OpenVPN, per als túnels dels clients que el fan servir."
     name: OpenVPN Connect
     winget: OpenVPNTechnologies.OpenVPNConnect
@@ -580,11 +635,13 @@ packages:
     mac: tunnelblick
   remoteaccess:
   - id: royal-ts
+    home: https://www.royalapps.com/ts/win/download
     desc: "Gestor de connexions remotes: RDP, SSH, VNC i webs, en un arbre amb credencials."
     name: Royal TS
     winget: RoyalApps.RoyalTS.7
     mac: royal-tsx
   - id: rustdesk
+    home: https://rustdesk.com/
     desc: "Escriptori remot obert, amb servidor propi si el vols. Alternativa a TeamViewer."
     name: RustDesk
     choco: rustdesk
@@ -599,17 +656,20 @@ packages:
       \ mstsc.exe ja ve de s\xE8rie."
   filemanagementcloud:
   - id: box-drive
+    home: https://www.box.com/
     desc: "Munta Box com una unitat de xarxa, amb els fitxers sota demanda."
     name: Box Drive
     winget: Box.Box
     mac: box-drive
   - id: localsend
+    home: https://localsend.org/
     desc: "Envia fitxers entre dispositius de la mateixa xarxa, sense núvol ni comptes."
     name: LocalSend
     winget: LocalSend.LocalSend
     choco: localsend
     mac: localsend
   - id: synology-drive
+    home: https://kb.synology.com/DSM/help/SynologyDriveClient/synologydriveclient
     optional: true
     desc: "Sincronitza carpetes amb un NAS de Synology."
     name: Synology Drive Client
@@ -617,6 +677,7 @@ packages:
     mac: synology-drive
   microsoftsuite:
   - id: azure-storage-explorer
+    home: https://azure.microsoft.com/en-us/features/storage-explorer
     desc: "Explora blobs, cues, taules i fitxers d'Azure Storage amb interfície."
     name: Azure Storage Explorer
     winget: Microsoft.Azure.StorageExplorer
@@ -630,24 +691,28 @@ packages:
     note: "Espec\xEDfic de macOS. A Windows actualitza Click-to-Run / Windows Update."
   media:
   - id: handbrake
+    home: https://handbrake.fr/
     desc: "Recodifica vídeo amb perfils ja fets: per abaixar el pes d'un MP4 sense pensar-hi."
     name: HandBrake
     winget: HandBrake.HandBrake
     choco: handbrake
     mac: handbrake-app
   - id: vlc
+    home: https://www.videolan.org/vlc/
     desc: "Reprodueix qualsevol cosa sense haver d'instal·lar còdecs."
     name: VLC
     winget: VideoLAN.VLC
     choco: vlc
     mac: vlc
   - id: mpv
+    home: https://github.com/shinchiro/mpv-winbuild-cmake
     desc: "Reproductor mínim i molt ràpid, controlat per teclat i scripts."
     name: mpv
     winget: shinchiro.mpv
     choco: mpv
     mac: (no hi es a ansible-mac)
   - id: ffmpeg
+    home: https://www.gyan.dev/ffmpeg/builds/
     desc: "La navalla suïssa de l'àudio i el vídeo: converteix, retalla i transmet."
     name: FFmpeg
     winget: Gyan.FFmpeg
@@ -655,6 +720,7 @@ packages:
     mac: (no hi es a ansible-mac)
     test: ffmpeg
   - id: opentv
+    home: https://github.com/Fredolx/open-tv
     optional: true
     desc: "Reproductor de llistes IPTV M3U."
     name: Open TV
@@ -666,6 +732,7 @@ packages:
     mac: (no hi es a ansible-mac)
   documents:
   - id: acrobat-reader
+    home: https://www.adobe.com/products/reader.html
     desc: "Lector de PDF de referència, per als formularis i les signatures que només hi funcionen."
     name: Adobe Acrobat Reader
     winget: Adobe.Acrobat.Reader.64-bit
@@ -679,23 +746,27 @@ packages:
     note: "Espec\xEDfic de macOS. A Windows el cobreix Mark Text, que ja \xE9s en\
       \ aquesta categoria."
   - id: marktext
+    home: https://marktext.app/
     desc: "Editor de Markdown amb la previsualització al mateix lloc on escrius."
     name: Mark Text
     choco: marktext
     provider: choco
     mac: mark-text
   - id: modern-csv
+    home: https://www.moderncsv.com/
     desc: "Obre i edita CSV de milions de línies sense que l'Excel se'ls inventi."
     name: Modern CSV
     winget: PFOJEnterprisesLLC.ModernCSV
     mac: modern-csv
   - id: onlyoffice
+    home: https://www.onlyoffice.com/en/desktop.aspx
     desc: "Suite ofimàtica compatible amb els formats de Microsoft. El substitut de l'Office al catàleg."
     name: ONLYOFFICE Desktop Editors
     winget: ONLYOFFICE.DesktopEditors
     choco: onlyoffice
     mac: onlyoffice
   - id: pdf24
+    home: https://www.pdf24.org/en/
     optional: true
     desc: "Eines de PDF en local: unir, partir, comprimir, convertir i signar."
     name: PDF24 Creator
@@ -704,6 +775,7 @@ packages:
     mac: revpdf-editor
   hardware:
   - id: logi-options
+    home: https://www.logitech.com/software/logi-options-plus
     optional: true
     desc: "Configura teclats i ratolins Logitech: botons, gestos i canvi entre equips."
     name: Logi Options+
@@ -711,11 +783,13 @@ packages:
     mac: logi-options+
   store:
   - id: ping-status
+    home: https://github.com/JustinGrote/PingoMeter
     desc: "Latència a la barra de tasques, per veure d'un cop d'ull si la connexió va bé."
     name: PingoMeter
     winget: JustinGrote.PingoMeter
     mac: mas 1158928913 Ping Status
   - id: microsoft-todo
+    home: https://to-do.microsoft.com/
     desc: "Tasques de Microsoft To Do, sincronitzades amb el compte de feina."
     name: Microsoft To Do
     winget: 9NBLGGH5R558
@@ -729,12 +803,14 @@ packages:
     note: 'Equivalent a Windows: PowerToys Video Conference Mute (Win+Maj+A), ja cobert
       a systemutilities.'
   - id: azure-vpn-client
+    home: https://apps.microsoft.com/detail/9NP355QT2SQB
     desc: "Client oficial per a les VPN Point-to-Site d'Azure."
     name: Azure VPN Client
     winget: 9NP355QT2SQB
     source: msstore
     mac: mas 1553936137 Azure VPN Client
   - id: wireguard
+    home: https://www.wireguard.com/install/
     desc: "Client de WireGuard, per als túnels que no passen per Tailscale."
     name: WireGuard
     winget: WireGuard.WireGuard
@@ -742,6 +818,7 @@ packages:
     mac: mas 1451685025 WireGuard
   fonts:
   - id: font-meslo
+    home: https://github.com/ryanoasis/nerd-fonts
     desc: "Meslo amb les icones de Nerd Fonts. Fa falta perquè el prompt d'Starship es vegi bé."
     name: Meslo LG Nerd Font
     choco: nerd-fonts-meslo
