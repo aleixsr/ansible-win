@@ -23,11 +23,11 @@
 .DESCRIPTION
     L'unica cosa que cal per comencar. Deixa llest:
       1. TLS 1.2 i politica d'execucio per a aquest proces
-      2. Chocolatey (si falta)
-      3. gsudo, perque la resta pugui elevar sense obrir mil UAC
-      4. Git (perque el repo es pugui actualitzar amb git pull)
-      5. El modul powershell-yaml, que es el que llegeix el cataleg
-      6. Opcionalment, executa run.ps1 tot seguit
+      2. Chocolatey, gsudo i Git, que van a escala de maquina i per tant
+         demanen UNA sola elevacio entre tots tres
+      3. El modul powershell-yaml, que es el que llegeix el cataleg
+      4. Clona el repo (o l'actualitza si ja hi es)
+      5. Opcionalment, executa run.ps1 tot seguit
 
     Es pot executar directament des d'Internet:
 
@@ -97,9 +97,6 @@ Write-Step 'Preparant el proces'
 Set-ExecutionPolicy Bypass -Scope Process -Force
 Write-Ok 'TLS 1.2 i ExecutionPolicy Bypass (nomes per a aquest proces)'
 
-if (-not (Test-Admin)) {
-    Write-Warn 'No ets administrador: Chocolatey i alguns paquets demanaran UAC.'
-}
 
 # -----------------------------------------------------------------------------
 # 2. winget
@@ -113,54 +110,101 @@ if (Test-Cmd 'winget') {
 }
 
 # -----------------------------------------------------------------------------
-# 3. Chocolatey
+# 3. El que necessita privilegis: Chocolatey, gsudo i Git
 # -----------------------------------------------------------------------------
-Write-Step 'Chocolatey'
+# Els tres s'instal.len a escala de maquina. Chocolatey ni tan sols demana UAC:
+# es nega amb un "requires Administrative permissions" i prou. winget, amb
+# --disable-interactivity, tampoc no pot obrir el dialeg.
+#
+# Per aixo els agrupem i demanem UNA sola elevacio per als que faltin, igual que
+# fa run.ps1. No elevem el bootstrap sencer a proposit: si l'usuari no es
+# administrador, l'UAC demanaria credencials d'un altre compte i el clon del
+# repo acabaria al perfil equivocat. Elevant nomes les instal.lacions, el clon i
+# el modul de PowerShell es queden a la sessio de qui ho ha llancat.
+Write-Step 'Eines de base'
+
+$ADMIN_PS = @'
+Set-ExecutionPolicy Bypass -Scope Process -Force
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+'@
+
+$pendents = New-Object System.Collections.ArrayList
+
 if (Test-Cmd 'choco') {
-    Write-Ok (Get-Command choco).Source
+    Write-Ok ('Chocolatey  ' + (Get-Command choco).Source)
 } else {
-    Invoke-Expression ((New-Object System.Net.WebClient).DownloadString(
-        'https://community.chocolatey.org/install.ps1'))
-    Sync-Path
-    Write-Ok 'Chocolatey instal.lat'
+    [void]$pendents.Add(@{
+        Nom = 'Chocolatey'
+        Cmd = "iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))"
+    })
 }
 
-# -----------------------------------------------------------------------------
-# 4. gsudo  (i `sudo` sense la g)
-# -----------------------------------------------------------------------------
-Write-Step 'gsudo'
 if (Test-Cmd 'gsudo') {
-    Write-Ok (Get-Command gsudo).Source
+    Write-Ok ('gsudo       ' + (Get-Command gsudo).Source)
 } elseif (Test-Cmd 'winget') {
-    & winget install --id gerardog.gsudo --exact --silent `
-        --accept-package-agreements --accept-source-agreements --disable-interactivity
-    Sync-Path
-    Write-Ok 'gsudo instal.lat (winget)'
+    [void]$pendents.Add(@{
+        Nom = 'gsudo'
+        Cmd = "winget install --id gerardog.gsudo --exact --silent --accept-package-agreements --accept-source-agreements --disable-interactivity"
+    })
 } else {
-    & choco install gsudo -y --no-progress
-    Sync-Path
-    Write-Ok 'gsudo instal.lat (choco)'
+    [void]$pendents.Add(@{ Nom = 'gsudo'; Cmd = 'choco install gsudo -y --no-progress' })
 }
 
-# -----------------------------------------------------------------------------
-# 5. Git
-# -----------------------------------------------------------------------------
-Write-Step 'Git'
 if (Test-Cmd 'git') {
-    Write-Ok (& git --version)
+    Write-Ok ('Git         ' + (& git --version))
 } elseif (Test-Cmd 'winget') {
-    & winget install --id Git.Git --exact --silent `
-        --accept-package-agreements --accept-source-agreements --disable-interactivity
-    Sync-Path
-    Write-Ok 'Git instal.lat'
+    [void]$pendents.Add(@{
+        Nom = 'Git'
+        Cmd = "winget install --id Git.Git --exact --silent --accept-package-agreements --accept-source-agreements --disable-interactivity"
+    })
 } else {
-    & choco install git -y --no-progress
+    [void]$pendents.Add(@{ Nom = 'Git'; Cmd = 'choco install git -y --no-progress' })
+}
+
+if ($pendents.Count -eq 0) {
+    Write-Ok 'no falta res'
+} elseif (Test-Admin) {
+    foreach ($t in $pendents) {
+        Write-Host ("    .. instal.lant " + $t.Nom)
+        Invoke-Expression $t.Cmd
+        Sync-Path
+        Write-Ok ($t.Nom + ' instal.lat')
+    }
+} else {
+    Write-Host ''
+    Write-Host ('  Falten ' + $pendents.Count + ' eines que s.instal.len a escala de maquina:') -ForegroundColor Yellow
+    foreach ($t in $pendents) { Write-Host ('     - ' + $t.Nom) -ForegroundColor White }
+    Write-Host ''
+    Write-Host '  Accepta l.UAC i es fan totes de cop. Es l.unic cop que el demanara.' -ForegroundColor Yellow
+
+    $guio = $ADMIN_PS + "`n" + (($pendents | ForEach-Object { $_.Cmd }) -join "`n")
+    $fitxer = Join-Path $env:TEMP ('aw-bootstrap-admin-' + [guid]::NewGuid().ToString('N') + '.ps1')
+    Set-Content -LiteralPath $fitxer -Value $guio -Encoding UTF8
+
+    try {
+        $p = Start-Process powershell -Verb RunAs -Wait -PassThru -ArgumentList `
+            '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $fitxer
+        if ($p.ExitCode -ne 0) {
+            Write-Warn ('la part elevada ha acabat amb codi ' + $p.ExitCode)
+        }
+    } catch {
+        Write-Host ''
+        Write-Warn 'UAC cancel.lat o sense permisos: no s.ha instal.lat res d.aixo.'
+        Write-Warn 'Torna-hi, o obre una consola com a administrador i executa-ho alla.'
+    } finally {
+        Remove-Item -LiteralPath $fitxer -Force -ErrorAction SilentlyContinue
+    }
+
     Sync-Path
-    Write-Ok 'Git instal.lat'
+    foreach ($t in $pendents) {
+        $ordre = switch ($t.Nom) { 'Chocolatey' { 'choco' } 'gsudo' { 'gsudo' } 'Git' { 'git' } }
+        if (Test-Cmd $ordre) { Write-Ok ($t.Nom + ' instal.lat') }
+        else { Write-Warn ($t.Nom + ' segueix sense instal.lar') }
+    }
 }
 
 # -----------------------------------------------------------------------------
-# 6. powershell-yaml
+# 4. powershell-yaml
 # -----------------------------------------------------------------------------
 Write-Step 'Modul powershell-yaml'
 if (Get-Module -ListAvailable powershell-yaml) {
@@ -178,7 +222,7 @@ if (Get-Module -ListAvailable powershell-yaml) {
 }
 
 # -----------------------------------------------------------------------------
-# 7. El repo
+# 5. El repo
 # -----------------------------------------------------------------------------
 Write-Step 'Repositori'
 $here = $null
@@ -194,7 +238,22 @@ if ($here -and (Test-Path -LiteralPath (Join-Path $here 'run.ps1'))) {
     Pop-Location
     Write-Ok "actualitzat: $repoPath"
 } else {
-    & git clone $RepoUrl $Path
+    # git escriu "Cloning into..." a stderr, i amb ErrorActionPreference = Stop
+    # Windows PowerShell 5.1 ho converteix en error terminant encara que el
+    # clon vagi be. Nomes passa quan algu captura la sortida, pero aleshores es
+    # un bootstrap que mor a l'ultim pas sense cap motiu visible.
+    $eapAnterior = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        & git clone $RepoUrl $Path
+        $codi = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $eapAnterior
+    }
+
+    if ($codi -ne 0 -or -not (Test-Path -LiteralPath (Join-Path $Path 'run.ps1'))) {
+        throw "git clone ha fallat (codi $codi). Comprova la connexio i que $Path no existeixi ja."
+    }
     $repoPath = $Path
     Write-Ok "clonat a: $repoPath"
 }
