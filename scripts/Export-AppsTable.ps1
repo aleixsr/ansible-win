@@ -7,11 +7,16 @@
     s'escriuen a mà: surten de `config.yml`, que és l'única font. Si afegeixes un
     paquet o li canvies la descripció, executa aquest script i commita el resultat.
 
-    Al README hi ha dos blocs delimitats per marques HTML. Tot el que hi ha entre
-    les marques es reescriu; la resta del fitxer no es toca.
+    Hi ha blocs delimitats per marques HTML. Tot el que hi ha entre les marques
+    es reescriu; la resta dels fitxers no es toca.
 
-      <!-- INDEX:INICI -->  ...  <!-- INDEX:FI -->   index de seccions
-      <!-- APPS:INICI -->   ...  <!-- APPS:FI -->    catàleg d'aplicacions
+      README.md
+        <!-- INDEX:INICI -->  ...  <!-- INDEX:FI -->   index de seccions
+        <!-- APPS:INICI -->   ...  <!-- APPS:FI -->    resum de quatre xifres
+
+      docs/APPS.md
+        <!-- APPS:INICI -->    ...  <!-- APPS:FI -->    catàleg per categories
+        <!-- PARITAT:INICI --> ...  <!-- PARITAT:FI --> taula de paritat
 .EXAMPLE
     .\scripts\Export-AppsTable.ps1
 .EXAMPLE
@@ -186,10 +191,10 @@ Add-App 'catàleg del Mac i no apliquen aquí.'
 $lines = New-Object System.Collections.ArrayList
 function Add-Line { param([string]$Text = '') [void]$lines.Add($Text) }
 
-Add-Line '# Paritat d''aplicacions: `ansible-mac` ↔ `ansible-win`'
+# Ja no és un document a part: va dins de docs/APPS.md, o sigui que aquí
+# comença en una secçió, no en un títol de fitxer.
 Add-Line ''
-Add-Line '> Generat automàticament per `scripts/Export-AppsTable.ps1` a partir de'
-Add-Line '> `config.yml`. No l''editis a mà.'
+Add-Line '## Paritat amb `ansible-mac`'
 Add-Line ''
 Add-Line 'La columna **A ansible-mac** és la fórmula o el cask del repo de macOS.'
 Add-Line 'Serveix per comprovar d''un cop d''ull que cap app del Mac s''ha quedat pel camí.'
@@ -252,6 +257,22 @@ Add-Line 'la reclama al final del run com a decisió pendent.'
 Add-Line ''
 
 # =============================================================================
+# Resum per al README
+# =============================================================================
+# Al README no hi va el catàleg sencer: només les xifres i cap on mirar. Les
+# xifres també es generen, que si no es queden velles a la primera setmana.
+$resum = New-Object System.Collections.ArrayList
+[void]$resum.Add('')
+[void]$resum.Add(("El catàleg són **{0} aplicacions** en {1} categories, de les quals **{2} són" -f `
+    $installables, $ordre.Count, $opcionals))
+[void]$resum.Add("opcionals**: no s'instal·len si no les demanes. {0} entrades més vénen del" -f $senseEquivalent.Count)
+[void]$resum.Add('catàleg del Mac i aquí no apliquen.')
+[void]$resum.Add('')
+[void]$resum.Add('La llista sencera, amb què fa cadascuna i un enllaç al seu projecte, és a')
+[void]$resum.Add('**[docs/APPS.md](docs/APPS.md)**.')
+$resumBlock = ($resum -join "`n")
+
+# =============================================================================
 # Índex del README
 # =============================================================================
 $readme = Get-Content -LiteralPath $ReadmeFile -Raw -Encoding UTF8
@@ -281,7 +302,7 @@ $appBlock = ($appLines -join "`n")
 if ($readmeAmbApps -match '(?s)<!-- APPS:INICI -->.*?<!-- APPS:FI -->') {
     $readmeAmbApps = [regex]::Replace($readmeAmbApps,
         '(?s)<!-- APPS:INICI -->.*?<!-- APPS:FI -->',
-        { param($m) "<!-- APPS:INICI -->`n" + $appBlock + "`n<!-- APPS:FI -->" })
+        { param($m) "<!-- APPS:INICI -->`n" + $resumBlock + "`n<!-- APPS:FI -->" })
 }
 
 foreach ($line in ($readmeAmbApps -split "`r?`n")) {
@@ -308,14 +329,15 @@ function Set-Block {
         { param($m) "<!-- $Marca`:INICI -->`n" + $Contingut + "`n<!-- $Marca`:FI -->" })
 }
 
-$readmeNou = Set-Block -Text $readme -Marca 'APPS' -Contingut $appBlock
+$readmeNou = Set-Block -Text $readme -Marca 'APPS' -Contingut $resumBlock
 $readmeNou = Set-Block -Text $readmeNou -Marca 'INDEX' -Contingut (($indexLines -join "`n"))
 
-$appsNou = ($lines -join "`n")
 $appsVell = ''
 if (Test-Path -LiteralPath $OutFile) {
     $appsVell = Get-Content -LiteralPath $OutFile -Raw -Encoding UTF8
 }
+$appsNou = Set-Block -Text $appsVell -Marca 'APPS' -Contingut $appBlock
+$appsNou = Set-Block -Text $appsNou -Marca 'PARITAT' -Contingut (($lines -join "`n"))
 
 <#
 .SYNOPSIS

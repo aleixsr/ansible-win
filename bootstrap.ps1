@@ -1,29 +1,37 @@
-﻿#Requires -Version 5.1
+#Requires -Version 5.1
+# -----------------------------------------------------------------------------
+# AQUEST FITXER ES ASCII PUR I SENSE BOM. NO HI POSIS ACCENTS.
+# -----------------------------------------------------------------------------
+# Es l'unic fitxer del repo amb aquesta restriccio, i te un motiu a cada banda:
+#
+#   Sense BOM, perque es baixa i s'executa amb `irm ... | iex`. Si hi hagues
+#   BOM, `irm` el tornaria com un caracter mes dins de la cadena, s'enganxaria
+#   al `#Requires` de la linia 1 i el parser petaria amb un "Unexpected token
+#   'param'" que no diu res de la causa.
+#
+#   Sense accents, perque Windows PowerShell 5.1 llegeix en ANSI tot .ps1 que
+#   no porti BOM. Els accents sortirien trencats ("instalA.lacio", "mAquina")
+#   quan s'executa com a fitxer amb .\bootstrap.ps1.
+#
+# Les dues coses alhora nomes es compleixen amb ASCII i sense BOM. La resta del
+# repo si que porta BOM i accents: alla no hi ha cap `iex` pel mig.
+# -----------------------------------------------------------------------------
 <#
 .SYNOPSIS
-    Prepara una màquina Windows acabada d'instal·lar per poder executar run.ps1.
+    Prepara una maquina Windows acabada d'instal.lar per poder executar run.ps1.
 
 .DESCRIPTION
-    L'única cosa que cal per començar. Deixa llest:
-      1. TLS 1.2 i política d'execució per a aquest procés
+    L'unica cosa que cal per comencar. Deixa llest:
+      1. TLS 1.2 i politica d'execucio per a aquest proces
       2. Chocolatey (si falta)
-      3. gsudo, perquè la resta pugui elevar sense obrir mil UAC
-      4. Git (perquè el repo es pugui actualitzar amb git pull)
-      5. El mòdul powershell-yaml, que és el que llegeix el catàleg
+      3. gsudo, perque la resta pugui elevar sense obrir mil UAC
+      4. Git (perque el repo es pugui actualitzar amb git pull)
+      5. El modul powershell-yaml, que es el que llegeix el cataleg
       6. Opcionalment, executa run.ps1 tot seguit
 
     Es pot executar directament des d'Internet:
 
-        & ([scriptblock]::Create((irm https://raw.githubusercontent.com/aleixsr/ansible-win/main/bootstrap.ps1).TrimStart([char]0xFEFF)))
-
-    El `.TrimStart([char]0xFEFF)` no és cap floritura: aquest fitxer comença amb
-    BOM (el necessita Windows PowerShell 5.1 per llegir-ne els accents quan
-    s'executa com a fitxer), i quan `irm` el baixa, el BOM arriba com un
-    caràcter dins de la cadena. Aleshores la línia 1 ja no és un comentari, el
-    `param()` deixa de ser la primera instrucció i el parser peta amb un
-    "Unexpected token 'param'" que no diu res de tot això.
-
-    Un `irm ... | iex` pelat, per tant, NO funciona amb aquest fitxer.
+        irm https://raw.githubusercontent.com/aleixsr/ansible-win/main/bootstrap.ps1 | iex
 
 .PARAMETER Run
     Encadena run.ps1 quan el bootstrap acabi.
@@ -82,12 +90,12 @@ Write-Host '  ansible-win - bootstrap' -ForegroundColor Magenta
 Write-Host '  ---------------------------' -ForegroundColor DarkGray
 
 # -----------------------------------------------------------------------------
-# 1. Requisits del procés
+# 1. Requisits del proces
 # -----------------------------------------------------------------------------
-Write-Step 'Preparant el procés'
+Write-Step 'Preparant el proces'
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 Set-ExecutionPolicy Bypass -Scope Process -Force
-Write-Ok 'TLS 1.2 i ExecutionPolicy Bypass (només per a aquest procés)'
+Write-Ok 'TLS 1.2 i ExecutionPolicy Bypass (nomes per a aquest proces)'
 
 if (-not (Test-Admin)) {
     Write-Warn 'No ets administrador: Chocolatey i alguns paquets demanaran UAC.'
@@ -100,8 +108,8 @@ Write-Step 'winget'
 if (Test-Cmd 'winget') {
     Write-Ok (Get-Command winget).Source
 } else {
-    Write-Warn 'winget no hi és. Instal·la "Instal·lador de aplicaciones" des de'
-    Write-Warn 'Microsoft Store o https://aka.ms/getwinget i torna a executar això.'
+    Write-Warn 'winget no hi es. Instal.la "Instal.lador de aplicaciones" des de'
+    Write-Warn 'Microsoft Store o https://aka.ms/getwinget i torna a executar aixo.'
 }
 
 # -----------------------------------------------------------------------------
@@ -114,7 +122,7 @@ if (Test-Cmd 'choco') {
     Invoke-Expression ((New-Object System.Net.WebClient).DownloadString(
         'https://community.chocolatey.org/install.ps1'))
     Sync-Path
-    Write-Ok 'Chocolatey instal·lat'
+    Write-Ok 'Chocolatey instal.lat'
 }
 
 # -----------------------------------------------------------------------------
@@ -127,11 +135,11 @@ if (Test-Cmd 'gsudo') {
     & winget install --id gerardog.gsudo --exact --silent `
         --accept-package-agreements --accept-source-agreements --disable-interactivity
     Sync-Path
-    Write-Ok 'gsudo instal·lat (winget)'
+    Write-Ok 'gsudo instal.lat (winget)'
 } else {
     & choco install gsudo -y --no-progress
     Sync-Path
-    Write-Ok 'gsudo instal·lat (choco)'
+    Write-Ok 'gsudo instal.lat (choco)'
 }
 
 # -----------------------------------------------------------------------------
@@ -144,19 +152,19 @@ if (Test-Cmd 'git') {
     & winget install --id Git.Git --exact --silent `
         --accept-package-agreements --accept-source-agreements --disable-interactivity
     Sync-Path
-    Write-Ok 'Git instal·lat'
+    Write-Ok 'Git instal.lat'
 } else {
     & choco install git -y --no-progress
     Sync-Path
-    Write-Ok 'Git instal·lat'
+    Write-Ok 'Git instal.lat'
 }
 
 # -----------------------------------------------------------------------------
 # 6. powershell-yaml
 # -----------------------------------------------------------------------------
-Write-Step 'Mòdul powershell-yaml'
+Write-Step 'Modul powershell-yaml'
 if (Get-Module -ListAvailable powershell-yaml) {
-    Write-Ok 'ja instal·lat'
+    Write-Ok 'ja instal.lat'
 } else {
     if (-not (Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue)) {
         Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope CurrentUser | Out-Null
@@ -166,7 +174,7 @@ if (Get-Module -ListAvailable powershell-yaml) {
         Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
     }
     Install-Module powershell-yaml -Scope CurrentUser -Force -AllowClobber
-    Write-Ok 'powershell-yaml instal·lat'
+    Write-Ok 'powershell-yaml instal.lat'
 }
 
 # -----------------------------------------------------------------------------
@@ -201,9 +209,9 @@ Write-Host ''
 if ($Run) {
     & (Join-Path $repoPath 'run.ps1')
 } else {
-    Write-Host '  Següents passos:' -ForegroundColor White
+    Write-Host '  Seguents passos:' -ForegroundColor White
     Write-Host "     cd $repoPath"
-    Write-Host '     .\run.ps1 -Check      # simulació: mira què faria'
-    Write-Host '     .\run.ps1             # provisiona de debò'
+    Write-Host '     .\run.ps1 -Check      # simulacio: mira que faria'
+    Write-Host '     .\run.ps1             # provisiona de debo'
     Write-Host ''
 }
