@@ -14,7 +14,16 @@
 
     Es pot executar directament des d'Internet:
 
-        irm https://raw.githubusercontent.com/aleixsr/ansible-win/main/bootstrap.ps1 | iex
+        & ([scriptblock]::Create((irm https://raw.githubusercontent.com/aleixsr/ansible-win/main/bootstrap.ps1).TrimStart([char]0xFEFF)))
+
+    El `.TrimStart([char]0xFEFF)` no és cap floritura: aquest fitxer comença amb
+    BOM (el necessita Windows PowerShell 5.1 per llegir-ne els accents quan
+    s'executa com a fitxer), i quan `irm` el baixa, el BOM arriba com un
+    caràcter dins de la cadena. Aleshores la línia 1 ja no és un comentari, el
+    `param()` deixa de ser la primera instrucció i el parser peta amb un
+    "Unexpected token 'param'" que no diu res de tot això.
+
+    Un `irm ... | iex` pelat, per tant, NO funciona amb aquest fitxer.
 
 .PARAMETER Run
     Encadena run.ps1 quan el bootstrap acabi.

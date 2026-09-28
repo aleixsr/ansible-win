@@ -131,10 +131,33 @@ La resta — Chocolatey, gsudo, Git i el mòdul `powershell-yaml` — els posa
 D'una màquina acabada d'instal·lar:
 
 ```powershell
-irm https://raw.githubusercontent.com/aleixsr/ansible-win/main/bootstrap.ps1 | iex
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/aleixsr/ansible-win/main/bootstrap.ps1).TrimStart([char]0xFEFF)))
 cd ~\ansible-win
 .\run.ps1
 ```
+
+<details>
+<summary>Per què no és un <code>irm ... | iex</code> i prou</summary>
+
+`bootstrap.ps1` comença amb BOM, que és el que necessita Windows PowerShell 5.1
+per llegir-ne bé els accents quan s'executa com a fitxer. Però quan `irm` el
+baixa, el BOM arriba com un caràcter més dins de la cadena: la línia 1 deixa de
+ser un comentari, el `param()` ja no és la primera instrucció i el parser respon
+això, que no s'assembla gens a la causa:
+
+```
+Unexpected attribute 'CmdletBinding'.
+Unexpected token 'param' in expression or statement.
+```
+
+El `.TrimStart([char]0xFEFF)` treu el BOM abans de parsejar. La forma amb
+`scriptblock` serveix, a més, per passar-hi paràmetres:
+
+```powershell
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/aleixsr/ansible-win/main/bootstrap.ps1).TrimStart([char]0xFEFF))) -Run
+```
+
+</details>
 
 O, si ja tens el repo clonat:
 
